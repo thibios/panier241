@@ -2,16 +2,19 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 import type { CartItem, DeliverySlotOption } from '../types'
 import { products } from '../data/products'
 import { merchants } from '../data/merchants'
+import { addresses } from '../data/addresses'
 
 interface CartContextValue {
   items: CartItem[]
   merchantId: string | null
   selectedSlot: DeliverySlotOption | null
+  selectedAddressId: string
   addItem: (merchantId: string, productId: string) => void
   removeItem: (productId: string) => void
   setQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
   setSelectedSlot: (slot: DeliverySlotOption | null) => void
+  setSelectedAddressId: (addressId: string) => void
   itemCount: number
   subtotal: number
   deliveryFee: number
@@ -25,6 +28,9 @@ const DELIVERY_FEE = 1500
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [selectedSlot, setSelectedSlot] = useState<DeliverySlotOption | null>(null)
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(
+    addresses.find((a) => a.isDefault)?.id ?? addresses[0]?.id ?? '',
+  )
 
   const merchantId = items[0]?.merchantId ?? null
 
@@ -75,11 +81,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     items,
     merchantId,
     selectedSlot,
+    selectedAddressId,
     addItem,
     removeItem,
     setQuantity,
     clearCart,
     setSelectedSlot,
+    setSelectedAddressId,
     itemCount,
     subtotal,
     deliveryFee,
