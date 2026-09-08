@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-surface text-brand-dark font-sans antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  @apply font-display;
+}
+
+/* Motif signature "tressé" (vannerie de panier), en filigrane sur les en-têtes bleus.
+   Deux jeux de diagonales croisées en SVG répété, jamais une image en dur. */
+.woven-pattern {
+  background-image: repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.08) 0px,
+      rgba(255, 255, 255, 0.08) 2px,
+      transparent 2px,
+      transparent 10px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.08) 0px,
+      rgba(255, 255, 255, 0.08) 2px,
+      transparent 2px,
+      transparent 10px
+    );
+}
+
+/* Scrollbar discrète (webkit) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(20, 36, 92, 0.15);
+  border-radius: 999px;
+}
