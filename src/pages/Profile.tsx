@@ -31,6 +31,7 @@ export default function Profile() {
     null,
   )
   const [myMerchantId, setMyMerchantId] = useState<string | null | undefined>(undefined)
+  const [myLivreurId, setMyLivreurId] = useState<string | null | undefined>(undefined)
 
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [label, setLabel] = useState('')
@@ -56,6 +57,12 @@ export default function Profile() {
       .eq('owner_id', user.id)
       .maybeSingle()
       .then(({ data }) => setMyMerchantId(data?.id ?? null))
+    supabase
+      .from('livreurs')
+      .select('id')
+      .eq('owner_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => setMyLivreurId(data?.id ?? null))
   }, [user])
 
   function resetForm() {
@@ -203,6 +210,17 @@ export default function Profile() {
             <Link to={myMerchantId ? '/marchand-espace' : '/devenir-marchand'}>
               <Button variant="secondary" fullWidth>
                 {myMerchantId ? 'Mon espace marchand 🏪' : 'Devenir marchand'}
+              </Button>
+            </Link>
+          </section>
+        )}
+
+        {myLivreurId !== undefined && (
+          <section>
+            <h2 className="mb-2 text-sm font-semibold text-brand-dark">Espace livreur</h2>
+            <Link to={myLivreurId ? '/livreur-espace' : '/devenir-livreur'}>
+              <Button variant="secondary" fullWidth>
+                {myLivreurId ? 'Mon espace livreur 🛵' : 'Devenir livreur'}
               </Button>
             </Link>
           </section>

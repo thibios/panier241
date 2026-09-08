@@ -29,6 +29,8 @@ interface OrderRow {
   slot_label: string
   address_label: string
   created_at: string
+  livreur_id: string | null
+  livreur_name: string | null
 }
 
 function orderFromRow(row: OrderRow): Order {
@@ -44,8 +46,13 @@ function orderFromRow(row: OrderRow): Order {
     createdAt: row.created_at,
     slotLabel: row.slot_label,
     addressLabel: row.address_label,
+    livreurId: row.livreur_id,
+    livreurName: row.livreur_name,
   }
 }
+
+const ORDER_COLUMNS =
+  'id, merchant_id, merchant_name, items, subtotal, delivery_fee, total, status, slot_label, address_label, created_at, livreur_id, livreur_name'
 
 export default function MerchantSpace() {
   const { user } = useAuth()
@@ -95,7 +102,7 @@ export default function MerchantSpace() {
     setOrdersLoading(true)
     const { data } = await supabase
       .from('orders')
-      .select('id, merchant_id, merchant_name, items, subtotal, delivery_fee, total, status, slot_label, address_label, created_at')
+      .select(ORDER_COLUMNS)
       .eq('merchant_id', merchantId)
       .order('created_at', { ascending: false })
     if (data) setOrders(data.map(orderFromRow))
@@ -323,11 +330,8 @@ export default function MerchantSpace() {
                       </Button>
                     )}
                   </div>
-                  {order.status === 'en_livraison' && (
-                    <p className="text-[11px] text-brand-dark/40">
-                      "Marquer livrée" est temporaire — la confirmation reviendra au livreur une fois
-                      l'espace livreur en place.
-                    </p>
+                  {order.livreurName && (
+                    <p className="text-[11px] text-brand-dark/40">🛵 Livreur : {order.livreurName}</p>
                   )}
                 </Card>
               ))

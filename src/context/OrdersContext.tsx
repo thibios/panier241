@@ -22,6 +22,8 @@ interface OrderRow {
   slot_label: string
   address_label: string
   created_at: string
+  livreur_id: string | null
+  livreur_name: string | null
 }
 
 function fromRow(row: OrderRow): Order {
@@ -37,8 +39,13 @@ function fromRow(row: OrderRow): Order {
     createdAt: row.created_at,
     slotLabel: row.slot_label,
     addressLabel: row.address_label,
+    livreurId: row.livreur_id,
+    livreurName: row.livreur_name,
   }
 }
+
+const ORDER_COLUMNS =
+  'id, merchant_id, merchant_name, items, subtotal, delivery_fee, total, status, slot_label, address_label, created_at, livreur_id, livreur_name'
 
 export function OrdersProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
@@ -48,7 +55,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     if (!user) return
     supabase
       .from('orders')
-      .select('id, merchant_id, merchant_name, items, subtotal, delivery_fee, total, status, slot_label, address_label, created_at')
+      .select(ORDER_COLUMNS)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => {
@@ -72,7 +79,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         slot_label: order.slotLabel,
         address_label: order.addressLabel,
       })
-      .select('id, merchant_id, merchant_name, items, subtotal, delivery_fee, total, status, slot_label, address_label, created_at')
+      .select(ORDER_COLUMNS)
       .single()
 
     if (data) setOrders((prev) => [fromRow(data), ...prev])

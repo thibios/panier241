@@ -34,6 +34,10 @@ function OrderCard({ order }: { order: Order }) {
 
       <p className="truncate text-xs text-brand-dark/60">{itemsSummary}</p>
 
+      {order.livreurName && (
+        <p className="text-xs text-brand-dark/60">🛵 Livreur : {order.livreurName}</p>
+      )}
+
       {order.status !== 'livree' && <OrderProgress status={order.status} />}
 
       <div className="flex items-center justify-between border-t border-brand-light pt-2 text-xs text-brand-dark/60">

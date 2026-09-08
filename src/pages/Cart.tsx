@@ -81,6 +81,8 @@ export default function Cart() {
       addressLabel: selectedAddress
         ? `${selectedAddress.label} · ${selectedAddress.neighborhood}, ${selectedAddress.city}`
         : '',
+      livreurId: null,
+      livreurName: null,
     }
 
     setIsSubmitting(true)

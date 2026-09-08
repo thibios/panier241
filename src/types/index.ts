@@ -90,6 +90,16 @@ export interface Order {
   createdAt: string // ISO
   slotLabel: string
   addressLabel: string
+  livreurId: string | null
+  livreurName: string | null
+}
+
+export interface Livreur {
+  id: string
+  ownerId: string
+  name: string
+  phone: string
+  vehicle: string
 }
 
 export interface PaymentMethod {
