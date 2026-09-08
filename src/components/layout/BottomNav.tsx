@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
+import { useOrders } from '../../context/OrdersContext'
 
 const tabs = [
   { to: '/', label: 'Accueil', icon: '🏠', end: true },
@@ -10,6 +11,12 @@ const tabs = [
 
 export default function BottomNav() {
   const { itemCount } = useCart()
+  const { unseenCount } = useOrders()
+
+  const badgeCount: Record<string, number> = {
+    '/panier': itemCount,
+    '/commandes': unseenCount,
+  }
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-brand-light bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
@@ -29,9 +36,9 @@ export default function BottomNav() {
                 <>
                   <span className="relative text-xl leading-none">
                     {tab.icon}
-                    {tab.to === '/panier' && itemCount > 0 && (
+                    {badgeCount[tab.to] > 0 && (
                       <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-category-poisson px-1 text-[10px] font-bold text-white">
-                        {itemCount}
+                        {badgeCount[tab.to]}
                       </span>
                     )}
                   </span>

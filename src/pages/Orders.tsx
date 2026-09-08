@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PageShell from '../components/layout/PageShell'
 import WovenHeader from '../components/layout/WovenHeader'
@@ -6,7 +6,11 @@ import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import StatusBadge from '../components/ui/StatusBadge'
 import OrderProgress from '../components/ui/OrderProgress'
+import StarPicker from '../components/ui/StarPicker'
 import { useOrders } from '../context/OrdersContext'
+import { useAuth } from '../context/AuthContext'
+import { useCatalog } from '../context/CatalogContext'
+import { supabase } from '../lib/supabaseClient'
 import { formatFCFA } from '../lib/format'
 import type { Order } from '../types'
 
@@ -19,8 +23,61 @@ function formatDate(iso: string) {
     date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
-function OrderCard({ order }: { order: Order }) {
+function ReviewForm({ order, onSubmitted }: { order: Order; onSubmitted: () => void }) {
+  const { user } = useAuth()
+  const [rating, setRating] = useState(0)
+  const [comment, setComment] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit() {
+    if (!user || rating === 0) return
+    setIsSubmitting(true)
+    setError(null)
+    const { error: insertError } = await supabase.from('reviews').insert({
+      order_id: order.id,
+      merchant_id: order.merchantId,
+      user_id: user.id,
+      rating,
+      comment: comment.trim() || null,
+    })
+    setIsSubmitting(false)
+    if (insertError) {
+      setError(insertError.message)
+      return
+    }
+    onSubmitted()
+  }
+
+  return (
+    <div className="space-y-2 border-t border-brand-light pt-3">
+      <StarPicker value={rating} onChange={setRating} />
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="Un commentaire (optionnel)"
+        rows={2}
+        className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
+      />
+      {error && <p className="text-xs text-category-poisson">{error}</p>}
+      <Button fullWidth disabled={rating === 0 || isSubmitting} onClick={handleSubmit}>
+        {isSubmitting ? 'Envoi...' : "Envoyer l'avis"}
+      </Button>
+    </div>
+  )
+}
+
+function OrderCard({
+  order,
+  hasReview,
+  onReviewSubmitted,
+}: {
+  order: Order
+  hasReview: boolean
+  onReviewSubmitted: () => void
+}) {
   const itemsSummary = order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')
+  const [isReviewing, setIsReviewing] = useState(false)
 
   return (
     <Card className="space-y-3">
@@ -44,13 +101,57 @@ function OrderCard({ order }: { order: Order }) {
         <span>{order.slotLabel}</span>
         <span className="font-semibold text-brand-dark">{formatFCFA(order.total)}</span>
       </div>
+
+      {order.status === 'livree' && !hasReview && !isReviewing && (
+        <button
+          type="button"
+          onClick={() => setIsReviewing(true)}
+          className="text-xs font-semibold text-brand"
+        >
+          Laisser un avis ⭐
+        </button>
+      )}
+
+      {order.status === 'livree' && hasReview && (
+        <p className="text-xs text-category-legumes">Merci pour ton avis ✓</p>
+      )}
+
+      {isReviewing && <ReviewForm order={order} onSubmitted={onReviewSubmitted} />}
     </Card>
   )
 }
 
 export default function Orders() {
-  const { orders } = useOrders()
+  const { orders, loading, unseenCount, markAllSeen } = useOrders()
+  const { user } = useAuth()
+  const { refresh: refreshCatalog } = useCatalog()
   const [tab, setTab] = useState<Tab>('en_cours')
+  const [reviewedOrderIds, setReviewedOrderIds] = useState<Set<string>>(new Set())
+  const [hadUnseenOnArrival, setHadUnseenOnArrival] = useState(false)
+  const hasMarkedSeen = useRef(false)
+
+  useEffect(() => {
+    if (loading || hasMarkedSeen.current) return
+    hasMarkedSeen.current = true
+    setHadUnseenOnArrival(unseenCount > 0)
+    markAllSeen()
+  }, [loading, unseenCount, markAllSeen])
+
+  useEffect(() => {
+    if (!user) return
+    supabase
+      .from('reviews')
+      .select('order_id')
+      .eq('user_id', user.id)
+      .then(({ data }) => {
+        if (data) setReviewedOrderIds(new Set(data.map((r) => r.order_id)))
+      })
+  }, [user])
+
+  function handleReviewSubmitted(orderId: string) {
+    setReviewedOrderIds((prev) => new Set(prev).add(orderId))
+    refreshCatalog()
+  }
 
   const enCours = useMemo(() => orders.filter((o) => o.status !== 'livree'), [orders])
   const historique = useMemo(() => orders.filter((o) => o.status === 'livree'), [orders])
@@ -63,6 +164,12 @@ export default function Orders() {
       </WovenHeader>
 
       <div className="px-5 pt-5">
+        {hadUnseenOnArrival && (
+          <div className="mb-4 rounded-card bg-brand-light p-3 text-sm text-brand">
+            Une ou plusieurs commandes ont été mises à jour depuis ta dernière visite.
+          </div>
+        )}
+
         <div className="mb-4 flex gap-2 rounded-pill bg-brand-light p-1">
           <button
             type="button"
@@ -87,7 +194,12 @@ export default function Orders() {
         {visibleOrders.length > 0 ? (
           <div className="space-y-3 pb-4">
             {visibleOrders.map((order) => (
-              <OrderCard key={order.id} order={order} />
+              <OrderCard
+                key={order.id}
+                order={order}
+                hasReview={reviewedOrderIds.has(order.id)}
+                onReviewSubmitted={() => handleReviewSubmitted(order.id)}
+              />
             ))}
           </div>
         ) : tab === 'en_cours' ? (

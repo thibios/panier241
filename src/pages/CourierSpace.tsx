@@ -6,6 +6,8 @@ import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
+import { useCatalog } from '../context/CatalogContext'
+import { markets } from '../data/markets'
 import { formatFCFA } from '../lib/format'
 import type { Livreur, Order } from '../types'
 
@@ -50,13 +52,22 @@ function orderFromRow(row: OrderRow): Order {
 
 export default function CourierSpace() {
   const { user } = useAuth()
+  const { merchants } = useCatalog()
 
   const [myLivreur, setMyLivreur] = useState<Livreur | null | undefined>(undefined)
   const [tab, setTab] = useState<Tab>('disponibles')
+  const [marketFilter, setMarketFilter] = useState<string>('all')
 
   const [availableOrders, setAvailableOrders] = useState<Order[]>([])
   const [myDeliveries, setMyDeliveries] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
+
+  function marketIdForOrder(order: Order) {
+    return merchants.find((m) => m.id === order.merchantId)?.marketId
+  }
+
+  const filteredAvailableOrders =
+    marketFilter === 'all' ? availableOrders : availableOrders.filter((o) => marketIdForOrder(o) === marketFilter)
 
   useEffect(() => {
     if (!user) return
@@ -176,8 +187,21 @@ export default function CourierSpace() {
 
         {tab === 'disponibles' && (
           <div className="space-y-3 pb-4">
-            {availableOrders.length > 0 ? (
-              availableOrders.map((order) => (
+            <select
+              value={marketFilter}
+              onChange={(e) => setMarketFilter(e.target.value)}
+              className="w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark focus:outline-none"
+            >
+              <option value="all">Tous les marchés</option>
+              {markets.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+
+            {filteredAvailableOrders.length > 0 ? (
+              filteredAvailableOrders.map((order) => (
                 <Card key={order.id} className="space-y-2">
                   <p className="text-sm font-semibold text-brand-dark">{order.merchantName}</p>
                   <p className="text-xs text-brand-dark/60">
