@@ -11,7 +11,6 @@ export const merchants: Merchant[] = [
     address: 'Marché Mont-Bouët, Allée B, Libreville',
     imageEmoji: '👩🏾‍🌾',
     bannerColor: '#3FAE5C',
-    isFavorite: true,
     productIds: ['prd-tomate', 'prd-oignon', 'prd-gombo', 'prd-piment', 'prd-banane-plantain', 'prd-mangue'],
   },
   {
@@ -24,7 +23,6 @@ export const merchants: Merchant[] = [
     address: 'Marché Mont-Bouët, Entrée principale, Libreville',
     imageEmoji: '🧑🏾‍🌾',
     bannerColor: '#F2994A',
-    isFavorite: false,
     productIds: ['prd-ananas', 'prd-mangue', 'prd-papaye', 'prd-safou', 'prd-orange'],
   },
   {
@@ -37,7 +35,6 @@ export const merchants: Merchant[] = [
     address: 'Marché Nkembo, Quai poisson, Libreville',
     imageEmoji: '🎣',
     bannerColor: '#E8543A',
-    isFavorite: true,
     productIds: ['prd-machoiron', 'prd-carpe', 'prd-crevette'],
   },
   {
@@ -50,7 +47,6 @@ export const merchants: Merchant[] = [
     address: 'Marché Oloumi, Stand 12, Libreville',
     imageEmoji: '🥩',
     bannerColor: '#E8543A',
-    isFavorite: false,
     productIds: ['prd-poulet', 'prd-boeuf'],
   },
   {
@@ -63,7 +59,6 @@ export const merchants: Merchant[] = [
     address: 'Marché Akébé, Allée des épices, Libreville',
     imageEmoji: '🌾',
     bannerColor: '#C08A3E',
-    isFavorite: true,
     productIds: ['prd-riz', 'prd-manioc', 'prd-arachide', 'prd-poivre', 'prd-gingembre', 'prd-feuille-manioc'],
   },
   {
@@ -76,7 +71,6 @@ export const merchants: Merchant[] = [
     address: 'Marché Mont-Bouët, Allée C, Libreville',
     imageEmoji: '🥬',
     bannerColor: '#3FAE5C',
-    isFavorite: false,
     productIds: ['prd-aubergine', 'prd-feuille-manioc', 'prd-gombo', 'prd-piment'],
   },
 ]

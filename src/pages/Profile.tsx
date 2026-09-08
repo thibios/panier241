@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PageShell from '../components/layout/PageShell'
 import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
-import { userProfile, paymentMethods } from '../data/addresses'
+import { paymentMethods } from '../data/addresses'
 import { useOrders } from '../context/OrdersContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { useAddresses } from '../context/AddressesContext'
+import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabaseClient'
 
 const paymentIcon: Record<string, string> = {
   'pay-1': '📱',
@@ -19,14 +21,34 @@ function formatMemberSince(iso: string) {
 }
 
 export default function Profile() {
+  const { user, signOut } = useAuth()
   const { orders } = useOrders()
   const { favoriteIds } = useFavorites()
   const { addresses, addAddress } = useAddresses()
+
+  const [profile, setProfile] = useState<{ firstName: string; lastName: string; phone: string } | null>(
+    null,
+  )
 
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [label, setLabel] = useState('')
   const [fullAddress, setFullAddress] = useState('')
   const [neighborhood, setNeighborhood] = useState('')
+  const [isSavingAddress, setIsSavingAddress] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    supabase
+      .from('profiles')
+      .select('first_name, last_name, phone')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setProfile({ firstName: data.first_name, lastName: data.last_name, phone: data.phone })
+        }
+      })
+  }, [user])
 
   function resetForm() {
     setLabel('')
@@ -35,14 +57,16 @@ export default function Profile() {
     setIsAddingAddress(false)
   }
 
-  function handleAddAddress() {
+  async function handleAddAddress() {
     if (!label.trim() || !fullAddress.trim() || !neighborhood.trim()) return
-    addAddress({
+    setIsSavingAddress(true)
+    await addAddress({
       label: label.trim(),
       fullAddress: fullAddress.trim(),
       neighborhood: neighborhood.trim(),
       city: 'Libreville',
     })
+    setIsSavingAddress(false)
     resetForm()
   }
 
@@ -55,16 +79,18 @@ export default function Profile() {
           </div>
           <div>
             <h1 className="text-lg font-bold">
-              {userProfile.firstName} {userProfile.lastName}
+              {profile ? `${profile.firstName} ${profile.lastName}` : user?.email}
             </h1>
-            <p className="text-sm text-white/80">{userProfile.phone}</p>
-            <p className="text-xs text-white/60">Membre depuis {formatMemberSince(userProfile.memberSince)}</p>
+            {profile?.phone && <p className="text-sm text-white/80">{profile.phone}</p>}
+            {user?.created_at && (
+              <p className="text-xs text-white/60">Membre depuis {formatMemberSince(user.created_at)}</p>
+            )}
           </div>
         </div>
       </WovenHeader>
 
       <div className="space-y-5 px-5 pt-5">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Card className="text-center">
             <p className="text-lg font-bold text-brand-dark">{orders.length}</p>
             <p className="mt-0.5 text-[11px] text-brand-dark/50">Commandes</p>
@@ -72,10 +98,6 @@ export default function Profile() {
           <Card className="text-center">
             <p className="text-lg font-bold text-brand-dark">{favoriteIds.length}</p>
             <p className="mt-0.5 text-[11px] text-brand-dark/50">Favoris</p>
-          </Card>
-          <Card className="text-center">
-            <p className="text-lg font-bold text-brand-dark">⭐ {userProfile.averageRatingGiven.toFixed(1)}</p>
-            <p className="mt-0.5 text-[11px] text-brand-dark/50">Note moyenne</p>
           </Card>
         </div>
 
@@ -116,10 +138,10 @@ export default function Profile() {
               />
               <Button
                 fullWidth
-                disabled={!label.trim() || !fullAddress.trim() || !neighborhood.trim()}
+                disabled={!label.trim() || !fullAddress.trim() || !neighborhood.trim() || isSavingAddress}
                 onClick={handleAddAddress}
               >
-                Enregistrer l'adresse
+                {isSavingAddress ? 'Enregistrement...' : "Enregistrer l'adresse"}
               </Button>
             </Card>
           )}
@@ -154,7 +176,7 @@ export default function Profile() {
               Ajouter
             </button>
           </div>
-          <div className="space-y-2 pb-4">
+          <div className="space-y-2">
             {paymentMethods.map((pm) => (
               <Card key={pm.id} className="flex items-center gap-3">
                 <span className="text-lg">{paymentIcon[pm.id] ?? '💳'}</span>
@@ -166,6 +188,12 @@ export default function Profile() {
             ))}
           </div>
         </section>
+
+        <div className="pb-4">
+          <Button variant="ghost" fullWidth onClick={() => signOut()}>
+            Se déconnecter
+          </Button>
+        </div>
       </div>
     </PageShell>
   )

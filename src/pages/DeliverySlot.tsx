@@ -106,27 +106,38 @@ export default function DeliverySlot() {
 
         <section>
           <h2 className="mb-3 text-sm font-semibold text-brand-dark">Adresse de livraison</h2>
-          <Card>
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-2">
-                <span className="text-lg">📍</span>
-                <div>
-                  <p className="text-sm font-semibold text-brand-dark">{selectedAddress.label}</p>
-                  <p className="text-xs text-brand-dark/50">{selectedAddress.fullAddress}</p>
-                  <p className="text-xs text-brand-dark/50">
-                    {selectedAddress.neighborhood}, {selectedAddress.city}
-                  </p>
+          {!selectedAddress ? (
+            <Card className="text-center">
+              <p className="text-sm text-brand-dark/70">
+                Tu n'as pas encore d'adresse enregistrée.
+              </p>
+              <Link to="/profil" className="mt-3 inline-block">
+                <Button variant="secondary">Ajouter une adresse dans mon profil</Button>
+              </Link>
+            </Card>
+          ) : (
+            <Card>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">📍</span>
+                  <div>
+                    <p className="text-sm font-semibold text-brand-dark">{selectedAddress.label}</p>
+                    <p className="text-xs text-brand-dark/50">{selectedAddress.fullAddress}</p>
+                    <p className="text-xs text-brand-dark/50">
+                      {selectedAddress.neighborhood}, {selectedAddress.city}
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddressPicker((v) => !v)}
+                  className="shrink-0 text-xs font-semibold text-brand"
+                >
+                  Changer
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowAddressPicker((v) => !v)}
-                className="shrink-0 text-xs font-semibold text-brand"
-              >
-                Changer
-              </button>
-            </div>
-          </Card>
+            </Card>
+          )}
 
           {showAddressPicker && (
             <div className="mt-2 space-y-2">
@@ -154,7 +165,7 @@ export default function DeliverySlot() {
         </section>
 
         <div className="pb-4 pt-2">
-          <Button fullWidth disabled={!selectedSlot} onClick={() => navigate('/panier')}>
+          <Button fullWidth disabled={!selectedSlot || !selectedAddress} onClick={() => navigate('/panier')}>
             Valider le créneau
           </Button>
         </div>

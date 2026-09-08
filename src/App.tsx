@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import BottomNav from './components/layout/BottomNav'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { OrdersProvider } from './context/OrdersContext'
 import { FavoritesProvider } from './context/FavoritesContext'
 import { AddressesProvider } from './context/AddressesContext'
+import AuthPage from './pages/Auth'
 import Home from './pages/Home'
 import MerchantDetail from './pages/MerchantDetail'
 import DeliverySlot from './pages/DeliverySlot'
@@ -11,7 +13,7 @@ import Cart from './pages/Cart'
 import Orders from './pages/Orders'
 import Profile from './pages/Profile'
 
-export default function App() {
+function AuthenticatedApp() {
   return (
     <FavoritesProvider>
       <AddressesProvider>
@@ -34,5 +36,27 @@ export default function App() {
         </CartProvider>
       </AddressesProvider>
     </FavoritesProvider>
+  )
+}
+
+function Gate() {
+  const { session, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface">
+        <p className="text-sm text-brand-dark/50">Chargement...</p>
+      </div>
+    )
+  }
+
+  return session ? <AuthenticatedApp /> : <AuthPage />
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Gate />
+    </AuthProvider>
   )
 }

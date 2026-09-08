@@ -37,7 +37,6 @@ export interface Merchant {
   address: string
   imageEmoji: string
   bannerColor: string
-  isFavorite: boolean
   productIds: string[]
 }
 
@@ -95,14 +94,4 @@ export interface PaymentMethod {
   id: string
   label: string
   detail: string
-}
-
-export interface UserProfile {
-  firstName: string
-  lastName: string
-  phone: string
-  email: string
-  memberSince: string
-  favoriteCount: number
-  averageRatingGiven: number
 }

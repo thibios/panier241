@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import PageShell from '../components/layout/PageShell'
 import WovenHeader from '../components/layout/WovenHeader'
@@ -29,6 +30,7 @@ export default function Cart() {
   const merchant = getCartMerchant(merchantId)
   const selectedAddress =
     addresses.find((a) => a.id === selectedAddressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0]
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (items.length === 0) {
     return (
@@ -50,7 +52,7 @@ export default function Cart() {
     )
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!merchant || !selectedSlot) return
 
     const orderItems: OrderItem[] = items.map((item) => {
@@ -80,7 +82,9 @@ export default function Cart() {
         : '',
     }
 
-    addOrder(order)
+    setIsSubmitting(true)
+    await addOrder(order)
+    setIsSubmitting(false)
     clearCart()
     navigate('/commandes')
   }
@@ -151,8 +155,8 @@ export default function Cart() {
         </Card>
 
         <div className="pb-4">
-          <Button fullWidth disabled={!selectedSlot} onClick={handleSubmit}>
-            Passer la commande
+          <Button fullWidth disabled={!selectedSlot || isSubmitting} onClick={handleSubmit}>
+            {isSubmitting ? 'Envoi de la commande...' : 'Passer la commande'}
           </Button>
         </div>
       </div>

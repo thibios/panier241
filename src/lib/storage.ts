@@ -16,3 +16,11 @@ export function writeSession<T>(key: string, value: T): void {
     // Stockage indisponible (navigation privée, quota...) : on continue sans persister.
   }
 }
+
+export function clearSession(key: string): void {
+  try {
+    sessionStorage.removeItem(PREFIX + key)
+  } catch {
+    // Stockage indisponible : rien à nettoyer.
+  }
+}

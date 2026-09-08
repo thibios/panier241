@@ -1,24 +1,67 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Address } from '../types'
-import { addresses as seedAddresses } from '../data/addresses'
-import { readSession, writeSession } from '../lib/storage'
+import { supabase } from '../lib/supabaseClient'
+import { useAuth } from './AuthContext'
 
 interface AddressesContextValue {
   addresses: Address[]
-  addAddress: (address: Omit<Address, 'id' | 'isDefault'>) => Address
+  addAddress: (address: Omit<Address, 'id' | 'isDefault'>) => Promise<void>
 }
 
 const AddressesContext = createContext<AddressesContextValue | null>(null)
 
+interface AddressRow {
+  id: string
+  label: string
+  full_address: string
+  neighborhood: string
+  city: string
+  is_default: boolean
+}
+
+function fromRow(row: AddressRow): Address {
+  return {
+    id: row.id,
+    label: row.label,
+    fullAddress: row.full_address,
+    neighborhood: row.neighborhood,
+    city: row.city,
+    isDefault: row.is_default,
+  }
+}
+
 export function AddressesProvider({ children }: { children: ReactNode }) {
-  const [addresses, setAddresses] = useState<Address[]>(() => readSession('addresses', seedAddresses))
+  const { user } = useAuth()
+  const [addresses, setAddresses] = useState<Address[]>([])
 
-  useEffect(() => writeSession('addresses', addresses), [addresses])
+  useEffect(() => {
+    if (!user) return
+    supabase
+      .from('addresses')
+      .select('id, label, full_address, neighborhood, city, is_default')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (data) setAddresses(data.map(fromRow))
+      })
+  }, [user])
 
-  function addAddress(input: Omit<Address, 'id' | 'isDefault'>) {
-    const newAddress: Address = { ...input, id: `addr-${Date.now()}`, isDefault: false }
-    setAddresses((prev) => [...prev, newAddress])
-    return newAddress
+  async function addAddress(input: Omit<Address, 'id' | 'isDefault'>) {
+    if (!user) return
+    const { data } = await supabase
+      .from('addresses')
+      .insert({
+        user_id: user.id,
+        label: input.label,
+        full_address: input.fullAddress,
+        neighborhood: input.neighborhood,
+        city: input.city,
+        is_default: addresses.length === 0,
+      })
+      .select('id, label, full_address, neighborhood, city, is_default')
+      .single()
+
+    if (data) setAddresses((prev) => [...prev, fromRow(data)])
   }
 
   return (
