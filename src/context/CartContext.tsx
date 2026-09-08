@@ -1,8 +1,8 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { CartItem, DeliverySlotOption } from '../types'
 import { products } from '../data/products'
 import { merchants } from '../data/merchants'
-import { addresses } from '../data/addresses'
+import { readSession, writeSession } from '../lib/storage'
 
 interface CartContextValue {
   items: CartItem[]
@@ -26,11 +26,15 @@ const CartContext = createContext<CartContextValue | null>(null)
 const DELIVERY_FEE = 1500
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
-  const [selectedSlot, setSelectedSlot] = useState<DeliverySlotOption | null>(null)
-  const [selectedAddressId, setSelectedAddressId] = useState<string>(
-    addresses.find((a) => a.isDefault)?.id ?? addresses[0]?.id ?? '',
+  const [items, setItems] = useState<CartItem[]>(() => readSession('cart-items', [] as CartItem[]))
+  const [selectedSlot, setSelectedSlot] = useState<DeliverySlotOption | null>(() =>
+    readSession('cart-slot', null as DeliverySlotOption | null),
   )
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(() => readSession('cart-address', ''))
+
+  useEffect(() => writeSession('cart-items', items), [items])
+  useEffect(() => writeSession('cart-slot', selectedSlot), [selectedSlot])
+  useEffect(() => writeSession('cart-address', selectedAddressId), [selectedAddressId])
 
   const merchantId = items[0]?.merchantId ?? null
 

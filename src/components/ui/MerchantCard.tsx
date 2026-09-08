@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { Merchant } from '../../types'
 import { markets } from '../../data/markets'
+import { useFavorites } from '../../context/FavoritesContext'
 
 const categoryDotClass: Record<string, string> = {
   legumes: 'bg-category-legumes',
@@ -11,6 +12,7 @@ const categoryDotClass: Record<string, string> = {
 
 export default function MerchantCard({ merchant }: { merchant: Merchant }) {
   const market = markets.find((m) => m.id === merchant.marketId)
+  const { isFavorite } = useFavorites()
 
   return (
     <Link
@@ -26,7 +28,7 @@ export default function MerchantCard({ merchant }: { merchant: Merchant }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <p className="truncate text-sm font-semibold text-brand-dark">{merchant.name}</p>
-          {merchant.isFavorite && <span className="text-xs text-category-fruits">★</span>}
+          {isFavorite(merchant.id) && <span className="text-xs text-category-fruits">★</span>}
         </div>
         <p className="truncate text-xs text-brand-dark/50">{market?.name}</p>
         <div className="mt-1 flex items-center gap-2">

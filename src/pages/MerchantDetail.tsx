@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import PageShell from '../components/layout/PageShell'
 import Button from '../components/ui/Button'
@@ -8,6 +7,7 @@ import { markets } from '../data/markets'
 import { products } from '../data/products'
 import { categories } from '../data/categories'
 import { useCart } from '../context/CartContext'
+import { useFavorites } from '../context/FavoritesContext'
 import { formatFCFA } from '../lib/format'
 
 const categoryDotClass: Record<string, string> = {
@@ -22,7 +22,7 @@ export default function MerchantDetail() {
   const navigate = useNavigate()
   const merchant = merchants.find((m) => m.id === merchantId)
   const { items, merchantId: cartMerchantId, addItem, setQuantity, itemCount, subtotal } = useCart()
-  const [isFavorite, setIsFavorite] = useState(merchant?.isFavorite ?? false)
+  const { isFavorite, toggleFavorite } = useFavorites()
 
   if (!merchant) {
     return (
@@ -57,11 +57,11 @@ export default function MerchantDetail() {
           </Link>
           <button
             type="button"
-            onClick={() => setIsFavorite((v) => !v)}
+            onClick={() => toggleFavorite(merchant.id)}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg"
             aria-label="Ajouter aux favoris"
           >
-            {isFavorite ? '★' : '☆'}
+            {isFavorite(merchant.id) ? '★' : '☆'}
           </button>
         </div>
         <div className="mt-4 flex items-center gap-3">

@@ -6,8 +6,8 @@ import Button from '../components/ui/Button'
 import QuantityStepper from '../components/ui/QuantityStepper'
 import { useCart, getCartMerchant } from '../context/CartContext'
 import { useOrders } from '../context/OrdersContext'
+import { useAddresses } from '../context/AddressesContext'
 import { products } from '../data/products'
-import { addresses } from '../data/addresses'
 import { formatFCFA } from '../lib/format'
 import type { Order, OrderItem } from '../types'
 
@@ -25,8 +25,10 @@ export default function Cart() {
     total,
   } = useCart()
   const { addOrder } = useOrders()
+  const { addresses } = useAddresses()
   const merchant = getCartMerchant(merchantId)
-  const selectedAddress = addresses.find((a) => a.id === selectedAddressId)
+  const selectedAddress =
+    addresses.find((a) => a.id === selectedAddressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0]
 
   if (items.length === 0) {
     return (

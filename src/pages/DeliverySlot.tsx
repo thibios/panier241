@@ -5,8 +5,8 @@ import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { generateDeliveryDays } from '../data/deliverySlots'
-import { addresses } from '../data/addresses'
 import { useCart } from '../context/CartContext'
+import { useAddresses } from '../context/AddressesContext'
 
 const periodIcon: Record<string, string> = {
   matin: '🌅',
@@ -18,12 +18,14 @@ const periodIcon: Record<string, string> = {
 export default function DeliverySlot() {
   const navigate = useNavigate()
   const { itemCount, selectedSlot, setSelectedSlot, selectedAddressId, setSelectedAddressId } = useCart()
+  const { addresses } = useAddresses()
   const days = useMemo(() => generateDeliveryDays(), [])
   const [activeDayIndex, setActiveDayIndex] = useState(0)
   const [showAddressPicker, setShowAddressPicker] = useState(false)
 
   const activeDay = days[activeDayIndex]
-  const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0]
+  const selectedAddress =
+    addresses.find((a) => a.id === selectedAddressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0]
 
   if (itemCount === 0) {
     return (

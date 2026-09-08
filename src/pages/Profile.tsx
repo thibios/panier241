@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import PageShell from '../components/layout/PageShell'
 import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
-import { userProfile, addresses, paymentMethods } from '../data/addresses'
-import { merchants } from '../data/merchants'
+import Button from '../components/ui/Button'
+import { userProfile, paymentMethods } from '../data/addresses'
 import { useOrders } from '../context/OrdersContext'
+import { useFavorites } from '../context/FavoritesContext'
+import { useAddresses } from '../context/AddressesContext'
 
 const paymentIcon: Record<string, string> = {
   'pay-1': '📱',
@@ -17,7 +20,31 @@ function formatMemberSince(iso: string) {
 
 export default function Profile() {
   const { orders } = useOrders()
-  const favoriteCount = merchants.filter((m) => m.isFavorite).length
+  const { favoriteIds } = useFavorites()
+  const { addresses, addAddress } = useAddresses()
+
+  const [isAddingAddress, setIsAddingAddress] = useState(false)
+  const [label, setLabel] = useState('')
+  const [fullAddress, setFullAddress] = useState('')
+  const [neighborhood, setNeighborhood] = useState('')
+
+  function resetForm() {
+    setLabel('')
+    setFullAddress('')
+    setNeighborhood('')
+    setIsAddingAddress(false)
+  }
+
+  function handleAddAddress() {
+    if (!label.trim() || !fullAddress.trim() || !neighborhood.trim()) return
+    addAddress({
+      label: label.trim(),
+      fullAddress: fullAddress.trim(),
+      neighborhood: neighborhood.trim(),
+      city: 'Libreville',
+    })
+    resetForm()
+  }
 
   return (
     <PageShell>
@@ -43,7 +70,7 @@ export default function Profile() {
             <p className="mt-0.5 text-[11px] text-brand-dark/50">Commandes</p>
           </Card>
           <Card className="text-center">
-            <p className="text-lg font-bold text-brand-dark">{favoriteCount}</p>
+            <p className="text-lg font-bold text-brand-dark">{favoriteIds.length}</p>
             <p className="mt-0.5 text-[11px] text-brand-dark/50">Favoris</p>
           </Card>
           <Card className="text-center">
@@ -55,10 +82,48 @@ export default function Profile() {
         <section>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-brand-dark">Mes adresses</h2>
-            <button type="button" className="text-xs font-semibold text-brand">
-              Ajouter
+            <button
+              type="button"
+              onClick={() => setIsAddingAddress((v) => !v)}
+              className="text-xs font-semibold text-brand"
+            >
+              {isAddingAddress ? 'Annuler' : 'Ajouter'}
             </button>
           </div>
+
+          {isAddingAddress && (
+            <Card className="mb-2 space-y-2">
+              <input
+                type="text"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="Nom (ex: Domicile, Bureau...)"
+                className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
+              />
+              <input
+                type="text"
+                value={fullAddress}
+                onChange={(e) => setFullAddress(e.target.value)}
+                placeholder="Adresse complète"
+                className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
+              />
+              <input
+                type="text"
+                value={neighborhood}
+                onChange={(e) => setNeighborhood(e.target.value)}
+                placeholder="Quartier (ex: Louis, Nzeng-Ayong...)"
+                className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
+              />
+              <Button
+                fullWidth
+                disabled={!label.trim() || !fullAddress.trim() || !neighborhood.trim()}
+                onClick={handleAddAddress}
+              >
+                Enregistrer l'adresse
+              </Button>
+            </Card>
+          )}
+
           <div className="space-y-2">
             {addresses.map((addr) => (
               <Card key={addr.id} className="flex items-start gap-2">
