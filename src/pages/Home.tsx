@@ -7,15 +7,15 @@ import MerchantCard from '../components/ui/MerchantCard'
 import ProductResultCard from '../components/ui/ProductResultCard'
 import { categories } from '../data/categories'
 import { markets } from '../data/markets'
-import { merchants } from '../data/merchants'
-import { products } from '../data/products'
 import { useFavorites } from '../context/FavoritesContext'
+import { useCatalog } from '../context/CatalogContext'
 import type { CategoryId } from '../types'
 
 export default function Home() {
   const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<CategoryId | null>(null)
   const { isFavorite } = useFavorites()
+  const { merchants, products } = useCatalog()
 
   const normalizedQuery = query.trim().toLowerCase()
   const isSearching = normalizedQuery.length > 0
@@ -110,7 +110,7 @@ export default function Home() {
                 <ProductResultCard
                   key={product.id}
                   product={product}
-                  sellers={merchants.filter((m) => m.productIds.includes(product.id))}
+                  sellers={merchants.filter((m) => m.id === product.merchantId)}
                 />
               ))}
             </div>

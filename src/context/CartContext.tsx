@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { CartItem, DeliverySlotOption } from '../types'
-import { products } from '../data/products'
-import { merchants } from '../data/merchants'
 import { readSession, writeSession } from '../lib/storage'
+import { useCatalog } from './CatalogContext'
 
 interface CartContextValue {
   items: CartItem[]
@@ -26,6 +25,7 @@ const CartContext = createContext<CartContextValue | null>(null)
 const DELIVERY_FEE = 1500
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { products } = useCatalog()
   const [items, setItems] = useState<CartItem[]>(() => readSession('cart-items', [] as CartItem[]))
   const [selectedSlot, setSelectedSlot] = useState<DeliverySlotOption | null>(() =>
     readSession('cart-slot', null as DeliverySlotOption | null),
@@ -76,7 +76,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const product = products.find((p) => p.id === item.productId)
       return sum + (product?.price ?? 0) * item.quantity
     }, 0)
-  }, [items])
+  }, [items, products])
 
   const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0
   const total = subtotal + deliveryFee
@@ -105,8 +105,4 @@ export function useCart() {
   const ctx = useContext(CartContext)
   if (!ctx) throw new Error('useCart doit être utilisé à l’intérieur de CartProvider')
   return ctx
-}
-
-export function getCartMerchant(merchantId: string | null) {
-  return merchants.find((m) => m.id === merchantId) ?? null
 }

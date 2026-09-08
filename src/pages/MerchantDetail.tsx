@@ -2,12 +2,11 @@ import { useNavigate, useParams, Link } from 'react-router-dom'
 import PageShell from '../components/layout/PageShell'
 import Button from '../components/ui/Button'
 import QuantityStepper from '../components/ui/QuantityStepper'
-import { merchants } from '../data/merchants'
 import { markets } from '../data/markets'
-import { products } from '../data/products'
 import { categories } from '../data/categories'
 import { useCart } from '../context/CartContext'
 import { useFavorites } from '../context/FavoritesContext'
+import { useCatalog } from '../context/CatalogContext'
 import { formatFCFA } from '../lib/format'
 
 const categoryDotClass: Record<string, string> = {
@@ -20,6 +19,7 @@ const categoryDotClass: Record<string, string> = {
 export default function MerchantDetail() {
   const { merchantId } = useParams()
   const navigate = useNavigate()
+  const { merchants, getProductsForMerchant } = useCatalog()
   const merchant = merchants.find((m) => m.id === merchantId)
   const { items, merchantId: cartMerchantId, addItem, setQuantity, itemCount, subtotal } = useCart()
   const { isFavorite, toggleFavorite } = useFavorites()
@@ -38,7 +38,7 @@ export default function MerchantDetail() {
   }
 
   const market = markets.find((m) => m.id === merchant.marketId)
-  const merchantProducts = products.filter((p) => merchant.productIds.includes(p.id))
+  const merchantProducts = getProductsForMerchant(merchant.id)
   const isOtherMerchantInCart = cartMerchantId !== null && cartMerchantId !== merchant.id
 
   function getQuantity(productId: string) {

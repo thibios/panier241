@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import PageShell from '../components/layout/PageShell'
 import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
@@ -29,6 +30,7 @@ export default function Profile() {
   const [profile, setProfile] = useState<{ firstName: string; lastName: string; phone: string } | null>(
     null,
   )
+  const [myMerchantId, setMyMerchantId] = useState<string | null | undefined>(undefined)
 
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [label, setLabel] = useState('')
@@ -48,6 +50,12 @@ export default function Profile() {
           setProfile({ firstName: data.first_name, lastName: data.last_name, phone: data.phone })
         }
       })
+    supabase
+      .from('merchants')
+      .select('id')
+      .eq('owner_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => setMyMerchantId(data?.id ?? null))
   }, [user])
 
   function resetForm() {
@@ -188,6 +196,17 @@ export default function Profile() {
             ))}
           </div>
         </section>
+
+        {myMerchantId !== undefined && (
+          <section>
+            <h2 className="mb-2 text-sm font-semibold text-brand-dark">Espace marchand</h2>
+            <Link to={myMerchantId ? '/marchand-espace' : '/devenir-marchand'}>
+              <Button variant="secondary" fullWidth>
+                {myMerchantId ? 'Mon espace marchand 🏪' : 'Devenir marchand'}
+              </Button>
+            </Link>
+          </section>
+        )}
 
         <div className="pb-4">
           <Button variant="ghost" fullWidth onClick={() => signOut()}>

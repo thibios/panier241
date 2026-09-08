@@ -20,6 +20,7 @@ export interface Market {
 
 export interface Product {
   id: string
+  merchantId: string
   name: string
   category: CategoryId
   price: number // en F CFA
@@ -29,6 +30,7 @@ export interface Product {
 
 export interface Merchant {
   id: string
+  ownerId: string | null
   name: string
   marketId: string
   categories: CategoryId[]
@@ -37,7 +39,7 @@ export interface Merchant {
   address: string
   imageEmoji: string
   bannerColor: string
-  productIds: string[]
+  kioskPhotoUrl: string | null
 }
 
 export type DeliveryPeriod = 'matin' | 'apres-midi' | 'soir' | 'retrait'

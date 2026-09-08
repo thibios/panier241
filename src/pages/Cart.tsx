@@ -5,10 +5,10 @@ import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import QuantityStepper from '../components/ui/QuantityStepper'
-import { useCart, getCartMerchant } from '../context/CartContext'
+import { useCart } from '../context/CartContext'
 import { useOrders } from '../context/OrdersContext'
 import { useAddresses } from '../context/AddressesContext'
-import { products } from '../data/products'
+import { useCatalog } from '../context/CatalogContext'
 import { formatFCFA } from '../lib/format'
 import type { Order, OrderItem } from '../types'
 
@@ -27,7 +27,8 @@ export default function Cart() {
   } = useCart()
   const { addOrder } = useOrders()
   const { addresses } = useAddresses()
-  const merchant = getCartMerchant(merchantId)
+  const { merchants, products } = useCatalog()
+  const merchant = merchants.find((m) => m.id === merchantId) ?? null
   const selectedAddress =
     addresses.find((a) => a.id === selectedAddressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0]
   const [isSubmitting, setIsSubmitting] = useState(false)
