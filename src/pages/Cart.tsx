@@ -116,6 +116,7 @@ export default function Cart() {
       livreurName: null,
       livreurPhone: null,
       shoppingVideoUrl,
+      clientPhone: null,
     }
 
     setIsSubmitting(true)

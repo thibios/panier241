@@ -36,6 +36,7 @@ interface OrderRow {
   livreur_name: string | null
   livreur_phone: string | null
   shopping_video_url: string | null
+  client_phone: string | null
 }
 
 function orderFromRow(row: OrderRow): Order {
@@ -57,11 +58,12 @@ function orderFromRow(row: OrderRow): Order {
     livreurName: row.livreur_name,
     livreurPhone: row.livreur_phone,
     shoppingVideoUrl: row.shopping_video_url,
+    clientPhone: row.client_phone,
   }
 }
 
 const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url'
+  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url, client_phone'
 
 export default function MerchantSpace() {
   const { user } = useAuth()

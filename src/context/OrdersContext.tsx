@@ -32,6 +32,7 @@ interface OrderRow {
   livreur_name: string | null
   livreur_phone: string | null
   shopping_video_url: string | null
+  client_phone: string | null
 }
 
 function fromRow(row: OrderRow): Order {
@@ -53,11 +54,12 @@ function fromRow(row: OrderRow): Order {
     livreurName: row.livreur_name,
     livreurPhone: row.livreur_phone,
     shoppingVideoUrl: row.shopping_video_url,
+    clientPhone: row.client_phone,
   }
 }
 
 const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url'
+  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url, client_phone'
 
 type SeenStatuses = Record<string, Order['status']>
 
@@ -86,6 +88,8 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
 
   async function addOrder(order: Order) {
     if (!user) return
+    const { data: profileData } = await supabase.from('profiles').select('phone').eq('id', user.id).single()
+
     const { data } = await supabase
       .from('orders')
       .insert({
@@ -102,6 +106,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         slot_label: order.slotLabel,
         address_label: order.addressLabel,
         shopping_video_url: order.shoppingVideoUrl,
+        client_phone: profileData?.phone ?? null,
       })
       .select(ORDER_COLUMNS)
       .single()

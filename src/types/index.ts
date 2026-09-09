@@ -104,6 +104,7 @@ export interface Order {
   livreurName: string | null
   livreurPhone: string | null
   shoppingVideoUrl: string | null
+  clientPhone: string | null
 }
 
 export interface Livreur {

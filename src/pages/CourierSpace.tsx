@@ -31,10 +31,11 @@ interface OrderRow {
   livreur_name: string | null
   livreur_phone: string | null
   shopping_video_url: string | null
+  client_phone: string | null
 }
 
 const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url'
+  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url, client_phone'
 
 function orderFromRow(row: OrderRow): Order {
   return {
@@ -55,6 +56,7 @@ function orderFromRow(row: OrderRow): Order {
     livreurName: row.livreur_name,
     livreurPhone: row.livreur_phone,
     shoppingVideoUrl: row.shopping_video_url,
+    clientPhone: row.client_phone,
   }
 }
 
@@ -69,6 +71,8 @@ export default function CourierSpace() {
   const [availableOrders, setAvailableOrders] = useState<Order[]>([])
   const [myDeliveries, setMyDeliveries] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
+  const [viewingOrder, setViewingOrder] = useState<Order | null>(null)
+  const [isAccepting, setIsAccepting] = useState(false)
 
   function marketIdForOrder(order: Order) {
     return merchants.find((m) => m.id === order.merchantId)?.marketId
@@ -117,11 +121,14 @@ export default function CourierSpace() {
 
   async function acceptDelivery(orderId: string) {
     if (!myLivreur) return
+    setIsAccepting(true)
     await supabase
       .from('orders')
       .update({ livreur_id: myLivreur.id, livreur_name: myLivreur.name, livreur_phone: myLivreur.phone })
       .eq('id', orderId)
     await fetchOrders()
+    setIsAccepting(false)
+    setViewingOrder(null)
     setTab('mes_livraisons')
   }
 
@@ -194,93 +201,152 @@ export default function CourierSpace() {
       </WovenHeader>
 
       <div className="px-5 pt-5">
-        <div className="mb-4 flex gap-2 rounded-pill bg-brand-light p-1">
-          <button
-            type="button"
-            onClick={() => setTab('disponibles')}
-            className={`flex-1 rounded-pill py-2 text-sm font-semibold transition ${
-              tab === 'disponibles' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
-            }`}
-          >
-            Disponibles {availableOrders.length > 0 && `(${availableOrders.length})`}
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('mes_livraisons')}
-            className={`flex-1 rounded-pill py-2 text-sm font-semibold transition ${
-              tab === 'mes_livraisons' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
-            }`}
-          >
-            Mes livraisons {myDeliveries.length > 0 && `(${myDeliveries.length})`}
-          </button>
-        </div>
-
-        <div className="mb-3 flex justify-end">
-          <button type="button" onClick={fetchOrders} className="text-xs font-semibold text-brand">
-            {loading ? 'Rafraîchissement...' : 'Rafraîchir'}
-          </button>
-        </div>
-
-        {tab === 'disponibles' && (
+        {viewingOrder ? (
           <div className="space-y-3 pb-4">
-            <select
-              value={marketFilter}
-              onChange={(e) => setMarketFilter(e.target.value)}
-              className="w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark focus:outline-none"
+            <button
+              type="button"
+              onClick={() => setViewingOrder(null)}
+              className="text-xs font-semibold text-brand"
             >
-              <option value="all">Tous les marchés</option>
-              {markets.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
+              ← Retour
+            </button>
 
-            {filteredAvailableOrders.length > 0 ? (
-              filteredAvailableOrders.map((order) => (
-                <Card key={order.id} className="space-y-2">
-                  <p className="text-sm font-semibold text-brand-dark">{order.merchantName}</p>
-                  <p className="text-xs text-brand-dark/60">
-                    {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
-                  </p>
-                  <p className="text-xs text-brand-dark/50">📍 {order.addressLabel}</p>
-                  <p className="text-xs text-brand-dark/50">🕒 {order.slotLabel}</p>
-                  <div className="flex items-center justify-between border-t border-brand-light pt-2">
-                    <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
-                    <Button onClick={() => acceptDelivery(order.id)}>Accepter cette livraison</Button>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <p className="text-center text-sm text-brand-dark/50">Aucune livraison disponible pour l'instant.</p>
-            )}
-          </div>
-        )}
+            <Card className="space-y-3">
+              <div>
+                <p className="text-xs font-semibold text-brand-dark/50">Marchand</p>
+                <p className="text-sm font-semibold text-brand-dark">{viewingOrder.merchantName}</p>
+              </div>
 
-        {tab === 'mes_livraisons' && (
-          <div className="space-y-3 pb-4">
-            {myDeliveries.length > 0 ? (
-              myDeliveries.map((order) => (
-                <Card key={order.id} className="space-y-2">
-                  <p className="text-sm font-semibold text-brand-dark">{order.merchantName}</p>
-                  <p className="text-xs text-brand-dark/60">
-                    {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
-                  </p>
-                  <p className="text-xs text-brand-dark/50">📍 {order.addressLabel}</p>
-                  <div className="flex items-center justify-between border-t border-brand-light pt-2">
-                    <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
-                    {order.status === 'en_livraison' ? (
-                      <Button onClick={() => markDelivered(order.id)}>Marquer livrée</Button>
-                    ) : (
-                      <span className="text-xs font-semibold text-category-legumes">Livrée ✓</span>
-                    )}
+              <div className="border-t border-brand-light pt-2">
+                <p className="text-xs font-semibold text-brand-dark/50">Articles</p>
+                <ul className="mt-1 space-y-0.5 text-sm text-brand-dark/70">
+                  {viewingOrder.items.map((i) => (
+                    <li key={i.productId}>
+                      {i.quantity} {i.productName} ({i.unit})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="border-t border-brand-light pt-2">
+                <p className="text-xs font-semibold text-brand-dark/50">Adresse de livraison</p>
+                <p className="text-sm text-brand-dark/70">📍 {viewingOrder.addressLabel}</p>
+                <p className="mt-1 text-sm text-brand-dark/70">🕒 {viewingOrder.slotLabel}</p>
+              </div>
+
+              <div className="border-t border-brand-light pt-2">
+                <p className="text-xs font-semibold text-brand-dark/50">Client</p>
+                {viewingOrder.clientPhone ? (
+                  <div className="mt-1 flex items-center justify-between">
+                    <span className="text-sm text-brand-dark/70">{viewingOrder.clientPhone}</span>
+                    <a href={`tel:${viewingOrder.clientPhone}`}>
+                      <Button variant="secondary">📞 Appeler</Button>
+                    </a>
                   </div>
-                </Card>
-              ))
-            ) : (
-              <p className="text-center text-sm text-brand-dark/50">Aucune livraison acceptée pour l'instant.</p>
-            )}
+                ) : (
+                  <p className="text-sm text-brand-dark/40">Numéro non renseigné.</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between border-t border-brand-light pt-2">
+                <span className="text-sm font-bold text-brand-dark">{formatFCFA(viewingOrder.total)}</span>
+                <Button disabled={isAccepting} onClick={() => acceptDelivery(viewingOrder.id)}>
+                  {isAccepting ? 'Acceptation...' : 'Accepter cette livraison'}
+                </Button>
+              </div>
+            </Card>
           </div>
+        ) : (
+          <>
+            <div className="mb-4 flex gap-2 rounded-pill bg-brand-light p-1">
+              <button
+                type="button"
+                onClick={() => setTab('disponibles')}
+                className={`flex-1 rounded-pill py-2 text-sm font-semibold transition ${
+                  tab === 'disponibles' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
+                }`}
+              >
+                Disponibles {availableOrders.length > 0 && `(${availableOrders.length})`}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab('mes_livraisons')}
+                className={`flex-1 rounded-pill py-2 text-sm font-semibold transition ${
+                  tab === 'mes_livraisons' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
+                }`}
+              >
+                Mes livraisons {myDeliveries.length > 0 && `(${myDeliveries.length})`}
+              </button>
+            </div>
+
+            <div className="mb-3 flex justify-end">
+              <button type="button" onClick={fetchOrders} className="text-xs font-semibold text-brand">
+                {loading ? 'Rafraîchissement...' : 'Rafraîchir'}
+              </button>
+            </div>
+
+            {tab === 'disponibles' && (
+              <div className="space-y-3 pb-4">
+                <select
+                  value={marketFilter}
+                  onChange={(e) => setMarketFilter(e.target.value)}
+                  className="w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark focus:outline-none"
+                >
+                  <option value="all">Tous les marchés</option>
+                  {markets.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+
+                {filteredAvailableOrders.length > 0 ? (
+                  filteredAvailableOrders.map((order) => (
+                    <Card key={order.id} className="space-y-2">
+                      <p className="text-sm font-semibold text-brand-dark">{order.merchantName}</p>
+                      <p className="text-xs text-brand-dark/60">
+                        {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
+                      </p>
+                      <p className="text-xs text-brand-dark/50">📍 {order.addressLabel}</p>
+                      <p className="text-xs text-brand-dark/50">🕒 {order.slotLabel}</p>
+                      <div className="flex items-center justify-between border-t border-brand-light pt-2">
+                        <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
+                        <Button onClick={() => setViewingOrder(order)}>Voir le détail</Button>
+                      </div>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-center text-sm text-brand-dark/50">Aucune livraison disponible pour l'instant.</p>
+                )}
+              </div>
+            )}
+
+            {tab === 'mes_livraisons' && (
+              <div className="space-y-3 pb-4">
+                {myDeliveries.length > 0 ? (
+                  myDeliveries.map((order) => (
+                    <Card key={order.id} className="space-y-2">
+                      <p className="text-sm font-semibold text-brand-dark">{order.merchantName}</p>
+                      <p className="text-xs text-brand-dark/60">
+                        {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
+                      </p>
+                      <p className="text-xs text-brand-dark/50">📍 {order.addressLabel}</p>
+                      <div className="flex items-center justify-between border-t border-brand-light pt-2">
+                        <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
+                        {order.status === 'en_livraison' ? (
+                          <Button onClick={() => markDelivered(order.id)}>Marquer livrée</Button>
+                        ) : (
+                          <span className="text-xs font-semibold text-category-legumes">Livrée ✓</span>
+                        )}
+                      </div>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-center text-sm text-brand-dark/50">Aucune livraison acceptée pour l'instant.</p>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </PageShell>
