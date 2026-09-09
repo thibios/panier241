@@ -34,6 +34,8 @@ interface OrderRow {
   created_at: string
   livreur_id: string | null
   livreur_name: string | null
+  livreur_phone: string | null
+  shopping_video_url: string | null
 }
 
 function orderFromRow(row: OrderRow): Order {
@@ -53,11 +55,13 @@ function orderFromRow(row: OrderRow): Order {
     addressLabel: row.address_label,
     livreurId: row.livreur_id,
     livreurName: row.livreur_name,
+    livreurPhone: row.livreur_phone,
+    shoppingVideoUrl: row.shopping_video_url,
   }
 }
 
 const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name'
+  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url'
 
 export default function MerchantSpace() {
   const { user } = useAuth()
@@ -82,7 +86,7 @@ export default function MerchantSpace() {
     if (!user) return
     supabase
       .from('merchants')
-      .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url, status')
+      .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url, status, phone')
       .eq('owner_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -103,6 +107,7 @@ export default function MerchantSpace() {
           bannerColor: data.banner_color,
           kioskPhotoUrl: data.kiosk_photo_url,
           status: data.status,
+          phone: data.phone,
         })
       })
   }, [user])
@@ -418,6 +423,16 @@ export default function MerchantSpace() {
                   )}
                   {order.livreurName && (
                     <p className="text-[11px] text-brand-dark/40">🛵 Livreur : {order.livreurName}</p>
+                  )}
+                  {order.shoppingVideoUrl && (
+                    <a
+                      href={order.shoppingVideoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-[11px] font-semibold text-brand"
+                    >
+                      ▶️ Voir la vidéo de la liste de courses
+                    </a>
                   )}
                 </Card>
               ))

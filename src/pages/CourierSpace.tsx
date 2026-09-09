@@ -29,10 +29,12 @@ interface OrderRow {
   created_at: string
   livreur_id: string | null
   livreur_name: string | null
+  livreur_phone: string | null
+  shopping_video_url: string | null
 }
 
 const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name'
+  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url'
 
 function orderFromRow(row: OrderRow): Order {
   return {
@@ -51,6 +53,8 @@ function orderFromRow(row: OrderRow): Order {
     addressLabel: row.address_label,
     livreurId: row.livreur_id,
     livreurName: row.livreur_name,
+    livreurPhone: row.livreur_phone,
+    shoppingVideoUrl: row.shopping_video_url,
   }
 }
 
@@ -115,7 +119,7 @@ export default function CourierSpace() {
     if (!myLivreur) return
     await supabase
       .from('orders')
-      .update({ livreur_id: myLivreur.id, livreur_name: myLivreur.name })
+      .update({ livreur_id: myLivreur.id, livreur_name: myLivreur.name, livreur_phone: myLivreur.phone })
       .eq('id', orderId)
     await fetchOrders()
     setTab('mes_livraisons')

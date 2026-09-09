@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../context/CatalogContext'
 import { supabase } from '../lib/supabaseClient'
 import { formatFCFA } from '../lib/format'
+import { buildWhatsAppLink } from '../lib/whatsapp'
 import type { Order } from '../types'
 
 type Tab = 'en_cours' | 'historique'
@@ -92,7 +93,19 @@ function OrderCard({
       <p className="truncate text-xs text-brand-dark/60">{itemsSummary}</p>
 
       {order.livreurName && (
-        <p className="text-xs text-brand-dark/60">🛵 Livreur : {order.livreurName}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-brand-dark/60">🛵 Livreur : {order.livreurName}</p>
+          {order.livreurPhone && (
+            <a
+              href={buildWhatsAppLink(order.livreurPhone, 'Bonjour, je vous contacte au sujet de ma livraison Panier 241. ')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold text-brand"
+            >
+              Contacter sur WhatsApp
+            </a>
+          )}
+        </div>
       )}
 
       {order.status !== 'livree' && <OrderProgress status={order.status} />}

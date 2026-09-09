@@ -9,7 +9,10 @@ import { useCart } from '../context/CartContext'
 import { useOrders } from '../context/OrdersContext'
 import { useAddresses } from '../context/AddressesContext'
 import { useCatalog } from '../context/CatalogContext'
+import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabaseClient'
 import { formatFCFA } from '../lib/format'
+import { buildWhatsAppLink } from '../lib/whatsapp'
 import type { Order, OrderItem } from '../types'
 
 export default function Cart() {
@@ -30,10 +33,12 @@ export default function Cart() {
   const { addOrder } = useOrders()
   const { addresses } = useAddresses()
   const { merchants, products } = useCatalog()
+  const { user } = useAuth()
   const merchant = merchants.find((m) => m.id === merchantId) ?? null
   const selectedAddress =
     addresses.find((a) => a.id === selectedAddressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0]
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [videoFile, setVideoFile] = useState<File | null>(null)
 
   if (items.length === 0) {
     return (
@@ -55,25 +60,47 @@ export default function Cart() {
     )
   }
 
+  const orderItemsPreview: OrderItem[] = items.map((item) => {
+    const product = products.find((p) => p.id === item.productId)!
+    return {
+      productId: product.id,
+      productName: product.name,
+      quantity: item.quantity,
+      unitPrice: product.price,
+      unit: product.unit,
+    }
+  })
+
+  const whatsAppSummary = [
+    `Nouvelle commande Panier 241${merchant ? ` — ${merchant.name}` : ''}`,
+    '',
+    ...orderItemsPreview.map((i) => `• ${i.quantity} × ${i.productName} (${i.unit})`),
+    '',
+    selectedSlot ? `Créneau : ${selectedSlot.dayLabel} · ${selectedSlot.periodLabel} (${selectedSlot.timeRange})` : '',
+    selectedAddress ? `Adresse : ${selectedAddress.label} · ${selectedAddress.neighborhood}, ${selectedAddress.city}` : '',
+    `Total estimé : ${formatFCFA(total)}`,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
   async function handleSubmit() {
     if (!merchant || !selectedSlot) return
 
-    const orderItems: OrderItem[] = items.map((item) => {
-      const product = products.find((p) => p.id === item.productId)!
-      return {
-        productId: product.id,
-        productName: product.name,
-        quantity: item.quantity,
-        unitPrice: product.price,
-        unit: product.unit,
+    let shoppingVideoUrl: string | null = null
+    if (videoFile && user) {
+      const path = `${user.id}/${Date.now()}-${videoFile.name}`
+      const { error: uploadError } = await supabase.storage.from('shopping-videos').upload(path, videoFile)
+      if (!uploadError) {
+        const { data: publicUrlData } = supabase.storage.from('shopping-videos').getPublicUrl(path)
+        shoppingVideoUrl = publicUrlData.publicUrl
       }
-    })
+    }
 
     const order: Order = {
       id: `ord-${Date.now()}`,
       merchantId: merchant.id,
       merchantName: merchant.name,
-      items: orderItems,
+      items: orderItemsPreview,
       subtotal,
       serviceFee,
       deliveryFee,
@@ -87,6 +114,8 @@ export default function Cart() {
         : '',
       livreurId: null,
       livreurName: null,
+      livreurPhone: null,
+      shoppingVideoUrl,
     }
 
     setIsSubmitting(true)
@@ -175,7 +204,40 @@ export default function Cart() {
           </div>
         </Card>
 
-        <div className="pb-4">
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-brand-dark">Liste de courses filmée (optionnel)</h2>
+          <Card className="space-y-2">
+            <p className="text-xs text-brand-dark/50">
+              Filme rapidement ta liste de courses pour que le marchand voie exactement ce qu'il te faut.
+            </p>
+            <input
+              type="file"
+              accept="video/*"
+              capture="environment"
+              onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
+              className="w-full text-sm text-brand-dark/70"
+            />
+            {videoFile && <p className="text-xs text-brand">Vidéo prête à être envoyée : {videoFile.name}</p>}
+          </Card>
+        </section>
+
+        <div className="space-y-2 pb-4">
+          {merchant?.phone ? (
+            <a
+              href={buildWhatsAppLink(merchant.phone, whatsAppSummary)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <Button variant="secondary" fullWidth>
+                🟢 Envoyer la commande via WhatsApp
+              </Button>
+            </a>
+          ) : (
+            <p className="text-center text-xs text-brand-dark/40">
+              Ce marchand n'a pas encore renseigné de numéro WhatsApp.
+            </p>
+          )}
           <Button fullWidth disabled={!selectedSlot || isSubmitting} onClick={handleSubmit}>
             {isSubmitting ? 'Envoi de la commande...' : 'Passer la commande'}
           </Button>

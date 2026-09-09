@@ -19,6 +19,7 @@ import BecomeCourier from './pages/BecomeCourier'
 import CourierSpace from './pages/CourierSpace'
 import AdminSpace from './pages/AdminSpace'
 import Help from './pages/Help'
+import Contact from './pages/Contact'
 
 function AuthenticatedApp() {
   return (
@@ -42,6 +43,7 @@ function AuthenticatedApp() {
                     <Route path="/livreur-espace" element={<CourierSpace />} />
                     <Route path="/admin" element={<AdminSpace />} />
                     <Route path="/aide" element={<Help />} />
+                    <Route path="/contact" element={<Contact />} />
                   </Routes>
                   <BottomNav />
                 </div>

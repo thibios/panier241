@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { useCatalog } from '../context/CatalogContext'
 import { formatFCFA } from '../lib/format'
+import { buildWhatsAppLink } from '../lib/whatsapp'
 
 const categoryDotClass: Record<string, string> = {
   legumes: 'bg-category-legumes',
@@ -97,6 +98,24 @@ export default function MerchantDetail() {
           <span className="text-lg">📍</span>
           <p className="text-sm text-brand-dark/70">{merchant.address}</p>
         </div>
+
+        {merchant.phone && (
+          <a
+            href={buildWhatsAppLink(merchant.phone, `Bonjour ${merchant.name}, `)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between rounded-card bg-white p-4 shadow-card"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🟢</span>
+              <div>
+                <p className="text-sm font-medium text-brand-dark">Contacter sur WhatsApp</p>
+                <p className="text-xs text-brand-dark/50">{merchant.phone}</p>
+              </div>
+            </div>
+            <span className="text-sm font-semibold text-brand">→</span>
+          </a>
+        )}
 
         {isOtherMerchantInCart && (
           <p className="rounded-card bg-category-cereales/10 p-3 text-xs text-category-cereales">

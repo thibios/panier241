@@ -45,6 +45,7 @@ export interface Merchant {
   bannerColor: string
   kioskPhotoUrl: string | null
   status: ApprovalStatus
+  phone: string | null
 }
 
 export type DeliveryPeriod = 'matin' | 'apres-midi' | 'soir' | 'retrait'
@@ -101,6 +102,8 @@ export interface Order {
   addressLabel: string
   livreurId: string | null
   livreurName: string | null
+  livreurPhone: string | null
+  shoppingVideoUrl: string | null
 }
 
 export interface Livreur {

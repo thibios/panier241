@@ -43,6 +43,10 @@ export default function Profile() {
   const [isLocating, setIsLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
 
+  const [isEditingPhone, setIsEditingPhone] = useState(false)
+  const [phoneDraft, setPhoneDraft] = useState('')
+  const [isSavingPhone, setIsSavingPhone] = useState(false)
+
   useEffect(() => {
     if (!user) return
     supabase
@@ -104,6 +108,15 @@ export default function Profile() {
     )
   }
 
+  async function handleSavePhone() {
+    if (!user || !phoneDraft.trim()) return
+    setIsSavingPhone(true)
+    await supabase.from('profiles').update({ phone: phoneDraft.trim() }).eq('id', user.id)
+    setProfile((prev) => (prev ? { ...prev, phone: phoneDraft.trim() } : prev))
+    setIsSavingPhone(false)
+    setIsEditingPhone(false)
+  }
+
   async function handleAddAddress() {
     if (!label.trim() || !fullAddress.trim() || !neighborhood.trim()) return
     setIsSavingAddress(true)
@@ -149,6 +162,56 @@ export default function Profile() {
             <p className="mt-0.5 text-[11px] text-brand-dark/50">Favoris</p>
           </Card>
         </div>
+
+        <section>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-brand-dark">Vos informations</h2>
+            {!isEditingPhone && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPhoneDraft(profile?.phone ?? '')
+                  setIsEditingPhone(true)
+                }}
+                className="text-xs font-semibold text-brand"
+              >
+                Modifier
+              </button>
+            )}
+          </div>
+          <Card className="space-y-2">
+            {isEditingPhone ? (
+              <>
+                <input
+                  type="tel"
+                  value={phoneDraft}
+                  onChange={(e) => setPhoneDraft(e.target.value)}
+                  placeholder="Numéro WhatsApp ou d'appel (ex: +241 074 12 34 56)"
+                  className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
+                />
+                <div className="flex gap-2">
+                  <Button fullWidth disabled={!phoneDraft.trim() || isSavingPhone} onClick={handleSavePhone}>
+                    {isSavingPhone ? 'Enregistrement...' : 'Enregistrer'}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingPhone(false)}
+                    className="shrink-0 px-3 text-xs font-semibold text-brand-dark/50"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div>
+                <p className="text-xs text-brand-dark/50">Numéro WhatsApp ou d'appel</p>
+                <p className="text-sm font-medium text-brand-dark">
+                  {profile?.phone || "Ajoute ton numéro pour qu'on puisse te joindre"}
+                </p>
+              </div>
+            )}
+          </Card>
+        </section>
 
         <section>
           <div className="mb-2 flex items-center justify-between">
@@ -288,10 +351,15 @@ export default function Profile() {
           </section>
         )}
 
-        <section>
+        <section className="space-y-2">
           <Link to="/aide">
             <Button variant="ghost" fullWidth>
               Aide — Comment sont calculés les prix ? ℹ️
+            </Button>
+          </Link>
+          <Link to="/contact">
+            <Button variant="ghost" fullWidth>
+              Contact 💬
             </Button>
           </Link>
         </section>

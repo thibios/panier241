@@ -30,6 +30,8 @@ interface OrderRow {
   created_at: string
   livreur_id: string | null
   livreur_name: string | null
+  livreur_phone: string | null
+  shopping_video_url: string | null
 }
 
 function fromRow(row: OrderRow): Order {
@@ -49,11 +51,13 @@ function fromRow(row: OrderRow): Order {
     addressLabel: row.address_label,
     livreurId: row.livreur_id,
     livreurName: row.livreur_name,
+    livreurPhone: row.livreur_phone,
+    shoppingVideoUrl: row.shopping_video_url,
   }
 }
 
 const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name'
+  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url'
 
 type SeenStatuses = Record<string, Order['status']>
 
@@ -97,6 +101,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         status: order.status,
         slot_label: order.slotLabel,
         address_label: order.addressLabel,
+        shopping_video_url: order.shoppingVideoUrl,
       })
       .select(ORDER_COLUMNS)
       .single()

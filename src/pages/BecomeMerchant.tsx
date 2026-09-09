@@ -38,6 +38,7 @@ export default function BecomeMerchant() {
   const { refresh } = useCatalog()
 
   const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [marketId, setMarketId] = useState(markets[0]?.id ?? '')
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([])
   const [address, setAddress] = useState('')
@@ -74,6 +75,7 @@ export default function BecomeMerchant() {
   const canSubmit =
     !!user &&
     name.trim() &&
+    phone.trim() &&
     marketId &&
     selectedCategories.length > 0 &&
     address.trim() &&
@@ -97,6 +99,7 @@ export default function BecomeMerchant() {
         .insert({
           owner_id: user.id,
           name: name.trim(),
+          phone: phone.trim(),
           market_id: marketId,
           categories: selectedCategories,
           address: address.trim(),
@@ -149,6 +152,13 @@ export default function BecomeMerchant() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nom de la boutique"
+              className={inputClass}
+            />
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Téléphone / WhatsApp (ex: +241 77 00 00 00)"
               className={inputClass}
             />
             <select value={marketId} onChange={(e) => setMarketId(e.target.value)} className={inputClass}>

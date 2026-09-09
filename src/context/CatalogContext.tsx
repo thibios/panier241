@@ -25,6 +25,7 @@ interface MerchantRow {
   banner_color: string
   kiosk_photo_url: string | null
   status: ApprovalStatus
+  phone: string | null
 }
 
 interface ProductRow {
@@ -51,6 +52,7 @@ function merchantFromRow(row: MerchantRow): Merchant {
     bannerColor: row.banner_color,
     kioskPhotoUrl: row.kiosk_photo_url,
     status: row.status,
+    phone: row.phone,
   }
 }
 
@@ -76,7 +78,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     const [merchantsRes, productsRes] = await Promise.all([
       supabase
         .from('merchants')
-        .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url, status')
+        .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url, status, phone')
         .eq('status', 'approved'),
       supabase.from('products').select('id, merchant_id, name, category, price, unit, image_emoji'),
     ])
