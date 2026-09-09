@@ -8,6 +8,8 @@ const categoryDotClass: Record<string, string> = {
   fruits: 'bg-category-fruits',
   poisson: 'bg-category-poisson',
   cereales: 'bg-category-cereales',
+  bricolage: 'bg-category-bricolage',
+  epicerie: 'bg-category-epicerie',
 }
 
 export default function MerchantCard({ merchant }: { merchant: Merchant }) {

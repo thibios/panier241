@@ -17,6 +17,8 @@ export default {
           fruits: '#F2994A',
           poisson: '#E8543A',
           cereales: '#C08A3E',
+          bricolage: '#5B7C99',
+          epicerie: '#2FA3A3',
         },
       },
       fontFamily: {

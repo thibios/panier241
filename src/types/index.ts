@@ -1,4 +1,4 @@
-export type CategoryId = 'legumes' | 'fruits' | 'poisson' | 'cereales'
+export type CategoryId = 'legumes' | 'fruits' | 'poisson' | 'cereales' | 'bricolage' | 'epicerie'
 
 export interface Category {
   id: CategoryId
