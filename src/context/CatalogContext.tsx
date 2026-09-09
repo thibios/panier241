@@ -1,5 +1,5 @@
 import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from 'react'
-import type { CategoryId, Merchant, Product } from '../types'
+import type { ApprovalStatus, CategoryId, Merchant, Product } from '../types'
 import { supabase } from '../lib/supabaseClient'
 
 interface CatalogContextValue {
@@ -24,6 +24,7 @@ interface MerchantRow {
   image_emoji: string
   banner_color: string
   kiosk_photo_url: string | null
+  status: ApprovalStatus
 }
 
 interface ProductRow {
@@ -49,6 +50,7 @@ function merchantFromRow(row: MerchantRow): Merchant {
     imageEmoji: row.image_emoji,
     bannerColor: row.banner_color,
     kioskPhotoUrl: row.kiosk_photo_url,
+    status: row.status,
   }
 }
 
@@ -74,11 +76,16 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     const [merchantsRes, productsRes] = await Promise.all([
       supabase
         .from('merchants')
-        .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url'),
+        .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url, status')
+        .eq('status', 'approved'),
       supabase.from('products').select('id, merchant_id, name, category, price, unit, image_emoji'),
     ])
-    if (merchantsRes.data) setMerchants(merchantsRes.data.map(merchantFromRow))
-    if (productsRes.data) setProducts(productsRes.data.map(productFromRow))
+    if (merchantsRes.data) {
+      const approvedMerchants = merchantsRes.data.map(merchantFromRow)
+      setMerchants(approvedMerchants)
+      const approvedIds = new Set(approvedMerchants.map((m) => m.id))
+      if (productsRes.data) setProducts(productsRes.data.filter((p) => approvedIds.has(p.merchant_id)).map(productFromRow))
+    }
     setLoading(false)
   }, [])
 

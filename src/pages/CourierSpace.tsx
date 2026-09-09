@@ -73,7 +73,7 @@ export default function CourierSpace() {
     if (!user) return
     supabase
       .from('livreurs')
-      .select('id, owner_id, name, phone, vehicle')
+      .select('id, owner_id, name, phone, vehicle, status')
       .eq('owner_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -81,7 +81,14 @@ export default function CourierSpace() {
           setMyLivreur(null)
           return
         }
-        setMyLivreur({ id: data.id, ownerId: data.owner_id, name: data.name, phone: data.phone, vehicle: data.vehicle })
+        setMyLivreur({
+          id: data.id,
+          ownerId: data.owner_id,
+          name: data.name,
+          phone: data.phone,
+          vehicle: data.vehicle,
+          status: data.status,
+        })
       })
   }, [user])
 
@@ -97,7 +104,7 @@ export default function CourierSpace() {
   }
 
   useEffect(() => {
-    if (myLivreur) fetchOrders()
+    if (myLivreur && myLivreur.status === 'approved') fetchOrders()
   }, [myLivreur])
 
   async function acceptDelivery(orderId: string) {
@@ -138,6 +145,27 @@ export default function CourierSpace() {
           <Link to="/devenir-livreur" className="mt-4 inline-block">
             <Button>Devenir livreur</Button>
           </Link>
+        </div>
+      </PageShell>
+    )
+  }
+
+  if (myLivreur.status !== 'approved') {
+    const message =
+      myLivreur.status === 'pending'
+        ? "Ta demande est en cours de validation par l'équipe Panier 241. Reviens un peu plus tard."
+        : 'Ton compte livreur a été suspendu. Contacte l\'administrateur pour plus d\'informations.'
+    return (
+      <PageShell>
+        <WovenHeader>
+          <h1 className="text-xl font-bold">{myLivreur.name}</h1>
+        </WovenHeader>
+        <div className="px-5 pt-8 text-center">
+          <p className="text-3xl">{myLivreur.status === 'pending' ? '⏳' : '⛔'}</p>
+          <p className="mt-2 text-sm font-medium text-brand-dark">
+            {myLivreur.status === 'pending' ? 'En attente de validation' : 'Compte suspendu'}
+          </p>
+          <p className="mt-1 text-xs text-brand-dark/50">{message}</p>
         </div>
       </PageShell>
     )

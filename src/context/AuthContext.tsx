@@ -22,6 +22,12 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+export const ADMIN_EMAIL = 'thibiosang@gmail.com'
+
+export function isAdminEmail(email: string | null | undefined): boolean {
+  return (email ?? '').trim().toLowerCase() === ADMIN_EMAIL
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)

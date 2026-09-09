@@ -28,6 +28,8 @@ export interface Product {
   imageEmoji: string
 }
 
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
+
 export interface Merchant {
   id: string
   ownerId: string | null
@@ -40,6 +42,7 @@ export interface Merchant {
   imageEmoji: string
   bannerColor: string
   kioskPhotoUrl: string | null
+  status: ApprovalStatus
 }
 
 export type DeliveryPeriod = 'matin' | 'apres-midi' | 'soir' | 'retrait'
@@ -100,6 +103,7 @@ export interface Livreur {
   name: string
   phone: string
   vehicle: string
+  status: ApprovalStatus
 }
 
 export interface PaymentMethod {

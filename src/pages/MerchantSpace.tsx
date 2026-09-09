@@ -74,7 +74,7 @@ export default function MerchantSpace() {
     if (!user) return
     supabase
       .from('merchants')
-      .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url')
+      .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url, status')
       .eq('owner_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -94,6 +94,7 @@ export default function MerchantSpace() {
           imageEmoji: data.image_emoji,
           bannerColor: data.banner_color,
           kioskPhotoUrl: data.kiosk_photo_url,
+          status: data.status,
         })
       })
   }, [user])
@@ -110,7 +111,7 @@ export default function MerchantSpace() {
   }
 
   useEffect(() => {
-    if (myMerchant) fetchOrders(myMerchant.id)
+    if (myMerchant && myMerchant.status === 'approved') fetchOrders(myMerchant.id)
   }, [myMerchant])
 
   async function updateOrderStatus(orderId: string, status: OrderStatus) {
@@ -163,6 +164,27 @@ export default function MerchantSpace() {
           <Link to="/devenir-marchand" className="mt-4 inline-block">
             <Button>Devenir marchand</Button>
           </Link>
+        </div>
+      </PageShell>
+    )
+  }
+
+  if (myMerchant.status !== 'approved') {
+    const message =
+      myMerchant.status === 'pending'
+        ? "Ta demande est en cours de validation par l'équipe Panier 241. Reviens un peu plus tard."
+        : 'Ton compte marchand a été suspendu. Contacte l\'administrateur pour plus d\'informations.'
+    return (
+      <PageShell>
+        <WovenHeader>
+          <h1 className="text-xl font-bold">{myMerchant.name}</h1>
+        </WovenHeader>
+        <div className="px-5 pt-8 text-center">
+          <p className="text-3xl">{myMerchant.status === 'pending' ? '⏳' : '⛔'}</p>
+          <p className="mt-2 text-sm font-medium text-brand-dark">
+            {myMerchant.status === 'pending' ? 'En attente de validation' : 'Compte suspendu'}
+          </p>
+          <p className="mt-1 text-xs text-brand-dark/50">{message}</p>
         </div>
       </PageShell>
     )

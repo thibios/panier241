@@ -8,7 +8,7 @@ import { paymentMethods } from '../data/addresses'
 import { useOrders } from '../context/OrdersContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { useAddresses } from '../context/AddressesContext'
-import { useAuth } from '../context/AuthContext'
+import { useAuth, isAdminEmail } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 
 const paymentIcon: Record<string, string> = {
@@ -30,8 +30,9 @@ export default function Profile() {
   const [profile, setProfile] = useState<{ firstName: string; lastName: string; phone: string } | null>(
     null,
   )
-  const [myMerchantId, setMyMerchantId] = useState<string | null | undefined>(undefined)
-  const [myLivreurId, setMyLivreurId] = useState<string | null | undefined>(undefined)
+  const [myMerchant, setMyMerchant] = useState<{ id: string; status: string } | null | undefined>(undefined)
+  const [myLivreur, setMyLivreur] = useState<{ id: string; status: string } | null | undefined>(undefined)
+  const isAdmin = isAdminEmail(user?.email)
 
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [label, setLabel] = useState('')
@@ -53,17 +54,23 @@ export default function Profile() {
       })
     supabase
       .from('merchants')
-      .select('id')
+      .select('id, status')
       .eq('owner_id', user.id)
       .maybeSingle()
-      .then(({ data }) => setMyMerchantId(data?.id ?? null))
+      .then(({ data }) => setMyMerchant(data ?? null))
     supabase
       .from('livreurs')
-      .select('id')
+      .select('id, status')
       .eq('owner_id', user.id)
       .maybeSingle()
-      .then(({ data }) => setMyLivreurId(data?.id ?? null))
+      .then(({ data }) => setMyLivreur(data ?? null))
   }, [user])
+
+  const statusSuffix: Record<string, string> = {
+    pending: ' (en attente)',
+    suspended: ' (suspendu)',
+    rejected: ' (refusé)',
+  }
 
   function resetForm() {
     setLabel('')
@@ -204,23 +211,38 @@ export default function Profile() {
           </div>
         </section>
 
-        {myMerchantId !== undefined && (
+        {myMerchant !== undefined && (
           <section>
             <h2 className="mb-2 text-sm font-semibold text-brand-dark">Espace marchand</h2>
-            <Link to={myMerchantId ? '/marchand-espace' : '/devenir-marchand'}>
+            <Link to={myMerchant ? '/marchand-espace' : '/devenir-marchand'}>
               <Button variant="secondary" fullWidth>
-                {myMerchantId ? 'Mon espace marchand 🏪' : 'Devenir marchand'}
+                {myMerchant
+                  ? `Mon espace marchand 🏪${statusSuffix[myMerchant.status] ?? ''}`
+                  : 'Devenir marchand'}
               </Button>
             </Link>
           </section>
         )}
 
-        {myLivreurId !== undefined && (
+        {myLivreur !== undefined && (
           <section>
             <h2 className="mb-2 text-sm font-semibold text-brand-dark">Espace livreur</h2>
-            <Link to={myLivreurId ? '/livreur-espace' : '/devenir-livreur'}>
+            <Link to={myLivreur ? '/livreur-espace' : '/devenir-livreur'}>
               <Button variant="secondary" fullWidth>
-                {myLivreurId ? 'Mon espace livreur 🛵' : 'Devenir livreur'}
+                {myLivreur
+                  ? `Mon espace livreur 🛵${statusSuffix[myLivreur.status] ?? ''}`
+                  : 'Devenir livreur'}
+              </Button>
+            </Link>
+          </section>
+        )}
+
+        {isAdmin && (
+          <section>
+            <h2 className="mb-2 text-sm font-semibold text-brand-dark">Administration</h2>
+            <Link to="/admin">
+              <Button variant="secondary" fullWidth>
+                Espace admin 🛠️
               </Button>
             </Link>
           </section>
