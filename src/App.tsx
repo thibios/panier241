@@ -18,6 +18,7 @@ import MerchantSpace from './pages/MerchantSpace'
 import BecomeCourier from './pages/BecomeCourier'
 import CourierSpace from './pages/CourierSpace'
 import AdminSpace from './pages/AdminSpace'
+import Help from './pages/Help'
 
 function AuthenticatedApp() {
   return (
@@ -40,6 +41,7 @@ function AuthenticatedApp() {
                     <Route path="/devenir-livreur" element={<BecomeCourier />} />
                     <Route path="/livreur-espace" element={<CourierSpace />} />
                     <Route path="/admin" element={<AdminSpace />} />
+                    <Route path="/aide" element={<Help />} />
                   </Routes>
                   <BottomNav />
                 </div>

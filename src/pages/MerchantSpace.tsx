@@ -10,6 +10,7 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../context/CatalogContext'
 import { formatFCFA } from '../lib/format'
+import { SERVICE_FEE_RATE } from '../lib/pricing'
 import type { CategoryId, Merchant, Order, OrderStatus } from '../types'
 
 type Tab = 'produits' | 'commandes'
@@ -23,7 +24,9 @@ interface OrderRow {
   merchant_name: string
   items: Order['items']
   subtotal: number
+  service_fee: number
   delivery_fee: number
+  distance_km: number | null
   total: number
   status: OrderStatus
   slot_label: string
@@ -40,7 +43,9 @@ function orderFromRow(row: OrderRow): Order {
     merchantName: row.merchant_name,
     items: row.items,
     subtotal: row.subtotal,
+    serviceFee: row.service_fee,
     deliveryFee: row.delivery_fee,
+    distanceKm: row.distance_km,
     total: row.total,
     status: row.status,
     createdAt: row.created_at,
@@ -52,7 +57,7 @@ function orderFromRow(row: OrderRow): Order {
 }
 
 const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, delivery_fee, total, status, slot_label, address_label, created_at, livreur_id, livreur_name'
+  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name'
 
 export default function MerchantSpace() {
   const { user } = useAuth()
@@ -63,6 +68,9 @@ export default function MerchantSpace() {
 
   const [orders, setOrders] = useState<Order[]>([])
   const [ordersLoading, setOrdersLoading] = useState(false)
+
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null)
+  const [editedSubtotal, setEditedSubtotal] = useState('')
 
   const [isAddingProduct, setIsAddingProduct] = useState(false)
   const [draftName, setDraftName] = useState('')
@@ -117,6 +125,29 @@ export default function MerchantSpace() {
   async function updateOrderStatus(orderId: string, status: OrderStatus) {
     setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)))
     await supabase.from('orders').update({ status }).eq('id', orderId)
+  }
+
+  function startEditingAmount(order: Order) {
+    setEditingOrderId(order.id)
+    setEditedSubtotal(String(order.subtotal))
+  }
+
+  async function handleSaveAmount(order: Order) {
+    const newSubtotal = Math.round(Number(editedSubtotal))
+    if (!Number.isFinite(newSubtotal) || newSubtotal < 0) return
+    const newServiceFee = Math.round(newSubtotal * SERVICE_FEE_RATE)
+    const newTotal = newSubtotal + newServiceFee + order.deliveryFee
+
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === order.id ? { ...o, subtotal: newSubtotal, serviceFee: newServiceFee, total: newTotal } : o,
+      ),
+    )
+    await supabase
+      .from('orders')
+      .update({ subtotal: newSubtotal, service_fee: newServiceFee, total: newTotal })
+      .eq('id', order.id)
+    setEditingOrderId(null)
   }
 
   async function handleAddProduct() {
@@ -339,19 +370,52 @@ export default function MerchantSpace() {
                   <p className="text-xs text-brand-dark/70">
                     {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
                   </p>
-                  <div className="flex items-center justify-between border-t border-brand-light pt-2">
-                    <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
-                    {order.status === 'en_preparation' && (
-                      <Button onClick={() => updateOrderStatus(order.id, 'en_livraison')}>
-                        Marquer prête (inviter un livreur)
-                      </Button>
-                    )}
-                    {order.status === 'en_livraison' && (
-                      <Button variant="secondary" onClick={() => updateOrderStatus(order.id, 'livree')}>
-                        Marquer livrée
-                      </Button>
-                    )}
-                  </div>
+
+                  {editingOrderId === order.id ? (
+                    <div className="flex items-center gap-2 border-t border-brand-light pt-2">
+                      <input
+                        type="number"
+                        min="0"
+                        value={editedSubtotal}
+                        onChange={(e) => setEditedSubtotal(e.target.value)}
+                        placeholder="Sous-total réel (F CFA)"
+                        className={inputClass}
+                      />
+                      <Button onClick={() => handleSaveAmount(order)}>Valider</Button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingOrderId(null)}
+                        className="text-xs font-semibold text-brand-dark/50"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between border-t border-brand-light pt-2">
+                      <div>
+                        <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
+                        {order.status !== 'livree' && (
+                          <button
+                            type="button"
+                            onClick={() => startEditingAmount(order)}
+                            className="ml-2 text-[11px] font-semibold text-brand"
+                          >
+                            Ajuster le montant réel
+                          </button>
+                        )}
+                      </div>
+                      {order.status === 'en_preparation' && (
+                        <Button onClick={() => updateOrderStatus(order.id, 'en_livraison')}>
+                          Marquer prête (inviter un livreur)
+                        </Button>
+                      )}
+                      {order.status === 'en_livraison' && (
+                        <Button variant="secondary" onClick={() => updateOrderStatus(order.id, 'livree')}>
+                          Marquer livrée
+                        </Button>
+                      )}
+                    </div>
+                  )}
                   {order.livreurName && (
                     <p className="text-[11px] text-brand-dark/40">🛵 Livreur : {order.livreurName}</p>
                   )}

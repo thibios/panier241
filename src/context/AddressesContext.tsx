@@ -17,7 +17,11 @@ interface AddressRow {
   neighborhood: string
   city: string
   is_default: boolean
+  lat: number | null
+  lng: number | null
 }
+
+const ADDRESS_COLUMNS = 'id, label, full_address, neighborhood, city, is_default, lat, lng'
 
 function fromRow(row: AddressRow): Address {
   return {
@@ -27,6 +31,8 @@ function fromRow(row: AddressRow): Address {
     neighborhood: row.neighborhood,
     city: row.city,
     isDefault: row.is_default,
+    lat: row.lat,
+    lng: row.lng,
   }
 }
 
@@ -38,7 +44,7 @@ export function AddressesProvider({ children }: { children: ReactNode }) {
     if (!user) return
     supabase
       .from('addresses')
-      .select('id, label, full_address, neighborhood, city, is_default')
+      .select(ADDRESS_COLUMNS)
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
       .then(({ data }) => {
@@ -57,8 +63,10 @@ export function AddressesProvider({ children }: { children: ReactNode }) {
         neighborhood: input.neighborhood,
         city: input.city,
         is_default: addresses.length === 0,
+        lat: input.lat,
+        lng: input.lng,
       })
-      .select('id, label, full_address, neighborhood, city, is_default')
+      .select(ADDRESS_COLUMNS)
       .single()
 
     if (data) setAddresses((prev) => [...prev, fromRow(data)])

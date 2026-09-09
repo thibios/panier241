@@ -19,7 +19,9 @@ interface OrderRow {
   merchant_name: string
   items: Order['items']
   subtotal: number
+  service_fee: number
   delivery_fee: number
+  distance_km: number | null
   total: number
   status: Order['status']
   slot_label: string
@@ -30,7 +32,7 @@ interface OrderRow {
 }
 
 const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, delivery_fee, total, status, slot_label, address_label, created_at, livreur_id, livreur_name'
+  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name'
 
 function orderFromRow(row: OrderRow): Order {
   return {
@@ -39,7 +41,9 @@ function orderFromRow(row: OrderRow): Order {
     merchantName: row.merchant_name,
     items: row.items,
     subtotal: row.subtotal,
+    serviceFee: row.service_fee,
     deliveryFee: row.delivery_fee,
+    distanceKm: row.distance_km,
     total: row.total,
     status: row.status,
     createdAt: row.created_at,

@@ -16,6 +16,8 @@ export interface Market {
   city: string
   imageEmoji: string
   merchantCount: number
+  lat: number
+  lng: number
 }
 
 export interface Product {
@@ -63,6 +65,8 @@ export interface Address {
   neighborhood: string
   city: string
   isDefault: boolean
+  lat: number | null
+  lng: number | null
 }
 
 export interface CartItem {
@@ -87,7 +91,9 @@ export interface Order {
   merchantName: string
   items: OrderItem[]
   subtotal: number
+  serviceFee: number
   deliveryFee: number
+  distanceKm: number | null
   total: number
   status: OrderStatus
   createdAt: string // ISO

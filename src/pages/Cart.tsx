@@ -22,7 +22,9 @@ export default function Cart() {
     setQuantity,
     clearCart,
     subtotal,
+    serviceFee,
     deliveryFee,
+    distanceKm,
     total,
   } = useCart()
   const { addOrder } = useOrders()
@@ -73,7 +75,9 @@ export default function Cart() {
       merchantName: merchant.name,
       items: orderItems,
       subtotal,
+      serviceFee,
       deliveryFee,
+      distanceKm,
       total,
       status: 'en_preparation',
       createdAt: new Date().toISOString(),
@@ -142,13 +146,27 @@ export default function Cart() {
           </Card>
         </section>
 
+        <p className="rounded-card bg-category-cereales/10 p-3 text-xs text-category-cereales">
+          ℹ️ Le sous-total des marchandises est une estimation — le montant réel peut varier selon le
+          marché et sera ajusté par le marchand si besoin.{' '}
+          <Link to="/aide" className="font-semibold underline">
+            En savoir plus
+          </Link>
+        </p>
+
         <Card className="space-y-2">
           <div className="flex items-center justify-between text-sm text-brand-dark/70">
-            <span>Sous-total</span>
+            <span>Sous-total (estimé)</span>
             <span>{formatFCFA(subtotal)}</span>
           </div>
           <div className="flex items-center justify-between text-sm text-brand-dark/70">
-            <span>Frais de livraison</span>
+            <span>Frais de service (5%)</span>
+            <span>{formatFCFA(serviceFee)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm text-brand-dark/70">
+            <span>
+              Livraison{distanceKm != null ? ` (2 000 F CFA + ${distanceKm.toFixed(1)} km)` : ''}
+            </span>
             <span>{formatFCFA(deliveryFee)}</span>
           </div>
           <div className="flex items-center justify-between border-t border-brand-light pt-2 text-sm font-bold text-brand-dark">

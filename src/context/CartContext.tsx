@@ -2,6 +2,9 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { CartItem, DeliverySlotOption } from '../types'
 import { readSession, writeSession } from '../lib/storage'
 import { useCatalog } from './CatalogContext'
+import { useAddresses } from './AddressesContext'
+import { markets } from '../data/markets'
+import { computeDelivery } from '../lib/pricing'
 
 interface CartContextValue {
   items: CartItem[]
@@ -16,16 +19,17 @@ interface CartContextValue {
   setSelectedAddressId: (addressId: string) => void
   itemCount: number
   subtotal: number
+  serviceFee: number
   deliveryFee: number
+  distanceKm: number | null
   total: number
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
 
-const DELIVERY_FEE = 1500
-
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { products } = useCatalog()
+  const { products, merchants } = useCatalog()
+  const { addresses } = useAddresses()
   const [items, setItems] = useState<CartItem[]>(() => readSession('cart-items', [] as CartItem[]))
   const [selectedSlot, setSelectedSlot] = useState<DeliverySlotOption | null>(() =>
     readSession('cart-slot', null as DeliverySlotOption | null),
@@ -78,8 +82,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }, 0)
   }, [items, products])
 
-  const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0
-  const total = subtotal + deliveryFee
+  const { serviceFee, deliveryFee, distanceKm, total } = useMemo(() => {
+    if (items.length === 0) return { serviceFee: 0, deliveryFee: 0, distanceKm: null, total: 0 }
+
+    const merchant = merchants.find((m) => m.id === merchantId)
+    const market = merchant ? markets.find((mk) => mk.id === merchant.marketId) : undefined
+    const marketCoords = market ? { lat: market.lat, lng: market.lng } : null
+
+    const address = addresses.find((a) => a.id === selectedAddressId) ?? addresses.find((a) => a.isDefault)
+    const addressCoords = address?.lat != null && address?.lng != null ? { lat: address.lat, lng: address.lng } : null
+
+    return computeDelivery(subtotal, marketCoords, addressCoords)
+  }, [items.length, subtotal, merchants, merchantId, addresses, selectedAddressId])
 
   const value: CartContextValue = {
     items,
@@ -94,7 +108,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setSelectedAddressId,
     itemCount,
     subtotal,
+    serviceFee,
     deliveryFee,
+    distanceKm,
     total,
   }
 

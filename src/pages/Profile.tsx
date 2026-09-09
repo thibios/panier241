@@ -39,6 +39,9 @@ export default function Profile() {
   const [fullAddress, setFullAddress] = useState('')
   const [neighborhood, setNeighborhood] = useState('')
   const [isSavingAddress, setIsSavingAddress] = useState(false)
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [isLocating, setIsLocating] = useState(false)
+  const [locationError, setLocationError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -76,7 +79,29 @@ export default function Profile() {
     setLabel('')
     setFullAddress('')
     setNeighborhood('')
+    setCoords(null)
+    setLocationError(null)
     setIsAddingAddress(false)
+  }
+
+  function handleUseCurrentLocation() {
+    if (!navigator.geolocation) {
+      setLocationError("La géolocalisation n'est pas disponible sur cet appareil.")
+      return
+    }
+    setIsLocating(true)
+    setLocationError(null)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoords({ lat: position.coords.latitude, lng: position.coords.longitude })
+        setIsLocating(false)
+      },
+      () => {
+        setLocationError("Localisation refusée — les frais de livraison utiliseront un forfait par défaut.")
+        setIsLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    )
   }
 
   async function handleAddAddress() {
@@ -87,6 +112,8 @@ export default function Profile() {
       fullAddress: fullAddress.trim(),
       neighborhood: neighborhood.trim(),
       city: 'Libreville',
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
     })
     setIsSavingAddress(false)
     resetForm()
@@ -158,6 +185,19 @@ export default function Profile() {
                 placeholder="Quartier (ex: Louis, Nzeng-Ayong...)"
                 className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
               />
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                disabled={isLocating}
+                className="w-full rounded-2xl bg-brand/10 px-3 py-2 text-sm font-medium text-brand"
+              >
+                {isLocating
+                  ? 'Localisation...'
+                  : coords
+                    ? '📍 Position enregistrée ✓'
+                    : '📍 Utiliser ma position actuelle'}
+              </button>
+              {locationError && <p className="text-xs text-category-poisson">{locationError}</p>}
               <Button
                 fullWidth
                 disabled={!label.trim() || !fullAddress.trim() || !neighborhood.trim() || isSavingAddress}
@@ -247,6 +287,14 @@ export default function Profile() {
             </Link>
           </section>
         )}
+
+        <section>
+          <Link to="/aide">
+            <Button variant="ghost" fullWidth>
+              Aide — Comment sont calculés les prix ? ℹ️
+            </Button>
+          </Link>
+        </section>
 
         <div className="pb-4">
           <Button variant="ghost" fullWidth onClick={() => signOut()}>
