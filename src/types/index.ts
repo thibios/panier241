@@ -28,6 +28,7 @@ export interface Product {
   price: number // en F CFA
   unit: string // ex: "kg", "botte", "pièce"
   imageEmoji: string
+  imageUrl: string | null
 }
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended'

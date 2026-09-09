@@ -23,10 +23,12 @@ interface ProductDraft {
   category: CategoryId
   price: string
   unit: string
+  photoFile: File | null
+  photoPreview: string | null
 }
 
 function emptyProductRow(): ProductDraft {
-  return { name: '', category: 'legumes', price: '', unit: 'kg' }
+  return { name: '', category: 'legumes', price: '', unit: 'kg', photoFile: null, photoPreview: null }
 }
 
 const inputClass =
@@ -60,6 +62,10 @@ export default function BecomeMerchant() {
 
   function updateProductDraft(index: number, patch: Partial<ProductDraft>) {
     setProductDrafts((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)))
+  }
+
+  function handleProductPhotoChange(index: number, file: File | null) {
+    updateProductDraft(index, { photoFile: file, photoPreview: file ? URL.createObjectURL(file) : null })
   }
 
   function addProductRow() {
@@ -112,13 +118,24 @@ export default function BecomeMerchant() {
 
       if (merchantError || !merchant) throw new Error(`Échec de la création du marchand : ${merchantError?.message}`)
 
-      const productsToInsert = validProducts.map((p) => ({
+      const productPhotoUrls = await Promise.all(
+        validProducts.map(async (p) => {
+          if (!p.photoFile) return null
+          const path = `${user.id}/${Date.now()}-${p.photoFile.name}`
+          const { error: photoError } = await supabase.storage.from('product-photos').upload(path, p.photoFile)
+          if (photoError) return null
+          return supabase.storage.from('product-photos').getPublicUrl(path).data.publicUrl
+        }),
+      )
+
+      const productsToInsert = validProducts.map((p, i) => ({
         merchant_id: merchant.id,
         name: p.name.trim(),
         category: p.category,
         price: Math.round(Number(p.price)),
         unit: p.unit.trim(),
         image_emoji: categories.find((c) => c.id === p.category)?.icon ?? '🛒',
+        image_url: productPhotoUrls[i],
       }))
 
       const { error: productsError } = await supabase.from('products').insert(productsToInsert)
@@ -269,6 +286,21 @@ export default function BecomeMerchant() {
                     onChange={(e) => updateProductDraft(index, { unit: e.target.value })}
                     placeholder="Unité (kg, pièce...)"
                     className={inputClass}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  {draft.photoPreview && (
+                    <img
+                      src={draft.photoPreview}
+                      alt="Aperçu du produit"
+                      className="h-10 w-10 shrink-0 rounded-2xl object-cover"
+                    />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleProductPhotoChange(index, e.target.files?.[0] ?? null)}
+                    className="w-full text-xs text-brand-dark/70"
                   />
                 </div>
               </Card>

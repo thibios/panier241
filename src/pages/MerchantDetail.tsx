@@ -136,9 +136,13 @@ export default function MerchantDetail() {
                   className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card"
                 >
                   <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xl text-white ${category?.colorClass}`}
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-xl text-white ${category?.colorClass}`}
                   >
-                    {product.imageEmoji}
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                    ) : (
+                      product.imageEmoji
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>

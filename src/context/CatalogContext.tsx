@@ -36,6 +36,7 @@ interface ProductRow {
   price: number
   unit: string
   image_emoji: string
+  image_url: string | null
 }
 
 function merchantFromRow(row: MerchantRow): Merchant {
@@ -65,6 +66,7 @@ function productFromRow(row: ProductRow): Product {
     price: row.price,
     unit: row.unit,
     imageEmoji: row.image_emoji,
+    imageUrl: row.image_url,
   }
 }
 
@@ -80,7 +82,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         .from('merchants')
         .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url, status, phone')
         .eq('status', 'approved'),
-      supabase.from('products').select('id, merchant_id, name, category, price, unit, image_emoji'),
+      supabase.from('products').select('id, merchant_id, name, category, price, unit, image_emoji, image_url'),
     ])
     if (merchantsRes.data) {
       const approvedMerchants = merchantsRes.data.map(merchantFromRow)

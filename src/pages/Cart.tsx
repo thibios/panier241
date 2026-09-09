@@ -60,15 +60,18 @@ export default function Cart() {
     )
   }
 
-  const orderItemsPreview: OrderItem[] = items.map((item) => {
-    const product = products.find((p) => p.id === item.productId)!
-    return {
-      productId: product.id,
-      productName: product.name,
-      quantity: item.quantity,
-      unitPrice: product.price,
-      unit: product.unit,
-    }
+  const orderItemsPreview: OrderItem[] = items.flatMap((item) => {
+    const product = products.find((p) => p.id === item.productId)
+    if (!product) return []
+    return [
+      {
+        productId: product.id,
+        productName: product.name,
+        quantity: item.quantity,
+        unitPrice: product.price,
+        unit: product.unit,
+      },
+    ]
   })
 
   const whatsAppSummary = [
@@ -140,8 +143,12 @@ export default function Cart() {
             if (!product) return null
             return (
               <div key={item.productId} className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-light text-xl">
-                  {product.imageEmoji}
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand-light text-xl">
+                  {product.imageUrl ? (
+                    <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                  ) : (
+                    product.imageEmoji
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>

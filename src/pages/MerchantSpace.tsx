@@ -83,6 +83,8 @@ export default function MerchantSpace() {
   const [draftCategory, setDraftCategory] = useState<CategoryId>('legumes')
   const [draftPrice, setDraftPrice] = useState('')
   const [draftUnit, setDraftUnit] = useState('kg')
+  const [draftPhotoFile, setDraftPhotoFile] = useState<File | null>(null)
+  const [draftPhotoPreview, setDraftPhotoPreview] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -157,8 +159,23 @@ export default function MerchantSpace() {
     setEditingOrderId(null)
   }
 
+  function handleDraftPhotoChange(file: File | null) {
+    setDraftPhotoFile(file)
+    setDraftPhotoPreview(file ? URL.createObjectURL(file) : null)
+  }
+
   async function handleAddProduct() {
-    if (!myMerchant || !draftName.trim() || !draftPrice.trim() || !draftUnit.trim()) return
+    if (!myMerchant || !user || !draftName.trim() || !draftPrice.trim() || !draftUnit.trim()) return
+
+    let imageUrl: string | null = null
+    if (draftPhotoFile) {
+      const path = `${user.id}/${Date.now()}-${draftPhotoFile.name}`
+      const { error: photoError } = await supabase.storage.from('product-photos').upload(path, draftPhotoFile)
+      if (!photoError) {
+        imageUrl = supabase.storage.from('product-photos').getPublicUrl(path).data.publicUrl
+      }
+    }
+
     await supabase.from('products').insert({
       merchant_id: myMerchant.id,
       name: draftName.trim(),
@@ -166,10 +183,13 @@ export default function MerchantSpace() {
       price: Math.round(Number(draftPrice)),
       unit: draftUnit.trim(),
       image_emoji: categories.find((c) => c.id === draftCategory)?.icon ?? '🛒',
+      image_url: imageUrl,
     })
     setDraftName('')
     setDraftPrice('')
     setDraftUnit('kg')
+    setDraftPhotoFile(null)
+    setDraftPhotoPreview(null)
     setIsAddingProduct(false)
     await refreshCatalog()
   }
@@ -315,6 +335,21 @@ export default function MerchantSpace() {
                     className={inputClass}
                   />
                 </div>
+                <div className="flex items-center gap-2">
+                  {draftPhotoPreview && (
+                    <img
+                      src={draftPhotoPreview}
+                      alt="Aperçu du produit"
+                      className="h-10 w-10 shrink-0 rounded-2xl object-cover"
+                    />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleDraftPhotoChange(e.target.files?.[0] ?? null)}
+                    className="w-full text-xs text-brand-dark/70"
+                  />
+                </div>
                 <Button
                   fullWidth
                   disabled={!draftName.trim() || !draftPrice.trim() || !draftUnit.trim()}
@@ -328,8 +363,12 @@ export default function MerchantSpace() {
             {myProducts.length > 0 ? (
               myProducts.map((product) => (
                 <Card key={product.id} className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-light text-xl">
-                    {product.imageEmoji}
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand-light text-xl">
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                    ) : (
+                      product.imageEmoji
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>
