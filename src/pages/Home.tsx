@@ -12,6 +12,16 @@ import { useCatalog } from '../context/CatalogContext'
 import { usePexelsPhotos } from '../context/PexelsContext'
 import type { CategoryId } from '../types'
 
+/** Voile de couleur (semi-transparent) posé sur les photos de catégorie, pour rester lisible. */
+const categoryOverlay: Record<CategoryId, string> = {
+  legumes: 'rgba(63,174,92,0.55)',
+  fruits: 'rgba(242,153,74,0.55)',
+  poisson: 'rgba(232,84,58,0.55)',
+  cereales: 'rgba(192,138,62,0.55)',
+  bricolage: 'rgba(91,124,153,0.55)',
+  epicerie: 'rgba(47,163,163,0.55)',
+}
+
 export default function Home() {
   const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<CategoryId | null>(null)
@@ -80,11 +90,13 @@ export default function Home() {
                 className="flex flex-col items-center gap-1.5"
               >
                 <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-full bg-cover bg-center text-2xl text-white transition [background-blend-mode:multiply] ${cat.colorClass} ${
+                  className={`flex h-14 w-14 items-center justify-center rounded-full bg-cover bg-center text-2xl text-white transition ${cat.colorClass} ${
                     isActive ? 'ring-4 ring-offset-2 ring-offset-surface' : ''
                   }`}
                   style={{
-                    ...(photo ? { backgroundImage: `url(${photo})` } : undefined),
+                    ...(photo
+                      ? { backgroundImage: `linear-gradient(${categoryOverlay[cat.id]}, ${categoryOverlay[cat.id]}), url(${photo})` }
+                      : undefined),
                     ...(isActive ? { boxShadow: '0 0 0 4px rgba(20,36,92,0.15)' } : undefined),
                   }}
                 >
