@@ -9,6 +9,8 @@ import { useFavorites } from '../context/FavoritesContext'
 import { useCatalog } from '../context/CatalogContext'
 import { formatFCFA } from '../lib/format'
 import { buildWhatsAppLink } from '../lib/whatsapp'
+import { resolveImage } from '../lib/images'
+import { usePexelsPhotos } from '../context/PexelsContext'
 
 const categoryDotClass: Record<string, string> = {
   legumes: 'bg-category-legumes',
@@ -26,6 +28,7 @@ export default function MerchantDetail() {
   const merchant = merchants.find((m) => m.id === merchantId)
   const { items, merchantId: cartMerchantId, addItem, setQuantity, itemCount, subtotal } = useCart()
   const { isFavorite, toggleFavorite } = useFavorites()
+  const pexelsPhotos = usePexelsPhotos()
 
   if (!merchant) {
     return (
@@ -69,11 +72,14 @@ export default function MerchantDetail() {
         </div>
         <div className="mt-4 flex items-center gap-3">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/20 text-4xl">
-            {merchant.kioskPhotoUrl ? (
-              <img src={merchant.kioskPhotoUrl} alt={merchant.name} className="h-full w-full object-cover" />
-            ) : (
-              merchant.imageEmoji
-            )}
+            {(() => {
+              const photo = resolveImage(merchant.kioskPhotoUrl, merchant.categories[0], pexelsPhotos)
+              return photo ? (
+                <img src={photo} alt={merchant.name} className="h-full w-full object-cover" />
+              ) : (
+                merchant.imageEmoji
+              )
+            })()}
           </div>
           <div>
             <h1 className="text-xl font-bold">{merchant.name}</h1>
@@ -144,11 +150,14 @@ export default function MerchantDetail() {
                   <div
                     className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-xl text-white ${category?.colorClass}`}
                   >
-                    {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-                    ) : (
-                      product.imageEmoji
-                    )}
+                    {(() => {
+                      const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
+                      return photo ? (
+                        <img src={photo} alt={product.name} className="h-full w-full object-cover" />
+                      ) : (
+                        product.imageEmoji
+                      )
+                    })()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>

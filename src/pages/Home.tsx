@@ -9,6 +9,7 @@ import { categories } from '../data/categories'
 import { markets } from '../data/markets'
 import { useFavorites } from '../context/FavoritesContext'
 import { useCatalog } from '../context/CatalogContext'
+import { usePexelsPhotos } from '../context/PexelsContext'
 import type { CategoryId } from '../types'
 
 export default function Home() {
@@ -16,6 +17,7 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState<CategoryId | null>(null)
   const { isFavorite } = useFavorites()
   const { merchants, products } = useCatalog()
+  const pexelsPhotos = usePexelsPhotos()
 
   const normalizedQuery = query.trim().toLowerCase()
   const isSearching = normalizedQuery.length > 0
@@ -69,6 +71,7 @@ export default function Home() {
         <div className="flex gap-3 overflow-x-auto pb-1 pt-2">
           {categories.map((cat) => {
             const isActive = activeCategory === cat.id
+            const photo = pexelsPhotos[cat.id]
             return (
               <button
                 key={cat.id}
@@ -77,12 +80,15 @@ export default function Home() {
                 className="flex flex-col items-center gap-1.5"
               >
                 <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-full text-2xl text-white transition ${cat.colorClass} ${
+                  className={`flex h-14 w-14 items-center justify-center rounded-full bg-cover bg-center text-2xl text-white transition [background-blend-mode:multiply] ${cat.colorClass} ${
                     isActive ? 'ring-4 ring-offset-2 ring-offset-surface' : ''
                   }`}
-                  style={isActive ? { boxShadow: '0 0 0 4px rgba(20,36,92,0.15)' } : undefined}
+                  style={{
+                    ...(photo ? { backgroundImage: `url(${photo})` } : undefined),
+                    ...(isActive ? { boxShadow: '0 0 0 4px rgba(20,36,92,0.15)' } : undefined),
+                  }}
                 >
-                  {cat.icon}
+                  {!photo && cat.icon}
                 </div>
                 <span className={`text-xs font-medium ${isActive ? 'text-brand-dark' : 'text-brand-dark/70'}`}>
                   {cat.label}

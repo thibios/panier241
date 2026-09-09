@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import type { Merchant } from '../../types'
 import { markets } from '../../data/markets'
 import { useFavorites } from '../../context/FavoritesContext'
+import { resolveImage } from '../../lib/images'
+import { usePexelsPhotos } from '../../context/PexelsContext'
 
 const categoryDotClass: Record<string, string> = {
   legumes: 'bg-category-legumes',
@@ -15,6 +17,8 @@ const categoryDotClass: Record<string, string> = {
 export default function MerchantCard({ merchant }: { merchant: Merchant }) {
   const market = markets.find((m) => m.id === merchant.marketId)
   const { isFavorite } = useFavorites()
+  const pexelsPhotos = usePexelsPhotos()
+  const photo = resolveImage(merchant.kioskPhotoUrl, merchant.categories[0], pexelsPhotos)
 
   return (
     <Link
@@ -25,8 +29,8 @@ export default function MerchantCard({ merchant }: { merchant: Merchant }) {
         className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-2xl"
         style={{ backgroundColor: `${merchant.bannerColor}20` }}
       >
-        {merchant.kioskPhotoUrl ? (
-          <img src={merchant.kioskPhotoUrl} alt={merchant.name} className="h-full w-full object-cover" />
+        {photo ? (
+          <img src={photo} alt={merchant.name} className="h-full w-full object-cover" />
         ) : (
           merchant.imageEmoji
         )}

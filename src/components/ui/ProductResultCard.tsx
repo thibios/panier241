@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import type { Merchant, Product } from '../../types'
 import { categories } from '../../data/categories'
 import { formatFCFA } from '../../lib/format'
+import { resolveImage } from '../../lib/images'
+import { usePexelsPhotos } from '../../context/PexelsContext'
 
 export default function ProductResultCard({
   product,
@@ -11,6 +13,8 @@ export default function ProductResultCard({
   sellers: Merchant[]
 }) {
   const category = categories.find((c) => c.id === product.category)
+  const pexelsPhotos = usePexelsPhotos()
+  const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
 
   return (
     <div className="rounded-card bg-white p-3 shadow-card">
@@ -18,8 +22,8 @@ export default function ProductResultCard({
         <div
           className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-xl text-white ${category?.colorClass}`}
         >
-          {product.imageUrl ? (
-            <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+          {photo ? (
+            <img src={photo} alt={product.name} className="h-full w-full object-cover" />
           ) : (
             product.imageEmoji
           )}

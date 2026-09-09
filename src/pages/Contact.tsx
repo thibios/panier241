@@ -51,6 +51,14 @@ export default function Contact() {
             </Button>
           </a>
         </Card>
+
+        <p className="text-center text-xs text-brand-dark/40">
+          Certaines photos sont fournies par{' '}
+          <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer" className="underline">
+            Pexels
+          </a>
+          .
+        </p>
       </div>
     </PageShell>
   )

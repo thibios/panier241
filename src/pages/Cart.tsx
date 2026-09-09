@@ -13,6 +13,8 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import { formatFCFA } from '../lib/format'
 import { buildWhatsAppLink } from '../lib/whatsapp'
+import { resolveImage } from '../lib/images'
+import { usePexelsPhotos } from '../context/PexelsContext'
 import type { Order, OrderItem } from '../types'
 
 export default function Cart() {
@@ -34,6 +36,7 @@ export default function Cart() {
   const { addresses } = useAddresses()
   const { merchants, products } = useCatalog()
   const { user } = useAuth()
+  const pexelsPhotos = usePexelsPhotos()
   const merchant = merchants.find((m) => m.id === merchantId) ?? null
   const selectedAddress =
     addresses.find((a) => a.id === selectedAddressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0]
@@ -144,11 +147,14 @@ export default function Cart() {
             return (
               <div key={item.productId} className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand-light text-xl">
-                  {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-                  ) : (
-                    product.imageEmoji
-                  )}
+                  {(() => {
+                    const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
+                    return photo ? (
+                      <img src={photo} alt={product.name} className="h-full w-full object-cover" />
+                    ) : (
+                      product.imageEmoji
+                    )
+                  })()}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>
