@@ -8,6 +8,7 @@ import { FavoritesProvider } from './context/FavoritesContext'
 import { AddressesProvider } from './context/AddressesContext'
 import AuthPage from './pages/Auth'
 import Home from './pages/Home'
+import MarketDetail from './pages/MarketDetail'
 import MerchantDetail from './pages/MerchantDetail'
 import DeliverySlot from './pages/DeliverySlot'
 import Cart from './pages/Cart'
@@ -32,6 +33,7 @@ function AuthenticatedApp() {
                 <div className="min-h-screen bg-surface">
                   <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="/marche/:marketId" element={<MarketDetail />} />
                     <Route path="/marchand/:merchantId" element={<MerchantDetail />} />
                     <Route path="/creneau" element={<DeliverySlot />} />
                     <Route path="/panier" element={<Cart />} />
