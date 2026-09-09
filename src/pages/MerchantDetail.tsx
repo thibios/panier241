@@ -68,8 +68,12 @@ export default function MerchantDetail() {
           </button>
         </div>
         <div className="mt-4 flex items-center gap-3">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-4xl">
-            {merchant.imageEmoji}
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/20 text-4xl">
+            {merchant.kioskPhotoUrl ? (
+              <img src={merchant.kioskPhotoUrl} alt={merchant.name} className="h-full w-full object-cover" />
+            ) : (
+              merchant.imageEmoji
+            )}
           </div>
           <div>
             <h1 className="text-xl font-bold">{merchant.name}</h1>

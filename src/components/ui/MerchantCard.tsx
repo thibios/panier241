@@ -22,10 +22,14 @@ export default function MerchantCard({ merchant }: { merchant: Merchant }) {
       className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card transition active:scale-[0.99]"
     >
       <div
-        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl"
+        className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-2xl"
         style={{ backgroundColor: `${merchant.bannerColor}20` }}
       >
-        {merchant.imageEmoji}
+        {merchant.kioskPhotoUrl ? (
+          <img src={merchant.kioskPhotoUrl} alt={merchant.name} className="h-full w-full object-cover" />
+        ) : (
+          merchant.imageEmoji
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
