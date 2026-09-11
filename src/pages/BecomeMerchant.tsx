@@ -25,12 +25,13 @@ interface ProductDraft {
   category: CategoryId
   price: string
   unit: string
+  variantLabel: string
   photoFile: File | null
   photoPreview: string | null
 }
 
 function emptyProductRow(): ProductDraft {
-  return { name: '', category: 'legumes', price: '', unit: 'kg', photoFile: null, photoPreview: null }
+  return { name: '', category: 'legumes', price: '', unit: 'kg', variantLabel: '', photoFile: null, photoPreview: null }
 }
 
 const inputClass =
@@ -138,6 +139,7 @@ export default function BecomeMerchant() {
         unit: p.unit.trim(),
         image_emoji: categories.find((c) => c.id === p.category)?.icon ?? '🛒',
         image_url: productPhotoUrls[i],
+        variant_label: p.variantLabel.trim() || null,
       }))
 
       const { error: productsError } = await supabase.from('products').insert(productsToInsert)
@@ -240,6 +242,10 @@ export default function BecomeMerchant() {
               + Ajouter un produit
             </button>
           </div>
+          <p className="mb-2 text-xs text-brand-dark/50">
+            Astuce : donne le même nom à plusieurs produits pour créer des variantes (tailles, couleurs...) —
+            précise la différence dans le champ Variante.
+          </p>
           <div className="space-y-3">
             {productDrafts.map((draft, index) => (
               <Card key={index} className="space-y-2">
@@ -290,6 +296,13 @@ export default function BecomeMerchant() {
                     className={inputClass}
                   />
                 </div>
+                <input
+                  type="text"
+                  value={draft.variantLabel}
+                  onChange={(e) => updateProductDraft(index, { variantLabel: e.target.value })}
+                  placeholder="Variante (ex: 12mm, 1kg, Rouge...) — optionnel"
+                  className={inputClass}
+                />
                 <div className="flex items-center gap-2">
                   {draft.photoPreview && (
                     <img

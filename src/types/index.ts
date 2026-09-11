@@ -29,6 +29,7 @@ export interface Product {
   unit: string // ex: "kg", "botte", "pièce"
   imageEmoji: string
   imageUrl: string | null
+  variantLabel: string | null
 }
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended'

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import PageShell from '../components/layout/PageShell'
 import Button from '../components/ui/Button'
@@ -11,6 +12,8 @@ import { formatFCFA } from '../lib/format'
 import { buildWhatsAppLink } from '../lib/whatsapp'
 import { resolveImage } from '../lib/images'
 import { usePexelsPhotos } from '../context/PexelsContext'
+import { groupProducts } from '../lib/productGroups'
+import type { Product } from '../types'
 
 const categoryDotClass: Record<string, string> = {
   legumes: 'bg-category-legumes',
@@ -29,6 +32,7 @@ export default function MerchantDetail() {
   const { items, merchantId: cartMerchantId, addItem, setQuantity, itemCount, subtotal } = useCart()
   const { isFavorite, toggleFavorite } = useFavorites()
   const pexelsPhotos = usePexelsPhotos()
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
 
   if (!merchant) {
     return (
@@ -43,12 +47,41 @@ export default function MerchantDetail() {
     )
   }
 
+  const currentMerchantId = merchant.id
   const market = markets.find((m) => m.id === merchant.marketId)
-  const merchantProducts = getProductsForMerchant(merchant.id)
-  const isOtherMerchantInCart = cartMerchantId !== null && cartMerchantId !== merchant.id
+  const merchantProducts = getProductsForMerchant(currentMerchantId)
+  const productGroups = groupProducts(merchantProducts)
+  const isOtherMerchantInCart = cartMerchantId !== null && cartMerchantId !== currentMerchantId
 
   function getQuantity(productId: string) {
     return items.find((item) => item.productId === productId)?.quantity ?? 0
+  }
+
+  function productThumbnail(product: Product) {
+    const category = categories.find((c) => c.id === product.category)
+    const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
+    return (
+      <div
+        className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-xl text-white ${category?.colorClass}`}
+      >
+        {photo ? <img src={photo} alt={product.name} className="h-full w-full object-cover" /> : product.imageEmoji}
+      </div>
+    )
+  }
+
+  function addControl(product: Product) {
+    const quantity = getQuantity(product.id)
+    return quantity > 0 ? (
+      <QuantityStepper
+        quantity={quantity}
+        onIncrement={() => addItem(currentMerchantId, product.id)}
+        onDecrement={() => setQuantity(product.id, quantity - 1)}
+      />
+    ) : (
+      <Button variant="secondary" onClick={() => addItem(currentMerchantId, product.id)}>
+        Ajouter
+      </Button>
+    )
   }
 
   return (
@@ -139,42 +172,59 @@ export default function MerchantDetail() {
         <div>
           <h2 className="mb-3 text-base font-semibold text-brand-dark">Produits disponibles</h2>
           <div className="space-y-3">
-            {merchantProducts.map((product) => {
-              const category = categories.find((c) => c.id === product.category)
-              const quantity = getQuantity(product.id)
+            {productGroups.map((group) => {
+              if (group.variants.length === 1) {
+                const product = group.variants[0]
+                return (
+                  <div key={product.id} className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card">
+                    {productThumbnail(product)}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>
+                      <p className="text-xs text-brand-dark/50">
+                        {formatFCFA(product.price)} / {product.unit}
+                      </p>
+                    </div>
+                    {addControl(product)}
+                  </div>
+                )
+              }
+
+              const isExpanded = expandedGroup === group.name
+              const cheapest = group.variants[0]
               return (
-                <div
-                  key={product.id}
-                  className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card"
-                >
-                  <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-xl text-white ${category?.colorClass}`}
+                <div key={group.name} className="overflow-hidden rounded-card bg-white shadow-card">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedGroup(isExpanded ? null : group.name)}
+                    className="flex w-full items-center gap-3 p-3 text-left"
                   >
-                    {(() => {
-                      const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
-                      return photo ? (
-                        <img src={photo} alt={product.name} className="h-full w-full object-cover" />
-                      ) : (
-                        product.imageEmoji
-                      )
-                    })()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>
-                    <p className="text-xs text-brand-dark/50">
-                      {formatFCFA(product.price)} / {product.unit}
-                    </p>
-                  </div>
-                  {quantity > 0 ? (
-                    <QuantityStepper
-                      quantity={quantity}
-                      onIncrement={() => addItem(merchant.id, product.id)}
-                      onDecrement={() => setQuantity(product.id, quantity - 1)}
-                    />
-                  ) : (
-                    <Button variant="secondary" onClick={() => addItem(merchant.id, product.id)}>
-                      Ajouter
-                    </Button>
+                    {productThumbnail(cheapest)}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-brand-dark">{group.name}</p>
+                      <p className="text-xs text-brand-dark/50">
+                        À partir de {formatFCFA(cheapest.price)} · {group.variants.length} variantes
+                      </p>
+                    </div>
+                    <span className={`text-brand-dark/40 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                      ▾
+                    </span>
+                  </button>
+                  {isExpanded && (
+                    <div className="space-y-2 border-t border-brand-light p-3 pt-2">
+                      {group.variants.map((product) => (
+                        <div key={product.id} className="flex items-center gap-3 rounded-2xl bg-brand-light/50 p-2">
+                          <div className="min-w-0 flex-1 pl-1">
+                            <p className="truncate text-sm font-medium text-brand-dark">
+                              {product.variantLabel ?? product.name}
+                            </p>
+                            <p className="text-xs text-brand-dark/50">
+                              {formatFCFA(product.price)} / {product.unit}
+                            </p>
+                          </div>
+                          {addControl(product)}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               )

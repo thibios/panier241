@@ -15,6 +15,7 @@ import { formatFCFA } from '../lib/format'
 import { buildWhatsAppLink } from '../lib/whatsapp'
 import { resolveImage } from '../lib/images'
 import { usePexelsPhotos } from '../context/PexelsContext'
+import { getProductDisplayName } from '../lib/productDisplay'
 import type { Order, OrderItem } from '../types'
 
 export default function Cart() {
@@ -69,7 +70,7 @@ export default function Cart() {
     return [
       {
         productId: product.id,
-        productName: product.name,
+        productName: getProductDisplayName(product),
         quantity: item.quantity,
         unitPrice: product.price,
         unit: product.unit,
@@ -157,7 +158,7 @@ export default function Cart() {
                   })()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>
+                  <p className="truncate text-sm font-medium text-brand-dark">{getProductDisplayName(product)}</p>
                   <p className="text-xs text-brand-dark/50">{formatFCFA(product.price)} / {product.unit}</p>
                 </div>
                 <QuantityStepper

@@ -86,6 +86,7 @@ export default function MerchantSpace() {
   const [draftCategory, setDraftCategory] = useState<CategoryId>('legumes')
   const [draftPrice, setDraftPrice] = useState('')
   const [draftUnit, setDraftUnit] = useState('kg')
+  const [draftVariantLabel, setDraftVariantLabel] = useState('')
   const [draftPhotoFile, setDraftPhotoFile] = useState<File | null>(null)
   const [draftPhotoPreview, setDraftPhotoPreview] = useState<string | null>(null)
 
@@ -187,10 +188,12 @@ export default function MerchantSpace() {
       unit: draftUnit.trim(),
       image_emoji: categories.find((c) => c.id === draftCategory)?.icon ?? '🛒',
       image_url: imageUrl,
+      variant_label: draftVariantLabel.trim() || null,
     })
     setDraftName('')
     setDraftPrice('')
     setDraftUnit('kg')
+    setDraftVariantLabel('')
     setDraftPhotoFile(null)
     setDraftPhotoPreview(null)
     setIsAddingProduct(false)
@@ -338,6 +341,16 @@ export default function MerchantSpace() {
                     className={inputClass}
                   />
                 </div>
+                <input
+                  type="text"
+                  value={draftVariantLabel}
+                  onChange={(e) => setDraftVariantLabel(e.target.value)}
+                  placeholder="Variante (ex: 12mm, 1kg, Rouge...) — optionnel"
+                  className={inputClass}
+                />
+                <p className="text-xs text-brand-dark/40">
+                  Donne le même nom qu'un produit existant pour créer une variante supplémentaire.
+                </p>
                 <div className="flex items-center gap-2">
                   {draftPhotoPreview && (
                     <img
@@ -377,7 +390,12 @@ export default function MerchantSpace() {
                     })()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>
+                    <p className="truncate text-sm font-medium text-brand-dark">
+                      {product.name}
+                      {product.variantLabel && (
+                        <span className="ml-1 font-normal text-brand-dark/40">· {product.variantLabel}</span>
+                      )}
+                    </p>
                     <p className="text-xs text-brand-dark/50">
                       {formatFCFA(product.price)} / {product.unit}
                     </p>

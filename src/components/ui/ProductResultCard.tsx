@@ -4,6 +4,7 @@ import { categories } from '../../data/categories'
 import { formatFCFA } from '../../lib/format'
 import { resolveImage } from '../../lib/images'
 import { usePexelsPhotos } from '../../context/PexelsContext'
+import { getProductDisplayName } from '../../lib/productDisplay'
 
 export default function ProductResultCard({
   product,
@@ -29,7 +30,7 @@ export default function ProductResultCard({
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>
+          <p className="truncate text-sm font-medium text-brand-dark">{getProductDisplayName(product)}</p>
           <p className="text-xs text-brand-dark/50">
             {formatFCFA(product.price)} / {product.unit}
           </p>
