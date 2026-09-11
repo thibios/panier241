@@ -13,6 +13,7 @@ import { formatFCFA } from '../lib/format'
 import { SERVICE_FEE_RATE } from '../lib/pricing'
 import { resolveImage } from '../lib/images'
 import { usePexelsPhotos } from '../context/PexelsContext'
+import { getProductDisplayName } from '../lib/productDisplay'
 import type { CategoryId, Merchant, Order, OrderStatus } from '../types'
 
 type Tab = 'produits' | 'commandes'
@@ -383,7 +384,7 @@ export default function MerchantSpace() {
                     {(() => {
                       const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
                       return photo ? (
-                        <img src={photo} alt={product.name} className="h-full w-full object-cover" />
+                        <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
                       ) : (
                         product.imageEmoji
                       )

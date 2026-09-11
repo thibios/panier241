@@ -151,7 +151,7 @@ export default function Cart() {
                   {(() => {
                     const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
                     return photo ? (
-                      <img src={photo} alt={product.name} className="h-full w-full object-cover" />
+                      <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
                     ) : (
                       product.imageEmoji
                     )

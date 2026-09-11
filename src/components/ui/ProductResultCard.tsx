@@ -24,7 +24,7 @@ export default function ProductResultCard({
           className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-xl text-white ${category?.colorClass}`}
         >
           {photo ? (
-            <img src={photo} alt={product.name} className="h-full w-full object-cover" />
+            <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
           ) : (
             product.imageEmoji
           )}

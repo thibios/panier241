@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import PageShell from '../components/layout/PageShell'
 import Button from '../components/ui/Button'
@@ -13,6 +13,7 @@ import { buildWhatsAppLink } from '../lib/whatsapp'
 import { resolveImage } from '../lib/images'
 import { usePexelsPhotos } from '../context/PexelsContext'
 import { groupProducts } from '../lib/productGroups'
+import { getProductDisplayName } from '../lib/productDisplay'
 import type { Product } from '../types'
 
 const categoryDotClass: Record<string, string> = {
@@ -33,6 +34,12 @@ export default function MerchantDetail() {
   const { isFavorite, toggleFavorite } = useFavorites()
   const pexelsPhotos = usePexelsPhotos()
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
+
+  // Le composant n'est pas remonté quand on navigue d'une fiche marchand à une
+  // autre (même route, param différent) : on réinitialise l'accordéon nous-mêmes.
+  useEffect(() => {
+    setExpandedGroup(null)
+  }, [merchantId])
 
   if (!merchant) {
     return (
@@ -64,7 +71,11 @@ export default function MerchantDetail() {
       <div
         className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-xl text-white ${category?.colorClass}`}
       >
-        {photo ? <img src={photo} alt={product.name} className="h-full w-full object-cover" /> : product.imageEmoji}
+        {photo ? (
+          <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
+        ) : (
+          product.imageEmoji
+        )}
       </div>
     )
   }
@@ -179,7 +190,7 @@ export default function MerchantDetail() {
                   <div key={product.id} className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card">
                     {productThumbnail(product)}
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-brand-dark">{product.name}</p>
+                      <p className="truncate text-sm font-medium text-brand-dark">{getProductDisplayName(product)}</p>
                       <p className="text-xs text-brand-dark/50">
                         {formatFCFA(product.price)} / {product.unit}
                       </p>
@@ -215,7 +226,7 @@ export default function MerchantDetail() {
                         <div key={product.id} className="flex items-center gap-3 rounded-2xl bg-brand-light/50 p-2">
                           <div className="min-w-0 flex-1 pl-1">
                             <p className="truncate text-sm font-medium text-brand-dark">
-                              {product.variantLabel ?? product.name}
+                              {product.variantLabel || getProductDisplayName(product)}
                             </p>
                             <p className="text-xs text-brand-dark/50">
                               {formatFCFA(product.price)} / {product.unit}
