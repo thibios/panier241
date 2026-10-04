@@ -29,7 +29,7 @@ export default function ProductResultCard({
             <Link
               key={seller.id}
               to={`/marchand/${seller.id}`}
-              className="rounded-xl bg-brand-light px-2.5 py-1 text-[11px] font-medium text-brand"
+              className="rounded-xl bg-mint px-2.5 py-1 text-[11px] font-semibold text-mint-dark"
             >
               {seller.name}
             </Link>

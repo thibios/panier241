@@ -87,7 +87,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const merchant = merchants.find((m) => m.id === merchantId)
     const market = merchant ? markets.find((mk) => mk.id === merchant.marketId) : undefined
-    const marketCoords = market ? { lat: market.lat, lng: market.lng } : null
+    const marketCoords =
+      market?.lat != null && market.lng != null ? { lat: market.lat, lng: market.lng } : null
 
     const address = addresses.find((a) => a.id === selectedAddressId) ?? addresses.find((a) => a.isDefault)
     const addressCoords = address?.lat != null && address?.lng != null ? { lat: address.lat, lng: address.lng } : null

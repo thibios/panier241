@@ -45,13 +45,20 @@ export default function Home() {
     return products.filter((p) => p.name.toLowerCase().includes(normalizedQuery))
   }, [products, normalizedQuery])
 
+  const marketSections = [
+    { title: 'Marchés de proximité', items: filteredMarkets.filter((m) => m.kind === 'marche') },
+    { title: 'Magasins et enseignes', items: filteredMarkets.filter((m) => m.kind === 'supermarche') },
+  ]
+
   const hasNoResults =
     isSearching && filteredMarkets.length === 0 && matchedMerchants.length === 0 && matchedProducts.length === 0
 
   return (
     <PageShell>
       <WovenHeader className="pb-8">
-        <h1 className="text-2xl font-bold">Panier 241</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">
+          Panier<span className="text-brand">241</span>
+        </h1>
         <p className="mt-1 text-sm text-white/80">
           Vos courses dans les marchés et magasins de Libreville, livrées chez vous.
         </p>
@@ -106,17 +113,18 @@ export default function Home() {
           </section>
         )}
 
-        {(!isSearching || filteredMarkets.length > 0) && (
-          <section>
-            <h2 className="mb-3 text-base font-semibold text-brand-dark">
-              {isSearching ? 'Marchés' : 'Marchés à proximité'}
-            </h2>
-            <div className="flex gap-3 overflow-x-auto pb-1">
-              {filteredMarkets.map((market) => (
-                <MarketCard key={market.id} market={market} />
-              ))}
-            </div>
-          </section>
+        {marketSections.map(
+          (section) =>
+            section.items.length > 0 && (
+              <section key={section.title}>
+                <h2 className="mb-3 text-base font-semibold text-brand-dark">{section.title}</h2>
+                <div className="flex gap-3 overflow-x-auto pb-1">
+                  {section.items.map((market) => (
+                    <MarketCard key={market.id} market={market} />
+                  ))}
+                </div>
+              </section>
+            ),
         )}
 
         {(!isSearching || matchedMerchants.length > 0) && (

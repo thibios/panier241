@@ -37,7 +37,7 @@ export default function CategoryDetail() {
         className={`relative rounded-b-[2rem] bg-cover bg-center px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white ${category.colorClass}`}
         style={
           banner
-            ? { backgroundImage: `linear-gradient(rgba(20,36,92,0.45), rgba(20,36,92,0.65)), url(${banner})` }
+            ? { backgroundImage: `linear-gradient(rgba(37,40,44,0.45), rgba(37,40,44,0.7)), url(${banner})` }
             : undefined
         }
       >
@@ -75,7 +75,7 @@ export default function CategoryDetail() {
                     <Link
                       key={seller.id}
                       to={`/marchand/${seller.id}`}
-                      className="rounded-xl bg-brand-light px-2.5 py-1 text-[11px] font-medium text-brand"
+                      className="rounded-xl bg-mint px-2.5 py-1 text-[11px] font-semibold text-mint-dark"
                     >
                       {seller.name}
                     </Link>

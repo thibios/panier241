@@ -6,11 +6,13 @@ export default {
       colors: {
         // Identité de marque Panier 241
         brand: {
-          DEFAULT: '#2A4FD8', // bleu profond — actions, en-têtes
-          dark: '#14245C', // titres foncés
-          light: '#EAF0FF', // fonds de carte clairs
+          DEFAULT: '#DB5A22', // orange du flyer — actions, accents
+          dark: '#25282C', // anthracite — en-têtes, titres
+          light: '#FBEBE2', // orange très clair — fonds de champs
         },
-        surface: '#F2E2A8', // fond général de l'app : jaune moutarde clair
+        surface: '#F7F5F1', // fond général : blanc cassé
+        // Vert menthe du flyer — étiquettes de marchés et de commerçants
+        mint: { DEFAULT: '#C6EBDB', dark: '#1F6B4E' },
         // Accents par catégorie de produit
         category: {
           legumes: '#3FAE5C',
@@ -22,14 +24,14 @@ export default {
         },
       },
       fontFamily: {
-        display: ['"Arial Narrow"', '"Archivo Narrow"', 'Arial', 'sans-serif'],
-        sans: ['"Arial Narrow"', '"Archivo Narrow"', 'Arial', 'sans-serif'],
+        display: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         card: '1.5rem',
       },
       boxShadow: {
-        card: '0 4px 16px -4px rgba(20, 36, 92, 0.12)',
+        card: '0 4px 16px -4px rgba(37, 40, 44, 0.14)',
       },
     },
   },

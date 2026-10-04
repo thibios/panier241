@@ -39,7 +39,9 @@ export default function Auth() {
     <div className="min-h-screen bg-surface">
       <div className="mx-auto min-h-screen max-w-md">
         <WovenHeader>
-          <h1 className="text-2xl font-bold">Panier 241</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">
+            Panier<span className="text-brand">241</span>
+          </h1>
           <p className="mt-1 text-sm text-white/80">
             Vos courses dans les marchés et magasins de Libreville, livrées chez vous.
           </p>

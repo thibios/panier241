@@ -10,9 +10,9 @@ export default function MarketHeader({ market, children }: { market: Market; chi
   const photo = useMarketPhoto(market)
   return (
     <header
-      className="woven-pattern relative overflow-hidden rounded-b-[2rem] bg-brand bg-cover bg-center px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white"
+      className="woven-pattern relative overflow-hidden rounded-b-[2rem] bg-brand-dark bg-cover bg-center px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white"
       style={
-        photo ? { backgroundImage: `linear-gradient(rgba(20,36,92,0.55), rgba(20,36,92,0.7)), url(${photo})` } : undefined
+        photo ? { backgroundImage: `linear-gradient(rgba(37,40,44,0.55), rgba(37,40,44,0.75)), url(${photo})` } : undefined
       }
     >
       {market.logoUrl && <LogoWatermark logoUrl={market.logoUrl} />}

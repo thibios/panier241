@@ -18,8 +18,9 @@ export interface Market {
   photoPage?: number
   /** Enseigne : logo officiel, affiché en vignette et en filigrane. */
   logoUrl?: string
-  lat: number
-  lng: number
+  /** Position GPS ; absente tant que l'emplacement exact n'est pas confirmé (forfait de livraison). */
+  lat?: number
+  lng?: number
 }
 
 export interface Product {
