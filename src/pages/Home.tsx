@@ -61,7 +61,7 @@ export default function Home() {
       </WovenHeader>
 
       <div className="-mt-4 space-y-6 px-5 pb-2">
-        <div className="flex gap-3 overflow-x-auto pb-1 pt-2">
+        <div className="flex gap-3 overflow-x-auto pb-1 pt-7">
           {categories.map((cat) => {
             const photo = pexelsPhotos[cat.id]
             return (
