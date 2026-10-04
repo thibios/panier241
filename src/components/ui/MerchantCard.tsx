@@ -25,14 +25,13 @@ export default function MerchantCard({ merchant }: { merchant: Merchant }) {
   return (
     <Link
       to={`/marchand/${merchant.id}`}
-      className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card transition active:scale-[0.99]"
+      className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card transition duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
     >
       <div
-        className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-2xl"
-        style={{ backgroundColor: `${merchant.bannerColor}20` }}
+        className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand-light"
       >
         {photo ? (
-          <img src={photo} alt={merchant.name} className="h-full w-full object-cover" />
+          <img src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full bg-white object-cover" />
         ) : (
           <CategoryIcon category={merchant.categories[0]} className="h-7 w-7 text-brand-dark/60" />
         )}

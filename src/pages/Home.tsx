@@ -1,24 +1,22 @@
 import { useMemo, useState } from 'react'
+import { ShoppingBasket, Search } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
 import WovenHeader from '../components/layout/WovenHeader'
 import SearchBar from '../components/ui/SearchBar'
+import CategoryTabs from '../components/ui/CategoryTabs'
 import MarketCard from '../components/ui/MarketCard'
 import MerchantCard from '../components/ui/MerchantCard'
 import ProductResultCard from '../components/ui/ProductResultCard'
-import { categories } from '../data/categories'
+import Reveal from '../components/ui/Reveal'
+import CatalogState from '../components/ui/CatalogState'
 import { markets } from '../data/markets'
 import { useFavorites } from '../context/FavoritesContext'
 import { useCatalog } from '../context/CatalogContext'
-import { usePexelsPhotos } from '../context/PexelsContext'
-import { ShoppingBasket, Search } from 'lucide-react'
-import { CategoryIcon } from '../components/ui/icons'
-import { Link } from 'react-router-dom'
 
 export default function Home() {
   const [query, setQuery] = useState('')
   const { isFavorite } = useFavorites()
-  const { merchants, products } = useCatalog()
-  const pexelsPhotos = usePexelsPhotos()
+  const { merchants, products, error } = useCatalog()
 
   const normalizedQuery = query.trim().toLowerCase()
   const isSearching = normalizedQuery.length > 0
@@ -45,10 +43,8 @@ export default function Home() {
     return products.filter((p) => p.name.toLowerCase().includes(normalizedQuery))
   }, [products, normalizedQuery])
 
-  const marketSections = [
-    { title: 'Marchés de proximité', items: filteredMarkets.filter((m) => m.kind === 'marche') },
-    { title: 'Magasins et enseignes', items: filteredMarkets.filter((m) => m.kind === 'supermarche') },
-  ]
+  const stores = filteredMarkets.filter((m) => m.kind === 'supermarche')
+  const localMarkets = filteredMarkets.filter((m) => m.kind === 'marche')
 
   const hasNoResults =
     isSearching && filteredMarkets.length === 0 && matchedMerchants.length === 0 && matchedProducts.length === 0
@@ -57,9 +53,9 @@ export default function Home() {
     <PageShell>
       <WovenHeader className="pb-8">
         <h1 className="text-2xl font-extrabold tracking-tight">
-          Panier<span className="text-brand">241</span>
+          Panier<span className="text-accent">241</span>
         </h1>
-        <p className="mt-1 text-sm text-white/80">
+        <p className="mt-1 text-sm text-white/85">
           Vos courses dans les marchés et magasins de Libreville, livrées chez vous.
         </p>
         <div className="mt-4">
@@ -67,32 +63,16 @@ export default function Home() {
         </div>
       </WovenHeader>
 
-      <div className="-mt-4 space-y-6 px-5 pb-2">
-        <div className="flex gap-3 overflow-x-auto pb-1 pt-7">
-          {categories.map((cat) => {
-            const photo = pexelsPhotos[cat.id]
-            return (
-              <Link key={cat.id} to={`/categorie/${cat.id}`} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
-                <div
-                  className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-full text-white shadow-card ${cat.colorClass}`}
-                >
-                  {photo ? (
-                    <img src={photo} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <CategoryIcon category={cat.id} className="h-6 w-6" />
-                  )}
-                </div>
-                <span className="text-center text-xs font-medium leading-tight text-brand-dark/70">{cat.label}</span>
-              </Link>
-            )
-          })}
-        </div>
+      <div className="space-y-7 px-5 pb-2 pt-5">
+        <CategoryTabs />
+
+        {error && <CatalogState />}
 
         {hasNoResults && (
           <div className="rounded-card bg-white p-5 text-center shadow-card">
-            <Search className="mx-auto h-9 w-9 text-brand-dark/30" />
+            <Search className="mx-auto h-9 w-9 text-brand-dark/30" aria-hidden="true" />
             <p className="mt-2 text-sm font-medium text-brand-dark">Aucun résultat pour "{query}"</p>
-            <p className="mt-1 text-xs text-brand-dark/50">
+            <p className="mt-1 text-xs text-brand-dark/60">
               Essaie un autre nom de marché, de marchand ou de produit.
             </p>
           </div>
@@ -102,29 +82,42 @@ export default function Home() {
           <section>
             <h2 className="mb-3 text-base font-semibold text-brand-dark">Produits</h2>
             <div className="space-y-3">
-              {matchedProducts.map((product) => (
-                <ProductResultCard
-                  key={product.id}
-                  product={product}
-                  sellers={merchants.filter((m) => m.id === product.merchantId)}
-                />
+              {matchedProducts.map((product, i) => (
+                <Reveal key={product.id} index={i}>
+                  <ProductResultCard
+                    product={product}
+                    sellers={merchants.filter((m) => m.id === product.merchantId)}
+                  />
+                </Reveal>
               ))}
             </div>
           </section>
         )}
 
-        {marketSections.map(
-          (section) =>
-            section.items.length > 0 && (
-              <section key={section.title}>
-                <h2 className="mb-3 text-base font-semibold text-brand-dark">{section.title}</h2>
-                <div className="flex gap-3 overflow-x-auto pb-1">
-                  {section.items.map((market) => (
-                    <MarketCard key={market.id} market={market} />
-                  ))}
-                </div>
-              </section>
-            ),
+        {stores.length > 0 && (
+          <section>
+            <h2 className="mb-3 text-base font-semibold text-brand-dark">Magasins et enseignes</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {stores.map((market, i) => (
+                <Reveal key={market.id} index={i % 2}>
+                  <MarketCard market={market} className="h-full" />
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {localMarkets.length > 0 && (
+          <section>
+            <h2 className="mb-3 text-base font-semibold text-brand-dark">Marchés de proximité</h2>
+            <div className="flex gap-3 overflow-x-auto pb-1">
+              {localMarkets.map((market, i) => (
+                <Reveal key={market.id} index={i} className="shrink-0">
+                  <MarketCard market={market} />
+                </Reveal>
+              ))}
+            </div>
+          </section>
         )}
 
         {(!isSearching || matchedMerchants.length > 0) && (
@@ -134,18 +127,22 @@ export default function Home() {
             </h2>
             {matchedMerchants.length > 0 ? (
               <div className="space-y-3">
-                {matchedMerchants.map((merchant) => (
-                  <MerchantCard key={merchant.id} merchant={merchant} />
+                {matchedMerchants.map((merchant, i) => (
+                  <Reveal key={merchant.id} index={i}>
+                    <MerchantCard merchant={merchant} />
+                  </Reveal>
                 ))}
               </div>
             ) : (
-              <div className="rounded-card bg-white p-5 text-center shadow-card">
-                <ShoppingBasket className="mx-auto h-9 w-9 text-brand-dark/30" />
-                <p className="mt-2 text-sm font-medium text-brand-dark">Aucun favori pour l'instant</p>
-                <p className="mt-1 text-xs text-brand-dark/50">
-                  Ajoutez vos marchands préférés depuis leur fiche pour les retrouver ici rapidement.
-                </p>
-              </div>
+              <Reveal>
+                <div className="rounded-card bg-white p-5 text-center shadow-card">
+                  <ShoppingBasket className="mx-auto h-9 w-9 text-brand-dark/30" aria-hidden="true" />
+                  <p className="mt-2 text-sm font-medium text-brand-dark">Aucun favori pour l'instant</p>
+                  <p className="mt-1 text-xs text-brand-dark/60">
+                    Ajoutez vos marchands préférés depuis leur fiche pour les retrouver ici rapidement.
+                  </p>
+                </div>
+              </Reveal>
             )}
           </section>
         )}

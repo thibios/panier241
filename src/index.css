@@ -19,20 +19,20 @@ h4 {
   @apply font-display;
 }
 
-/* Motif signature "tressé" (vannerie de panier), en filigrane sur les en-têtes bleus.
-   Deux jeux de diagonales croisées en SVG répété, jamais une image en dur. */
+/* Motif signature « tressé » (vannerie de panier), en filigrane sur les en-têtes.
+   Deux jeux de diagonales croisées, jamais une image en dur. */
 .woven-pattern {
   background-image: repeating-linear-gradient(
       45deg,
-      rgba(255, 255, 255, 0.08) 0px,
-      rgba(255, 255, 255, 0.08) 2px,
+      rgb(255 255 255 / 0.07) 0px,
+      rgb(255 255 255 / 0.07) 2px,
       transparent 2px,
       transparent 10px
     ),
     repeating-linear-gradient(
       -45deg,
-      rgba(255, 255, 255, 0.08) 0px,
-      rgba(255, 255, 255, 0.08) 2px,
+      rgb(255 255 255 / 0.07) 0px,
+      rgb(255 255 255 / 0.07) 2px,
       transparent 2px,
       transparent 10px
     );
@@ -44,6 +44,109 @@ h4 {
   height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(37, 40, 44, 0.18);
+  background: rgb(var(--color-ink) / 0.18);
   border-radius: 999px;
+}
+
+/* ---------- Animations ---------- */
+
+/* Apparition au défilement : fondu + légère montée. Le décalage (stagger) est
+   posé par le composant Reveal via transition-delay. */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 480ms ease-out,
+    transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Entrée dans la vitrine d'un commerce : le thème local apparaît en fondu. */
+@keyframes theme-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.theme-scope {
+  animation: theme-in 380ms ease-out both;
+}
+
+/* Zoom « Ken Burns » très discret sur les images d'en-tête. */
+@keyframes ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.07);
+  }
+}
+.ken-burns {
+  animation: ken-burns 16s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* Compteur du panier : rebond à chaque changement. */
+@keyframes badge-pop {
+  0% {
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.badge-pop {
+  animation: badge-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Icône panier : micro-rebond quand un produit y arrive. */
+@keyframes cart-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-5px) scale(1.12);
+  }
+  70% {
+    transform: translateY(1px) scale(0.97);
+  }
+}
+.cart-bounce {
+  animation: cart-bounce 460ms ease-out;
+}
+
+/* Squelettes de chargement. */
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+.skeleton {
+  @apply rounded-xl bg-brand-light;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+/* Accessibilité : si l'utilisateur demande moins de mouvement, tout est immédiat. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
 }

@@ -6,6 +6,8 @@ interface CatalogContextValue {
   merchants: Merchant[]
   products: Product[]
   loading: boolean
+  /** Vrai si le dernier chargement du catalogue a échoué (réseau, serveur). */
+  error: boolean
   refresh: () => Promise<void>
   getProductsForMerchant: (merchantId: string) => Product[]
 }
@@ -72,6 +74,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const [merchants, setMerchants] = useState<Merchant[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -82,6 +85,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         .eq('status', 'approved'),
       supabase.from('products').select('id, merchant_id, name, category, price, unit, image_url, variant_label'),
     ])
+    setError(Boolean(merchantsRes.error || productsRes.error))
     if (merchantsRes.data) {
       const approvedMerchants = merchantsRes.data.map(merchantFromRow)
       setMerchants(approvedMerchants)
@@ -100,7 +104,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <CatalogContext.Provider value={{ merchants, products, loading, refresh, getProductsForMerchant }}>
+    <CatalogContext.Provider value={{ merchants, products, loading, error, refresh, getProductsForMerchant }}>
       {children}
     </CatalogContext.Provider>
   )

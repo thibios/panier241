@@ -8,7 +8,8 @@ import { CategoryIcon } from './icons'
 /**
  * Vignette d'un produit. Priorité : photo uploadée par le marchand > photo
  * Pexels du produit lui-même (par son nom) > photo Pexels de sa catégorie >
- * icône de la catégorie.
+ * icône de la catégorie. Le fond coloré sert de placeholder pendant le
+ * chargement ; `data-fly-source` désigne l'élément qui « vole » vers le panier.
  */
 export default function ProductPhoto({ product, className = 'h-12 w-12' }: { product: Product; className?: string }) {
   const categoryPhotos = usePexelsPhotos()
@@ -18,10 +19,17 @@ export default function ProductPhoto({ product, className = 'h-12 w-12' }: { pro
 
   return (
     <div
+      data-fly-source
       className={`flex shrink-0 items-center justify-center overflow-hidden rounded-2xl text-white ${className} ${category?.colorClass}`}
     >
       {photo ? (
-        <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
+        <img
+          src={photo}
+          alt={getProductDisplayName(product)}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
       ) : (
         <CategoryIcon category={product.category} className="h-6 w-6" />
       )}

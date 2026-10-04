@@ -2,6 +2,22 @@ import type { ReactNode } from 'react'
 import type { Market } from '../../types'
 import { useMarketPhoto } from '../ui/MarketVisual'
 
+/** Image de fond d'un en-tête, avec zoom lent très discret et voile sombre pour la lisibilité. */
+export function HeroBackdrop({ photo }: { photo: string }) {
+  return (
+    <>
+      <img
+        src={photo}
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        className="ken-burns absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-brand-dark/60" />
+    </>
+  )
+}
+
 /**
  * En-tête d'un lieu de vente : photo de marché en fond pour un marché
  * traditionnel, logo de l'enseigne en filigrane pour un magasin.
@@ -9,12 +25,8 @@ import { useMarketPhoto } from '../ui/MarketVisual'
 export default function MarketHeader({ market, children }: { market: Market; children: ReactNode }) {
   const photo = useMarketPhoto(market)
   return (
-    <header
-      className="woven-pattern relative overflow-hidden rounded-b-[2rem] bg-brand-dark bg-cover bg-center px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white"
-      style={
-        photo ? { backgroundImage: `linear-gradient(rgba(37,40,44,0.55), rgba(37,40,44,0.75)), url(${photo})` } : undefined
-      }
-    >
+    <header className="woven-pattern relative overflow-hidden rounded-b-[2rem] bg-header px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white">
+      {photo && <HeroBackdrop photo={photo} />}
       {market.logoUrl && <LogoWatermark logoUrl={market.logoUrl} />}
       <div className="relative">{children}</div>
     </header>

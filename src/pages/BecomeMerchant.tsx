@@ -9,18 +9,10 @@ import { markets } from '../data/markets'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../context/CatalogContext'
+import { categoryColors } from '../theme/tokens'
 import type { CategoryId } from '../types'
 import { ArrowLeft } from 'lucide-react'
 import { CategoryIcon } from '../components/ui/icons'
-
-const categoryColorHex: Record<CategoryId, string> = {
-  legumes: '#3FAE5C',
-  fruits: '#F2994A',
-  poisson: '#E8543A',
-  cereales: '#C08A3E',
-  bricolage: '#5B7C99',
-  epicerie: '#2FA3A3',
-}
 
 interface ProductDraft {
   name: string
@@ -114,7 +106,7 @@ export default function BecomeMerchant() {
           market_id: marketId,
           categories: selectedCategories,
           address: address.trim(),
-          banner_color: categoryColorHex[selectedCategories[0]],
+          banner_color: categoryColors[selectedCategories[0]],
           kiosk_photo_url: publicUrlData.publicUrl,
         })
         .select('id')

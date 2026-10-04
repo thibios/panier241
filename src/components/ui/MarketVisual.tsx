@@ -14,8 +14,8 @@ export function useMarketPhoto(market: Market): string | null {
 export default function MarketVisual({ market, iconClassName }: { market: Market; iconClassName: string }) {
   const photo = useMarketPhoto(market)
   if (market.logoUrl) {
-    return <img src={market.logoUrl} alt={`Logo ${market.name}`} className="h-full w-full bg-white object-contain p-1.5" />
+    return <img src={market.logoUrl} alt={`Logo ${market.name}`} loading="lazy" decoding="async" className="h-full w-full bg-white object-contain p-1.5" />
   }
-  if (photo) return <img src={photo} alt="" className="h-full w-full object-cover" />
+  if (photo) return <img src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
   return <MarketIcon kind={market.kind} className={iconClassName} />
 }

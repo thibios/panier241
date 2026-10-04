@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import BottomNav from './components/layout/BottomNav'
+import OfflineBanner from './components/layout/OfflineBanner'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CatalogProvider } from './context/CatalogContext'
 import { CartProvider } from './context/CartContext'
@@ -35,6 +36,7 @@ function AuthenticatedApp() {
             <CartProvider>
               <OrdersProvider>
                 <div className="min-h-screen bg-surface">
+                    <OfflineBanner />
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="/marche/:marketId" element={<MarketDetail />} />
