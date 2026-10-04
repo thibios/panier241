@@ -13,6 +13,7 @@ import { resolveImage } from '../lib/images'
 import { usePexelsPhotos } from '../context/PexelsContext'
 import { groupProducts } from '../lib/productGroups'
 import { getProductDisplayName } from '../lib/productDisplay'
+import { LogoWatermark } from '../components/layout/MarketHeader'
 import type { Product } from '../types'
 import { ArrowLeft, ArrowRight, MapPin, Star, MessageCircle, ChevronDown } from 'lucide-react'
 import { CategoryIcon } from '../components/ui/icons'
@@ -85,10 +86,11 @@ export default function MerchantDetail() {
   return (
     <PageShell>
       <div
-        className="relative px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white"
+        className="relative overflow-hidden rounded-b-[2rem] px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white"
         style={{ backgroundColor: merchant.bannerColor }}
       >
-        <div className="flex items-center justify-between">
+        {market?.logoUrl && <LogoWatermark logoUrl={market.logoUrl} />}
+        <div className="relative flex items-center justify-between">
           <Link to="/" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -101,7 +103,7 @@ export default function MerchantDetail() {
             <Star className={`h-5 w-5 ${isFavorite(merchant.id) ? 'fill-white' : ''}`} />
           </button>
         </div>
-        <div className="mt-4 flex items-center gap-3">
+        <div className="relative mt-4 flex items-center gap-3">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/20 text-4xl">
             {(() => {
               const photo = resolveImage(merchant.kioskPhotoUrl, merchant.categories[0], pexelsPhotos)

@@ -1,12 +1,12 @@
 import { useParams, Link } from 'react-router-dom'
 import PageShell from '../components/layout/PageShell'
-import WovenHeader from '../components/layout/WovenHeader'
+import MarketHeader from '../components/layout/MarketHeader'
 import Button from '../components/ui/Button'
 import MerchantCard from '../components/ui/MerchantCard'
 import { markets } from '../data/markets'
 import { useCatalog } from '../context/CatalogContext'
 import { ArrowLeft, ShoppingBasket } from 'lucide-react'
-import { MarketIcon } from '../components/ui/icons'
+import MarketVisual from '../components/ui/MarketVisual'
 
 export default function MarketDetail() {
   const { marketId } = useParams()
@@ -30,14 +30,14 @@ export default function MarketDetail() {
 
   return (
     <PageShell>
-      <WovenHeader>
+      <MarketHeader market={market}>
         <div className="flex items-center gap-3">
           <Link to="/" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-2xl">
-              <MarketIcon kind={market.kind} className="h-6 w-6" />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/20">
+              <MarketVisual market={market} iconClassName="h-6 w-6" />
             </div>
             <div>
               <h1 className="text-xl font-bold">{market.name}</h1>
@@ -47,7 +47,7 @@ export default function MarketDetail() {
             </div>
           </div>
         </div>
-      </WovenHeader>
+      </MarketHeader>
 
       <div className="space-y-3 px-5 pt-5 pb-8">
         <h2 className="text-sm font-semibold text-brand-dark">

@@ -10,7 +10,7 @@ export default {
           dark: '#14245C', // titres foncés
           light: '#EAF0FF', // fonds de carte clairs
         },
-        surface: '#F3F5FB', // fond général de l'app
+        surface: '#F2E2A8', // fond général de l'app : jaune moutarde clair
         // Accents par catégorie de produit
         category: {
           legumes: '#3FAE5C',
@@ -22,8 +22,8 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Sora', 'ui-rounded', 'sans-serif'],
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Arial Narrow"', '"Archivo Narrow"', 'Arial', 'sans-serif'],
+        sans: ['"Arial Narrow"', '"Archivo Narrow"', 'Arial', 'sans-serif'],
       },
       borderRadius: {
         card: '1.5rem',

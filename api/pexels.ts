@@ -15,10 +15,13 @@ export default async function handler(req: any, res: any) {
 
   // Seule la recherche en français est proposée en plus de l'anglais par défaut.
   const locale = req.query?.locale === 'fr-FR' ? '&locale=fr-FR' : ''
+  // `page` permet de choisir le 2e, 3e... résultat pour varier les photos d'un même mot-clé.
+  const pageNumber = Number.parseInt(String(req.query?.page ?? '1'), 10)
+  const page = pageNumber >= 1 && pageNumber <= 20 ? pageNumber : 1
 
   try {
     const pexelsRes = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=square${locale}`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&page=${page}&orientation=square${locale}`,
       { headers: { Authorization: apiKey } },
     )
 

@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
 import type { CategoryId } from '../types'
 
-const CACHE_PREFIX = 'pexels-cache:v2:'
+const CACHE_PREFIX = 'pexels-cache:v3:'
 const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 jours
 
 /** Mots-clés Pexels par catégorie (anglais : de meilleurs résultats sur Pexels). */
 const categoryKeywords: Record<CategoryId, string> = {
-  legumes: 'fresh vegetables',
-  fruits: 'fresh fruits',
-  poisson: 'fresh fish and meat',
-  cereales: 'grains and spices',
-  bricolage: 'construction tools hardware',
-  epicerie: 'grocery store shelf',
+  legumes: 'african market vegetables',
+  fruits: 'african market fruits',
+  poisson: 'african fish market',
+  cereales: 'african market spices grains',
+  bricolage: 'african construction site workers',
+  epicerie: 'african grocery shop',
 }
 
 interface CacheEntry {
@@ -19,8 +19,15 @@ interface CacheEntry {
   fetchedAt: number
 }
 
-function cacheKey(query: string, locale: string | undefined) {
-  return `${CACHE_PREFIX}${locale ?? 'en'}:${query.trim().toLowerCase()}`
+export interface PexelsOptions {
+  /** 'fr-FR' pour chercher en français ; anglais par défaut. */
+  locale?: 'fr-FR'
+  /** Rang du résultat à prendre (1 = premier), pour varier les photos d'un même mot-clé. */
+  page?: number
+}
+
+function cacheKey(query: string, { locale, page = 1 }: PexelsOptions = {}) {
+  return `${CACHE_PREFIX}${locale ?? 'en'}:${page}:${query.trim().toLowerCase()}`
 }
 
 function readCache(key: string): string | null {
@@ -54,8 +61,8 @@ const inFlight = new Map<string, Promise<string | null>>()
  * son repli. Seul un vrai résultat est mis en cache, pour qu'un échec soit
  * retenté au prochain chargement.
  */
-export function getPexelsPhoto(query: string, locale?: string): Promise<string | null> {
-  const key = cacheKey(query, locale)
+export function getPexelsPhoto(query: string, options: PexelsOptions = {}): Promise<string | null> {
+  const key = cacheKey(query, options)
   const cached = readCache(key)
   if (cached) return Promise.resolve(cached)
 
@@ -63,7 +70,8 @@ export function getPexelsPhoto(query: string, locale?: string): Promise<string |
   if (pending) return pending
 
   const params = new URLSearchParams({ query: query.trim() })
-  if (locale) params.set('locale', locale)
+  if (options.locale) params.set('locale', options.locale)
+  if (options.page && options.page > 1) params.set('page', String(options.page))
   const request = fetch(`/api/pexels?${params}`)
     .then(async (res) => {
       if (!res.ok) return null
@@ -78,33 +86,39 @@ export function getPexelsPhoto(query: string, locale?: string): Promise<string |
   return request
 }
 
+/** Rang du résultat retenu par catégorie, quand le premier se répète d'une catégorie à l'autre. */
+const categoryPage: Partial<Record<CategoryId, number>> = { fruits: 2 }
+
 export function getCategoryPhoto(categoryId: CategoryId): Promise<string | null> {
-  return getPexelsPhoto(categoryKeywords[categoryId])
+  return getPexelsPhoto(categoryKeywords[categoryId], { page: categoryPage[categoryId] })
 }
 
 /**
- * Photo Pexels correspondant au nom d'un produit (recherche en français).
- * `null` tant qu'elle n'est pas chargée, ou si `productName` est null.
+ * Photo Pexels pour un mot-clé. `null` tant qu'elle n'est pas chargée, en cas
+ * d'échec, ou si `query` est null.
  */
-export function useProductNamePhoto(productName: string | null): string | null {
-  const [url, setUrl] = useState<string | null>(() =>
-    productName ? readCache(cacheKey(productName, 'fr-FR')) : null,
-  )
+export function usePexelsPhoto(query: string | null, locale?: 'fr-FR', page = 1): string | null {
+  const [url, setUrl] = useState<string | null>(() => (query ? readCache(cacheKey(query, { locale, page })) : null))
 
   useEffect(() => {
-    if (!productName) {
+    if (!query) {
       setUrl(null)
       return
     }
     let cancelled = false
-    setUrl(readCache(cacheKey(productName, 'fr-FR')))
-    getPexelsPhoto(productName, 'fr-FR').then((result) => {
+    setUrl(readCache(cacheKey(query, { locale, page })))
+    getPexelsPhoto(query, { locale, page }).then((result) => {
       if (!cancelled) setUrl(result)
     })
     return () => {
       cancelled = true
     }
-  }, [productName])
+  }, [query, locale, page])
 
   return url
+}
+
+/** Photo Pexels correspondant au nom d'un produit (recherche en français). */
+export function useProductNamePhoto(productName: string | null): string | null {
+  return usePexelsPhoto(productName, 'fr-FR')
 }

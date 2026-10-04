@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { Market } from '../../types'
 import { useCatalog } from '../../context/CatalogContext'
-import { MarketIcon } from './icons'
+import MarketVisual from './MarketVisual'
 
 export default function MarketCard({ market }: { market: Market }) {
   const { merchants } = useCatalog()
@@ -12,8 +12,8 @@ export default function MarketCard({ market }: { market: Market }) {
       to={`/marche/${market.id}`}
       className="flex w-40 shrink-0 flex-col gap-2 rounded-card bg-white p-3 shadow-card transition active:scale-[0.99]"
     >
-      <div className="flex h-20 items-center justify-center rounded-2xl bg-brand-light text-4xl">
-        <MarketIcon kind={market.kind} className="h-9 w-9 text-brand" />
+      <div className="flex h-24 items-center justify-center overflow-hidden rounded-2xl bg-brand-light">
+        <MarketVisual market={market} iconClassName="h-9 w-9 text-brand" />
       </div>
       <div>
         <p className="text-sm font-semibold leading-tight text-brand-dark">{market.name}</p>

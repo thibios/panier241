@@ -34,7 +34,7 @@ export default function CategoryDetail() {
   return (
     <PageShell>
       <header
-        className={`relative bg-cover bg-center px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white ${category.colorClass}`}
+        className={`relative rounded-b-[2rem] bg-cover bg-center px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white ${category.colorClass}`}
         style={
           banner
             ? { backgroundImage: `linear-gradient(rgba(20,36,92,0.45), rgba(20,36,92,0.65)), url(${banner})` }
