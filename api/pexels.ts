@@ -13,9 +13,12 @@ export default async function handler(req: any, res: any) {
     return
   }
 
+  // Seule la recherche en français est proposée en plus de l'anglais par défaut.
+  const locale = req.query?.locale === 'fr-FR' ? '&locale=fr-FR' : ''
+
   try {
     const pexelsRes = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=square`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=square${locale}`,
       { headers: { Authorization: apiKey } },
     )
 

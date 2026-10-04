@@ -11,12 +11,9 @@ import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../context/CatalogContext'
 import { formatFCFA } from '../lib/format'
 import { SERVICE_FEE_RATE } from '../lib/pricing'
-import { resolveImage } from '../lib/images'
-import { usePexelsPhotos } from '../context/PexelsContext'
-import { getProductDisplayName } from '../lib/productDisplay'
 import type { CategoryId, Merchant, Order, OrderStatus } from '../types'
 import { ArrowLeft, Bike, Store, Hourglass, Ban, Play } from 'lucide-react'
-import { CategoryIcon } from '../components/ui/icons'
+import ProductPhoto from '../components/ui/ProductPhoto'
 
 type Tab = 'produits' | 'commandes'
 
@@ -73,7 +70,6 @@ const ORDER_COLUMNS =
 export default function MerchantSpace() {
   const { user } = useAuth()
   const { getProductsForMerchant, refresh: refreshCatalog } = useCatalog()
-  const pexelsPhotos = usePexelsPhotos()
 
   const [myMerchant, setMyMerchant] = useState<Merchant | null | undefined>(undefined)
   const [tab, setTab] = useState<Tab>('produits')
@@ -380,16 +376,7 @@ export default function MerchantSpace() {
             {myProducts.length > 0 ? (
               myProducts.map((product) => (
                 <Card key={product.id} className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand-light text-xl">
-                    {(() => {
-                      const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
-                      return photo ? (
-                        <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
-                      ) : (
-                        <CategoryIcon category={product.category} className="h-6 w-6 text-brand" />
-                      )
-                    })()}
-                  </div>
+                  <ProductPhoto product={product} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-brand-dark">
                       {product.name}

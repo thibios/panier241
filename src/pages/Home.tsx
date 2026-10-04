@@ -10,23 +10,12 @@ import { markets } from '../data/markets'
 import { useFavorites } from '../context/FavoritesContext'
 import { useCatalog } from '../context/CatalogContext'
 import { usePexelsPhotos } from '../context/PexelsContext'
-import type { CategoryId } from '../types'
 import { ShoppingBasket, Search } from 'lucide-react'
 import { CategoryIcon } from '../components/ui/icons'
-
-/** Voile de couleur (semi-transparent) posé sur les photos de catégorie, pour rester lisible. */
-const categoryOverlay: Record<CategoryId, string> = {
-  legumes: 'rgba(63,174,92,0.55)',
-  fruits: 'rgba(242,153,74,0.55)',
-  poisson: 'rgba(232,84,58,0.55)',
-  cereales: 'rgba(192,138,62,0.55)',
-  bricolage: 'rgba(91,124,153,0.55)',
-  epicerie: 'rgba(47,163,163,0.55)',
-}
+import { Link } from 'react-router-dom'
 
 export default function Home() {
   const [query, setQuery] = useState('')
-  const [activeCategory, setActiveCategory] = useState<CategoryId | null>(null)
   const { isFavorite } = useFavorites()
   const { merchants, products } = useCatalog()
   const pexelsPhotos = usePexelsPhotos()
@@ -46,26 +35,18 @@ export default function Home() {
   // En recherche : tous les marchands correspondants. Sinon : uniquement les favoris.
   const matchedMerchants = useMemo(() => {
     return merchants.filter((m) => {
-      if (activeCategory && !m.categories.includes(activeCategory)) return false
       if (normalizedQuery) return m.name.toLowerCase().includes(normalizedQuery)
       return isFavorite(m.id)
     })
-  }, [activeCategory, normalizedQuery, isFavorite])
+  }, [merchants, normalizedQuery, isFavorite])
 
   const matchedProducts = useMemo(() => {
     if (!normalizedQuery) return []
-    return products.filter((p) => {
-      if (activeCategory && p.category !== activeCategory) return false
-      return p.name.toLowerCase().includes(normalizedQuery)
-    })
-  }, [activeCategory, normalizedQuery])
+    return products.filter((p) => p.name.toLowerCase().includes(normalizedQuery))
+  }, [products, normalizedQuery])
 
   const hasNoResults =
     isSearching && filteredMarkets.length === 0 && matchedMerchants.length === 0 && matchedProducts.length === 0
-
-  function toggleCategory(id: CategoryId) {
-    setActiveCategory((prev) => (prev === id ? null : id))
-  }
 
   return (
     <PageShell>
@@ -82,32 +63,20 @@ export default function Home() {
       <div className="-mt-4 space-y-6 px-5 pb-2">
         <div className="flex gap-3 overflow-x-auto pb-1 pt-2">
           {categories.map((cat) => {
-            const isActive = activeCategory === cat.id
             const photo = pexelsPhotos[cat.id]
             return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => toggleCategory(cat.id)}
-                className="flex flex-col items-center gap-1.5"
-              >
+              <Link key={cat.id} to={`/categorie/${cat.id}`} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
                 <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-full bg-cover bg-center text-2xl text-white transition ${cat.colorClass} ${
-                    isActive ? 'ring-4 ring-offset-2 ring-offset-surface' : ''
-                  }`}
-                  style={{
-                    ...(photo
-                      ? { backgroundImage: `linear-gradient(${categoryOverlay[cat.id]}, ${categoryOverlay[cat.id]}), url(${photo})` }
-                      : undefined),
-                    ...(isActive ? { boxShadow: '0 0 0 4px rgba(20,36,92,0.15)' } : undefined),
-                  }}
+                  className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-full text-white shadow-card ${cat.colorClass}`}
                 >
-                  {!photo && <CategoryIcon category={cat.id} className="h-6 w-6" />}
+                  {photo ? (
+                    <img src={photo} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <CategoryIcon category={cat.id} className="h-6 w-6" />
+                  )}
                 </div>
-                <span className={`text-xs font-medium ${isActive ? 'text-brand-dark' : 'text-brand-dark/70'}`}>
-                  {cat.label}
-                </span>
-              </button>
+                <span className="text-center text-xs font-medium leading-tight text-brand-dark/70">{cat.label}</span>
+              </Link>
             )
           })}
         </div>

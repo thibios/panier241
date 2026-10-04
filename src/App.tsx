@@ -10,6 +10,7 @@ import { PexelsProvider } from './context/PexelsContext'
 import AuthPage from './pages/Auth'
 import Home from './pages/Home'
 import MarketDetail from './pages/MarketDetail'
+import CategoryDetail from './pages/CategoryDetail'
 import MerchantDetail from './pages/MerchantDetail'
 import DeliverySlot from './pages/DeliverySlot'
 import Cart from './pages/Cart'
@@ -36,6 +37,7 @@ function AuthenticatedApp() {
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="/marche/:marketId" element={<MarketDetail />} />
+                      <Route path="/categorie/:categoryId" element={<CategoryDetail />} />
                       <Route path="/marchand/:merchantId" element={<MerchantDetail />} />
                       <Route path="/creneau" element={<DeliverySlot />} />
                       <Route path="/panier" element={<Cart />} />

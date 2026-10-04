@@ -4,7 +4,6 @@ import PageShell from '../components/layout/PageShell'
 import Button from '../components/ui/Button'
 import QuantityStepper from '../components/ui/QuantityStepper'
 import { markets } from '../data/markets'
-import { categories } from '../data/categories'
 import { useCart } from '../context/CartContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { useCatalog } from '../context/CatalogContext'
@@ -17,6 +16,7 @@ import { getProductDisplayName } from '../lib/productDisplay'
 import type { Product } from '../types'
 import { ArrowLeft, ArrowRight, MapPin, Star, MessageCircle, ChevronDown } from 'lucide-react'
 import { CategoryIcon } from '../components/ui/icons'
+import ProductPhoto from '../components/ui/ProductPhoto'
 
 const categoryDotClass: Record<string, string> = {
   legumes: 'bg-category-legumes',
@@ -66,21 +66,6 @@ export default function MerchantDetail() {
     return items.find((item) => item.productId === productId)?.quantity ?? 0
   }
 
-  function productThumbnail(product: Product) {
-    const category = categories.find((c) => c.id === product.category)
-    const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
-    return (
-      <div
-        className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-xl text-white ${category?.colorClass}`}
-      >
-        {photo ? (
-          <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
-        ) : (
-          <CategoryIcon category={product.category} className="h-6 w-6" />
-        )}
-      </div>
-    )
-  }
 
   function addControl(product: Product) {
     const quantity = getQuantity(product.id)
@@ -190,7 +175,7 @@ export default function MerchantDetail() {
                 const product = group.variants[0]
                 return (
                   <div key={product.id} className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card">
-                    {productThumbnail(product)}
+                    <ProductPhoto product={product} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-brand-dark">{getProductDisplayName(product)}</p>
                       <p className="text-xs text-brand-dark/50">
@@ -211,7 +196,7 @@ export default function MerchantDetail() {
                     onClick={() => setExpandedGroup(isExpanded ? null : group.name)}
                     className="flex w-full items-center gap-3 p-3 text-left"
                   >
-                    {productThumbnail(cheapest)}
+                    <ProductPhoto product={cheapest} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-brand-dark">{group.name}</p>
                       <p className="text-xs text-brand-dark/50">

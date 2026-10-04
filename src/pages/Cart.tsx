@@ -13,12 +13,10 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import { formatFCFA } from '../lib/format'
 import { buildWhatsAppLink } from '../lib/whatsapp'
-import { resolveImage } from '../lib/images'
-import { usePexelsPhotos } from '../context/PexelsContext'
 import { getProductDisplayName } from '../lib/productDisplay'
 import type { Order, OrderItem } from '../types'
 import { ShoppingBasket, MapPin, Clock, MessageCircle, Info } from 'lucide-react'
-import { CategoryIcon } from '../components/ui/icons'
+import ProductPhoto from '../components/ui/ProductPhoto'
 
 export default function Cart() {
   const navigate = useNavigate()
@@ -39,7 +37,6 @@ export default function Cart() {
   const { addresses } = useAddresses()
   const { merchants, products } = useCatalog()
   const { user } = useAuth()
-  const pexelsPhotos = usePexelsPhotos()
   const merchant = merchants.find((m) => m.id === merchantId) ?? null
   const selectedAddress =
     addresses.find((a) => a.id === selectedAddressId) ?? addresses.find((a) => a.isDefault) ?? addresses[0]
@@ -149,16 +146,7 @@ export default function Cart() {
             if (!product) return null
             return (
               <div key={item.productId} className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand-light text-xl">
-                  {(() => {
-                    const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
-                    return photo ? (
-                      <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
-                    ) : (
-                      <CategoryIcon category={product.category} className="h-6 w-6 text-brand" />
-                    )
-                  })()}
-                </div>
+                <ProductPhoto product={product} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-brand-dark">{getProductDisplayName(product)}</p>
                   <p className="text-xs text-brand-dark/50">{formatFCFA(product.price)} / {product.unit}</p>

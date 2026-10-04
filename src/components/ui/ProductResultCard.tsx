@@ -1,11 +1,8 @@
 import { Link } from 'react-router-dom'
 import type { Merchant, Product } from '../../types'
-import { categories } from '../../data/categories'
 import { formatFCFA } from '../../lib/format'
-import { resolveImage } from '../../lib/images'
-import { usePexelsPhotos } from '../../context/PexelsContext'
 import { getProductDisplayName } from '../../lib/productDisplay'
-import { CategoryIcon } from './icons'
+import ProductPhoto from './ProductPhoto'
 
 export default function ProductResultCard({
   product,
@@ -14,22 +11,11 @@ export default function ProductResultCard({
   product: Product
   sellers: Merchant[]
 }) {
-  const category = categories.find((c) => c.id === product.category)
-  const pexelsPhotos = usePexelsPhotos()
-  const photo = resolveImage(product.imageUrl, product.category, pexelsPhotos)
 
   return (
     <div className="rounded-card bg-white p-3 shadow-card">
       <div className="flex items-center gap-3">
-        <div
-          className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-xl text-white ${category?.colorClass}`}
-        >
-          {photo ? (
-            <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
-          ) : (
-            <CategoryIcon category={product.category} className="h-6 w-6" />
-          )}
-        </div>
+        <ProductPhoto product={product} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-brand-dark">{getProductDisplayName(product)}</p>
           <p className="text-xs text-brand-dark/50">
