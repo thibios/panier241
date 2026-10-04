@@ -7,6 +7,7 @@ import Button from '../components/ui/Button'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth, isAdminEmail } from '../context/AuthContext'
 import type { ApprovalStatus } from '../types'
+import { ArrowLeft, Lock } from 'lucide-react'
 
 interface MerchantRow {
   id: string
@@ -58,10 +59,10 @@ export default function AdminSpace() {
     return (
       <PageShell>
         <div className="px-5 pt-8 text-center">
-          <p className="text-3xl">🔒</p>
+          <Lock className="mx-auto h-9 w-9 text-brand-dark/30" />
           <p className="mt-2 text-sm font-medium text-brand-dark">Accès réservé à l'administrateur</p>
           <Link to="/" className="mt-4 inline-block text-sm font-semibold text-brand">
-            ← Retour à l'accueil
+            <ArrowLeft className="inline h-4 w-4" /> Retour à l'accueil
           </Link>
         </div>
       </PageShell>

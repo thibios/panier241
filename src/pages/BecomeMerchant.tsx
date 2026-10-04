@@ -10,6 +10,8 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../context/CatalogContext'
 import type { CategoryId } from '../types'
+import { ArrowLeft } from 'lucide-react'
+import { CategoryIcon } from '../components/ui/icons'
 
 const categoryColorHex: Record<CategoryId, string> = {
   legumes: '#3FAE5C',
@@ -112,7 +114,6 @@ export default function BecomeMerchant() {
           market_id: marketId,
           categories: selectedCategories,
           address: address.trim(),
-          image_emoji: '🏪',
           banner_color: categoryColorHex[selectedCategories[0]],
           kiosk_photo_url: publicUrlData.publicUrl,
         })
@@ -137,7 +138,6 @@ export default function BecomeMerchant() {
         category: p.category,
         price: Math.round(Number(p.price)),
         unit: p.unit.trim(),
-        image_emoji: categories.find((c) => c.id === p.category)?.icon ?? '🛒',
         image_url: productPhotoUrls[i],
         variant_label: p.variantLabel.trim() || null,
       }))
@@ -158,7 +158,7 @@ export default function BecomeMerchant() {
       <WovenHeader>
         <div className="flex items-center gap-3">
           <Link to="/profil" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
-            ←
+            <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="text-xl font-bold">Devenir marchand</h1>
         </div>
@@ -213,7 +213,8 @@ export default function BecomeMerchant() {
                     isActive ? 'bg-brand text-white' : 'bg-white text-brand-dark/70 shadow-card'
                   }`}
                 >
-                  {cat.icon} {cat.label}
+                  <CategoryIcon category={cat.id} className="mr-1.5 inline h-4 w-4" />
+                  {cat.label}
                 </button>
               )
             })}
@@ -275,7 +276,7 @@ export default function BecomeMerchant() {
                 >
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.label}
+                      {cat.label}
                     </option>
                   ))}
                 </select>

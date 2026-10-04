@@ -1,12 +1,13 @@
 import { NavLink } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { useOrders } from '../../context/OrdersContext'
+import { ShoppingBasket, Package, User, Home } from 'lucide-react'
 
 const tabs = [
-  { to: '/', label: 'Accueil', icon: '🏠', end: true },
-  { to: '/commandes', label: 'Commandes', icon: '📦', end: false },
-  { to: '/panier', label: 'Panier', icon: '🧺', end: false },
-  { to: '/profil', label: 'Profil', icon: '👤', end: false },
+  { to: '/', label: 'Accueil', icon: Home, end: true },
+  { to: '/commandes', label: 'Commandes', icon: Package, end: false },
+  { to: '/panier', label: 'Panier', icon: ShoppingBasket, end: false },
+  { to: '/profil', label: 'Profil', icon: User, end: false },
 ]
 
 export default function BottomNav() {
@@ -35,7 +36,7 @@ export default function BottomNav() {
               {({ isActive }) => (
                 <>
                   <span className="relative text-xl leading-none">
-                    {tab.icon}
+                    <tab.icon className="h-5 w-5" />
                     {badgeCount[tab.to] > 0 && (
                       <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-category-poisson px-1 text-[10px] font-bold text-white">
                         {badgeCount[tab.to]}

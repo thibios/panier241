@@ -4,6 +4,7 @@ import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import { BASE_DELIVERY_FEE, RATE_PER_KM, SERVICE_FEE_RATE } from '../lib/pricing'
 import { formatFCFA } from '../lib/format'
+import { ArrowLeft } from 'lucide-react'
 
 export default function Help() {
   return (
@@ -11,7 +12,7 @@ export default function Help() {
       <WovenHeader>
         <div className="flex items-center gap-3">
           <Link to="/profil" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
-            ←
+            <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="text-xl font-bold">Aide</h1>
         </div>

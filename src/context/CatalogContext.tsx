@@ -21,7 +21,6 @@ interface MerchantRow {
   rating: number
   review_count: number
   address: string
-  image_emoji: string
   banner_color: string
   kiosk_photo_url: string | null
   status: ApprovalStatus
@@ -35,7 +34,6 @@ interface ProductRow {
   category: CategoryId
   price: number
   unit: string
-  image_emoji: string
   image_url: string | null
   variant_label: string | null
 }
@@ -50,7 +48,6 @@ function merchantFromRow(row: MerchantRow): Merchant {
     rating: row.rating,
     reviewCount: row.review_count,
     address: row.address,
-    imageEmoji: row.image_emoji,
     bannerColor: row.banner_color,
     kioskPhotoUrl: row.kiosk_photo_url,
     status: row.status,
@@ -66,7 +63,6 @@ function productFromRow(row: ProductRow): Product {
     category: row.category,
     price: row.price,
     unit: row.unit,
-    imageEmoji: row.image_emoji,
     imageUrl: row.image_url,
     variantLabel: row.variant_label,
   }
@@ -82,9 +78,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     const [merchantsRes, productsRes] = await Promise.all([
       supabase
         .from('merchants')
-        .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url, status, phone')
+        .select('id, owner_id, name, market_id, categories, rating, review_count, address, banner_color, kiosk_photo_url, status, phone')
         .eq('status', 'approved'),
-      supabase.from('products').select('id, merchant_id, name, category, price, unit, image_emoji, image_url, variant_label'),
+      supabase.from('products').select('id, merchant_id, name, category, price, unit, image_url, variant_label'),
     ])
     if (merchantsRes.data) {
       const approvedMerchants = merchantsRes.data.map(merchantFromRow)

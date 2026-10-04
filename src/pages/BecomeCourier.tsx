@@ -6,6 +6,7 @@ import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
+import { ArrowLeft } from 'lucide-react'
 
 const vehicles = ['Moto', 'Vélo', 'Voiture', 'À pied']
 
@@ -50,7 +51,7 @@ export default function BecomeCourier() {
       <WovenHeader>
         <div className="flex items-center gap-3">
           <Link to="/profil" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
-            ←
+            <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="text-xl font-bold">Devenir livreur</h1>
         </div>

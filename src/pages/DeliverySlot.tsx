@@ -7,12 +7,13 @@ import Button from '../components/ui/Button'
 import { generateDeliveryDays } from '../data/deliverySlots'
 import { useCart } from '../context/CartContext'
 import { useAddresses } from '../context/AddressesContext'
+import { ArrowLeft, ShoppingBasket, Store, MapPin, Check, Sunrise, Sun, Moon, type LucideIcon } from 'lucide-react'
 
-const periodIcon: Record<string, string> = {
-  matin: '🌅',
-  'apres-midi': '☀️',
-  soir: '🌙',
-  retrait: '🏪',
+const periodIcon: Record<string, LucideIcon> = {
+  matin: Sunrise,
+  'apres-midi': Sun,
+  soir: Moon,
+  retrait: Store,
 }
 
 export default function DeliverySlot() {
@@ -31,7 +32,7 @@ export default function DeliverySlot() {
     return (
       <PageShell>
         <div className="px-5 pt-6 text-center">
-          <p className="text-3xl">🧺</p>
+          <ShoppingBasket className="mx-auto h-9 w-9 text-brand-dark/30" />
           <p className="mt-2 text-sm font-medium text-brand-dark">Ton panier est vide</p>
           <p className="mt-1 text-xs text-brand-dark/50">
             Ajoute des produits depuis une fiche marchand avant de choisir un créneau.
@@ -49,7 +50,7 @@ export default function DeliverySlot() {
       <WovenHeader>
         <div className="flex items-center gap-3">
           <Link to="/panier" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
-            ←
+            <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="text-xl font-bold">Choix du créneau</h1>
         </div>
@@ -90,14 +91,17 @@ export default function DeliverySlot() {
                     isSelected ? 'bg-brand text-white' : 'bg-white text-brand-dark'
                   }`}
                 >
-                  <span className="text-xl">{periodIcon[slot.period]}</span>
+                  {(() => {
+                    const PeriodIcon = periodIcon[slot.period]
+                    return <PeriodIcon className="h-6 w-6 shrink-0" />
+                  })()}
                   <div className="flex-1">
                     <p className="text-sm font-semibold">{slot.periodLabel}</p>
                     <p className={`text-xs ${isSelected ? 'text-white/80' : 'text-brand-dark/50'}`}>
                       {slot.timeRange}
                     </p>
                   </div>
-                  {isSelected && <span className="text-lg">✓</span>}
+                  {isSelected && <Check className="h-5 w-5" />}
                 </button>
               )
             })}
@@ -119,7 +123,7 @@ export default function DeliverySlot() {
             <Card>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2">
-                  <span className="text-lg">📍</span>
+                  <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
                   <div>
                     <p className="text-sm font-semibold text-brand-dark">{selectedAddress.label}</p>
                     <p className="text-xs text-brand-dark/50">{selectedAddress.fullAddress}</p>
@@ -157,7 +161,7 @@ export default function DeliverySlot() {
                     <span className="font-medium text-brand-dark">{addr.label}</span>{' '}
                     <span className="text-brand-dark/50">— {addr.neighborhood}</span>
                   </span>
-                  {addr.id === selectedAddressId && <span className="text-brand">✓</span>}
+                  {addr.id === selectedAddressId && <Check className="h-4 w-4 text-brand" />}
                 </button>
               ))}
             </div>

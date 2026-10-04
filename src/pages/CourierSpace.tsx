@@ -10,6 +10,7 @@ import { useCatalog } from '../context/CatalogContext'
 import { markets } from '../data/markets'
 import { formatFCFA } from '../lib/format'
 import type { Livreur, Order } from '../types'
+import { ArrowLeft, Bike, Hourglass, Ban, MapPin, Clock, Phone, Check } from 'lucide-react'
 
 type Tab = 'disponibles' | 'mes_livraisons'
 
@@ -152,7 +153,7 @@ export default function CourierSpace() {
           <h1 className="text-xl font-bold">Espace livreur</h1>
         </WovenHeader>
         <div className="px-5 pt-8 text-center">
-          <p className="text-3xl">🛵</p>
+          <Bike className="mx-auto h-9 w-9 text-brand-dark/30" />
           <p className="mt-2 text-sm font-medium text-brand-dark">Tu n'as pas encore de profil livreur</p>
           <p className="mt-1 text-xs text-brand-dark/50">
             Crée ton profil pour accepter des livraisons sur Panier 241.
@@ -176,7 +177,7 @@ export default function CourierSpace() {
           <h1 className="text-xl font-bold">{myLivreur.name}</h1>
         </WovenHeader>
         <div className="px-5 pt-8 text-center">
-          <p className="text-3xl">{myLivreur.status === 'pending' ? '⏳' : '⛔'}</p>
+          {myLivreur.status === 'pending' ? <Hourglass className="mx-auto h-9 w-9 text-brand-dark/30" /> : <Ban className="mx-auto h-9 w-9 text-category-poisson" />}
           <p className="mt-2 text-sm font-medium text-brand-dark">
             {myLivreur.status === 'pending' ? 'En attente de validation' : 'Compte suspendu'}
           </p>
@@ -191,7 +192,7 @@ export default function CourierSpace() {
       <WovenHeader>
         <div className="flex items-center gap-3">
           <Link to="/profil" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
-            ←
+            <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
             <h1 className="text-xl font-bold">{myLivreur.name}</h1>
@@ -208,7 +209,7 @@ export default function CourierSpace() {
               onClick={() => setViewingOrder(null)}
               className="text-xs font-semibold text-brand"
             >
-              ← Retour
+              <ArrowLeft className="inline h-4 w-4" /> Retour
             </button>
 
             <Card className="space-y-3">
@@ -230,8 +231,8 @@ export default function CourierSpace() {
 
               <div className="border-t border-brand-light pt-2">
                 <p className="text-xs font-semibold text-brand-dark/50">Adresse de livraison</p>
-                <p className="text-sm text-brand-dark/70">📍 {viewingOrder.addressLabel}</p>
-                <p className="mt-1 text-sm text-brand-dark/70">🕒 {viewingOrder.slotLabel}</p>
+                <p className="text-sm text-brand-dark/70"><MapPin className="mr-1 inline h-3.5 w-3.5" />{viewingOrder.addressLabel}</p>
+                <p className="mt-1 text-sm text-brand-dark/70"><Clock className="mr-1 inline h-3.5 w-3.5" />{viewingOrder.slotLabel}</p>
               </div>
 
               <div className="border-t border-brand-light pt-2">
@@ -240,7 +241,7 @@ export default function CourierSpace() {
                   <div className="mt-1 flex items-center justify-between">
                     <span className="text-sm text-brand-dark/70">{viewingOrder.clientPhone}</span>
                     <a href={`tel:${viewingOrder.clientPhone}`}>
-                      <Button variant="secondary">📞 Appeler</Button>
+                      <Button variant="secondary"><Phone className="mr-1.5 inline h-4 w-4" />Appeler</Button>
                     </a>
                   </div>
                 ) : (
@@ -307,8 +308,8 @@ export default function CourierSpace() {
                       <p className="text-xs text-brand-dark/60">
                         {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
                       </p>
-                      <p className="text-xs text-brand-dark/50">📍 {order.addressLabel}</p>
-                      <p className="text-xs text-brand-dark/50">🕒 {order.slotLabel}</p>
+                      <p className="text-xs text-brand-dark/50"><MapPin className="mr-1 inline h-3.5 w-3.5" />{order.addressLabel}</p>
+                      <p className="text-xs text-brand-dark/50"><Clock className="mr-1 inline h-3.5 w-3.5" />{order.slotLabel}</p>
                       <div className="flex items-center justify-between border-t border-brand-light pt-2">
                         <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
                         <Button onClick={() => setViewingOrder(order)}>Voir le détail</Button>
@@ -330,13 +331,13 @@ export default function CourierSpace() {
                       <p className="text-xs text-brand-dark/60">
                         {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
                       </p>
-                      <p className="text-xs text-brand-dark/50">📍 {order.addressLabel}</p>
+                      <p className="text-xs text-brand-dark/50"><MapPin className="mr-1 inline h-3.5 w-3.5" />{order.addressLabel}</p>
                       <div className="flex items-center justify-between border-t border-brand-light pt-2">
                         <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
                         {order.status === 'en_livraison' ? (
                           <Button onClick={() => markDelivered(order.id)}>Marquer livrée</Button>
                         ) : (
-                          <span className="text-xs font-semibold text-category-legumes">Livrée ✓</span>
+                          <span className="text-xs font-semibold text-category-legumes">Livrée <Check className="inline h-3.5 w-3.5" /></span>
                         )}
                       </div>
                     </Card>

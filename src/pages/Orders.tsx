@@ -14,6 +14,7 @@ import { supabase } from '../lib/supabaseClient'
 import { formatFCFA } from '../lib/format'
 import { buildWhatsAppLink } from '../lib/whatsapp'
 import type { Order } from '../types'
+import { Bike, Package, Archive, Star, Check } from 'lucide-react'
 
 type Tab = 'en_cours' | 'historique'
 
@@ -94,7 +95,7 @@ function OrderCard({
 
       {order.livreurName && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-brand-dark/60">🛵 Livreur : {order.livreurName}</p>
+          <p className="text-xs text-brand-dark/60"><Bike className="mr-1 inline h-3.5 w-3.5" />Livreur : {order.livreurName}</p>
           {order.livreurPhone && (
             <a
               href={buildWhatsAppLink(order.livreurPhone, 'Bonjour, je vous contacte au sujet de ma livraison Panier 241. ')}
@@ -121,12 +122,12 @@ function OrderCard({
           onClick={() => setIsReviewing(true)}
           className="text-xs font-semibold text-brand"
         >
-          Laisser un avis ⭐
+          Laisser un avis <Star className="inline h-3.5 w-3.5" />
         </button>
       )}
 
       {order.status === 'livree' && hasReview && (
-        <p className="text-xs text-category-legumes">Merci pour ton avis ✓</p>
+        <p className="text-xs text-category-legumes">Merci pour ton avis <Check className="inline h-3.5 w-3.5" /></p>
       )}
 
       {isReviewing && <ReviewForm order={order} onSubmitted={onReviewSubmitted} />}
@@ -217,7 +218,7 @@ export default function Orders() {
           </div>
         ) : tab === 'en_cours' ? (
           <div className="rounded-card bg-white p-5 text-center shadow-card">
-            <p className="text-2xl">📦</p>
+            <Package className="mx-auto h-9 w-9 text-brand-dark/30" />
             <p className="mt-2 text-sm font-medium text-brand-dark">Aucune commande en cours</p>
             <p className="mt-1 text-xs text-brand-dark/50">
               Passe commande chez un marchand pour la suivre ici en temps réel.
@@ -228,7 +229,7 @@ export default function Orders() {
           </div>
         ) : (
           <div className="rounded-card bg-white p-5 text-center shadow-card">
-            <p className="text-2xl">🗂️</p>
+            <Archive className="mx-auto h-9 w-9 text-brand-dark/30" />
             <p className="mt-2 text-sm font-medium text-brand-dark">Aucune commande livrée pour l'instant</p>
             <p className="mt-1 text-xs text-brand-dark/50">
               Ton historique de commandes apparaîtra ici une fois livré.

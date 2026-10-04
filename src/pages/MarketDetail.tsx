@@ -5,6 +5,8 @@ import Button from '../components/ui/Button'
 import MerchantCard from '../components/ui/MerchantCard'
 import { markets } from '../data/markets'
 import { useCatalog } from '../context/CatalogContext'
+import { ArrowLeft, ShoppingBasket } from 'lucide-react'
+import { MarketIcon } from '../components/ui/icons'
 
 export default function MarketDetail() {
   const { marketId } = useParams()
@@ -17,7 +19,7 @@ export default function MarketDetail() {
         <div className="px-5 pt-6">
           <p className="text-sm text-brand-dark/60">Marché introuvable.</p>
           <Link to="/" className="mt-3 inline-block text-sm font-semibold text-brand">
-            ← Retour à l'accueil
+            <ArrowLeft className="inline h-4 w-4" /> Retour à l'accueil
           </Link>
         </div>
       </PageShell>
@@ -31,11 +33,11 @@ export default function MarketDetail() {
       <WovenHeader>
         <div className="flex items-center gap-3">
           <Link to="/" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
-            ←
+            <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-2xl">
-              {market.imageEmoji}
+              <MarketIcon kind={market.kind} className="h-6 w-6" />
             </div>
             <div>
               <h1 className="text-xl font-bold">{market.name}</h1>
@@ -60,7 +62,7 @@ export default function MarketDetail() {
           </div>
         ) : (
           <div className="rounded-card bg-white p-5 text-center shadow-card">
-            <p className="text-2xl">🧺</p>
+            <ShoppingBasket className="mx-auto h-9 w-9 text-brand-dark/30" />
             <p className="mt-2 text-sm font-medium text-brand-dark">Aucun marchand pour l'instant ici</p>
             <p className="mt-1 text-xs text-brand-dark/50">
               Personne n'a encore rejoint ce lieu de vente sur Panier 241. Si tu es marchand ici, sois le

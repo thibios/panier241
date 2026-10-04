@@ -15,6 +15,8 @@ import { usePexelsPhotos } from '../context/PexelsContext'
 import { groupProducts } from '../lib/productGroups'
 import { getProductDisplayName } from '../lib/productDisplay'
 import type { Product } from '../types'
+import { ArrowLeft, ArrowRight, MapPin, Star, MessageCircle, ChevronDown } from 'lucide-react'
+import { CategoryIcon } from '../components/ui/icons'
 
 const categoryDotClass: Record<string, string> = {
   legumes: 'bg-category-legumes',
@@ -47,7 +49,7 @@ export default function MerchantDetail() {
         <div className="px-5 pt-6">
           <p className="text-sm text-brand-dark/60">Marchand introuvable.</p>
           <Link to="/" className="mt-3 inline-block text-sm font-semibold text-brand">
-            ← Retour à l'accueil
+            <ArrowLeft className="inline h-4 w-4" /> Retour à l'accueil
           </Link>
         </div>
       </PageShell>
@@ -74,7 +76,7 @@ export default function MerchantDetail() {
         {photo ? (
           <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
         ) : (
-          product.imageEmoji
+          <CategoryIcon category={product.category} className="h-6 w-6" />
         )}
       </div>
     )
@@ -103,7 +105,7 @@ export default function MerchantDetail() {
       >
         <div className="flex items-center justify-between">
           <Link to="/" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
-            ←
+            <ArrowLeft className="h-5 w-5" />
           </Link>
           <button
             type="button"
@@ -111,7 +113,7 @@ export default function MerchantDetail() {
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg"
             aria-label="Ajouter aux favoris"
           >
-            {isFavorite(merchant.id) ? '★' : '☆'}
+            <Star className={`h-5 w-5 ${isFavorite(merchant.id) ? 'fill-white' : ''}`} />
           </button>
         </div>
         <div className="mt-4 flex items-center gap-3">
@@ -121,7 +123,7 @@ export default function MerchantDetail() {
               return photo ? (
                 <img src={photo} alt={merchant.name} className="h-full w-full object-cover" />
               ) : (
-                merchant.imageEmoji
+                <CategoryIcon category={merchant.categories[0]} className="h-8 w-8" />
               )
             })()}
           </div>
@@ -135,7 +137,7 @@ export default function MerchantDetail() {
       <div className="space-y-5 px-5 pt-5">
         <div className="flex items-center justify-between rounded-card bg-white p-4 shadow-card">
           <div className="flex items-center gap-2">
-            <span className="text-lg">⭐</span>
+            <Star className="h-5 w-5 fill-category-fruits text-category-fruits" />
             <div>
               <p className="text-sm font-semibold text-brand-dark">
                 {merchant.rating.toFixed(1)} <span className="font-normal text-brand-dark/50">/ 5</span>
@@ -151,7 +153,7 @@ export default function MerchantDetail() {
         </div>
 
         <div className="flex items-start gap-2 rounded-card bg-white p-4 shadow-card">
-          <span className="text-lg">📍</span>
+          <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
           <p className="text-sm text-brand-dark/70">{merchant.address}</p>
         </div>
 
@@ -163,13 +165,13 @@ export default function MerchantDetail() {
             className="flex items-center justify-between rounded-card bg-white p-4 shadow-card"
           >
             <div className="flex items-center gap-2">
-              <span className="text-lg">🟢</span>
+              <MessageCircle className="h-6 w-6 shrink-0 text-category-legumes" />
               <div>
                 <p className="text-sm font-medium text-brand-dark">Contacter sur WhatsApp</p>
                 <p className="text-xs text-brand-dark/50">{merchant.phone}</p>
               </div>
             </div>
-            <span className="text-sm font-semibold text-brand">→</span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-brand" />
           </a>
         )}
 
@@ -217,7 +219,7 @@ export default function MerchantDetail() {
                       </p>
                     </div>
                     <span className={`text-brand-dark/40 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-                      ▾
+                      <ChevronDown className="h-4 w-4" />
                     </span>
                   </button>
                   {isExpanded && (

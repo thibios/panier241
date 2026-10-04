@@ -4,6 +4,8 @@ import { markets } from '../../data/markets'
 import { useFavorites } from '../../context/FavoritesContext'
 import { resolveImage } from '../../lib/images'
 import { usePexelsPhotos } from '../../context/PexelsContext'
+import { Star, ChevronRight } from 'lucide-react'
+import { CategoryIcon } from './icons'
 
 const categoryDotClass: Record<string, string> = {
   legumes: 'bg-category-legumes',
@@ -32,18 +34,18 @@ export default function MerchantCard({ merchant }: { merchant: Merchant }) {
         {photo ? (
           <img src={photo} alt={merchant.name} className="h-full w-full object-cover" />
         ) : (
-          merchant.imageEmoji
+          <CategoryIcon category={merchant.categories[0]} className="h-7 w-7 text-brand-dark/60" />
         )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <p className="truncate text-sm font-semibold text-brand-dark">{merchant.name}</p>
-          {isFavorite(merchant.id) && <span className="text-xs text-category-fruits">★</span>}
+          {isFavorite(merchant.id) && <Star className="h-3 w-3 shrink-0 fill-category-fruits text-category-fruits" />}
         </div>
         <p className="truncate text-xs text-brand-dark/50">{market?.name}</p>
         <div className="mt-1 flex items-center gap-2">
           <span className="flex items-center gap-1 text-xs font-medium text-brand-dark">
-            ⭐ {merchant.rating.toFixed(1)}
+            <Star className="h-3.5 w-3.5 fill-category-fruits text-category-fruits" /> {merchant.rating.toFixed(1)}
             <span className="text-brand-dark/40">({merchant.reviewCount})</span>
           </span>
           <span className="flex gap-1">
@@ -53,7 +55,7 @@ export default function MerchantCard({ merchant }: { merchant: Merchant }) {
           </span>
         </div>
       </div>
-      <span className="text-brand-dark/30">›</span>
+      <ChevronRight className="h-5 w-5 shrink-0 text-brand-dark/30" />
     </Link>
   )
 }

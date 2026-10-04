@@ -11,6 +11,8 @@ import { useFavorites } from '../context/FavoritesContext'
 import { useCatalog } from '../context/CatalogContext'
 import { usePexelsPhotos } from '../context/PexelsContext'
 import type { CategoryId } from '../types'
+import { ShoppingBasket, Search } from 'lucide-react'
+import { CategoryIcon } from '../components/ui/icons'
 
 /** Voile de couleur (semi-transparent) posé sur les photos de catégorie, pour rester lisible. */
 const categoryOverlay: Record<CategoryId, string> = {
@@ -100,7 +102,7 @@ export default function Home() {
                     ...(isActive ? { boxShadow: '0 0 0 4px rgba(20,36,92,0.15)' } : undefined),
                   }}
                 >
-                  {!photo && cat.icon}
+                  {!photo && <CategoryIcon category={cat.id} className="h-6 w-6" />}
                 </div>
                 <span className={`text-xs font-medium ${isActive ? 'text-brand-dark' : 'text-brand-dark/70'}`}>
                   {cat.label}
@@ -112,7 +114,7 @@ export default function Home() {
 
         {hasNoResults && (
           <div className="rounded-card bg-white p-5 text-center shadow-card">
-            <p className="text-2xl">🔍</p>
+            <Search className="mx-auto h-9 w-9 text-brand-dark/30" />
             <p className="mt-2 text-sm font-medium text-brand-dark">Aucun résultat pour "{query}"</p>
             <p className="mt-1 text-xs text-brand-dark/50">
               Essaie un autre nom de marché, de marchand ou de produit.
@@ -161,7 +163,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="rounded-card bg-white p-5 text-center shadow-card">
-                <p className="text-2xl">🧺</p>
+                <ShoppingBasket className="mx-auto h-9 w-9 text-brand-dark/30" />
                 <p className="mt-2 text-sm font-medium text-brand-dark">Aucun favori pour l'instant</p>
                 <p className="mt-1 text-xs text-brand-dark/50">
                   Ajoutez vos marchands préférés depuis leur fiche pour les retrouver ici rapidement.

@@ -5,6 +5,7 @@ import { formatFCFA } from '../../lib/format'
 import { resolveImage } from '../../lib/images'
 import { usePexelsPhotos } from '../../context/PexelsContext'
 import { getProductDisplayName } from '../../lib/productDisplay'
+import { CategoryIcon } from './icons'
 
 export default function ProductResultCard({
   product,
@@ -26,7 +27,7 @@ export default function ProductResultCard({
           {photo ? (
             <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
           ) : (
-            product.imageEmoji
+            <CategoryIcon category={product.category} className="h-6 w-6" />
           )}
         </div>
         <div className="min-w-0 flex-1">
@@ -44,7 +45,7 @@ export default function ProductResultCard({
               to={`/marchand/${seller.id}`}
               className="rounded-pill bg-brand-light px-2.5 py-1 text-[11px] font-medium text-brand"
             >
-              {seller.imageEmoji} {seller.name}
+              {seller.name}
             </Link>
           ))}
         </div>

@@ -17,6 +17,8 @@ import { resolveImage } from '../lib/images'
 import { usePexelsPhotos } from '../context/PexelsContext'
 import { getProductDisplayName } from '../lib/productDisplay'
 import type { Order, OrderItem } from '../types'
+import { ShoppingBasket, MapPin, Clock, MessageCircle, Info } from 'lucide-react'
+import { CategoryIcon } from '../components/ui/icons'
 
 export default function Cart() {
   const navigate = useNavigate()
@@ -51,7 +53,7 @@ export default function Cart() {
           <h1 className="text-xl font-bold">Mon panier</h1>
         </WovenHeader>
         <div className="px-5 pt-8 text-center">
-          <p className="text-3xl">🧺</p>
+          <ShoppingBasket className="mx-auto h-9 w-9 text-brand-dark/30" />
           <p className="mt-2 text-sm font-medium text-brand-dark">Ton panier est vide</p>
           <p className="mt-1 text-xs text-brand-dark/50">
             Parcours les marchés et marchands pour composer ta commande.
@@ -153,7 +155,7 @@ export default function Cart() {
                     return photo ? (
                       <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
                     ) : (
-                      product.imageEmoji
+                      <CategoryIcon category={product.category} className="h-6 w-6 text-brand" />
                     )
                   })()}
                 </div>
@@ -180,18 +182,18 @@ export default function Cart() {
           </div>
           <Card className="space-y-1 text-xs text-brand-dark/70">
             {selectedSlot ? (
-              <p>🕒 {selectedSlot.dayLabel} · {selectedSlot.periodLabel} ({selectedSlot.timeRange})</p>
+              <p><Clock className="mr-1 inline h-3.5 w-3.5" />{selectedSlot.dayLabel} · {selectedSlot.periodLabel} ({selectedSlot.timeRange})</p>
             ) : (
               <p className="text-category-poisson">Aucun créneau choisi — clique sur "Modifier" pour en choisir un.</p>
             )}
             {selectedAddress && (
-              <p>📍 {selectedAddress.label} — {selectedAddress.fullAddress}, {selectedAddress.neighborhood}</p>
+              <p><MapPin className="mr-1 inline h-3.5 w-3.5" />{selectedAddress.label} — {selectedAddress.fullAddress}, {selectedAddress.neighborhood}</p>
             )}
           </Card>
         </section>
 
         <p className="rounded-card bg-category-cereales/10 p-3 text-xs text-category-cereales">
-          ℹ️ Le sous-total des marchandises est une estimation — le montant réel peut varier selon le
+          <Info className="mr-1 inline h-3.5 w-3.5" />Le sous-total des marchandises est une estimation — le montant réel peut varier selon le
           marché et sera ajusté par le marchand si besoin.{' '}
           <Link to="/aide" className="font-semibold underline">
             En savoir plus
@@ -245,7 +247,7 @@ export default function Cart() {
               className="block"
             >
               <Button variant="secondary" fullWidth>
-                🟢 Envoyer la commande via WhatsApp
+                <MessageCircle className="mr-2 inline h-4 w-4" />Envoyer la commande via WhatsApp
               </Button>
             </a>
           ) : (

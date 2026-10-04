@@ -15,6 +15,8 @@ import { resolveImage } from '../lib/images'
 import { usePexelsPhotos } from '../context/PexelsContext'
 import { getProductDisplayName } from '../lib/productDisplay'
 import type { CategoryId, Merchant, Order, OrderStatus } from '../types'
+import { ArrowLeft, Bike, Store, Hourglass, Ban, Play } from 'lucide-react'
+import { CategoryIcon } from '../components/ui/icons'
 
 type Tab = 'produits' | 'commandes'
 
@@ -95,7 +97,7 @@ export default function MerchantSpace() {
     if (!user) return
     supabase
       .from('merchants')
-      .select('id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color, kiosk_photo_url, status, phone')
+      .select('id, owner_id, name, market_id, categories, rating, review_count, address, banner_color, kiosk_photo_url, status, phone')
       .eq('owner_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -112,7 +114,6 @@ export default function MerchantSpace() {
           rating: data.rating,
           reviewCount: data.review_count,
           address: data.address,
-          imageEmoji: data.image_emoji,
           bannerColor: data.banner_color,
           kioskPhotoUrl: data.kiosk_photo_url,
           status: data.status,
@@ -187,7 +188,6 @@ export default function MerchantSpace() {
       category: draftCategory,
       price: Math.round(Number(draftPrice)),
       unit: draftUnit.trim(),
-      image_emoji: categories.find((c) => c.id === draftCategory)?.icon ?? '🛒',
       image_url: imageUrl,
       variant_label: draftVariantLabel.trim() || null,
     })
@@ -221,7 +221,7 @@ export default function MerchantSpace() {
           <h1 className="text-xl font-bold">Espace marchand</h1>
         </WovenHeader>
         <div className="px-5 pt-8 text-center">
-          <p className="text-3xl">🏪</p>
+          <Store className="mx-auto h-9 w-9 text-brand-dark/30" />
           <p className="mt-2 text-sm font-medium text-brand-dark">Tu n'as pas encore de marchand</p>
           <p className="mt-1 text-xs text-brand-dark/50">
             Crée ton profil marchand pour vendre tes produits sur Panier 241.
@@ -245,7 +245,7 @@ export default function MerchantSpace() {
           <h1 className="text-xl font-bold">{myMerchant.name}</h1>
         </WovenHeader>
         <div className="px-5 pt-8 text-center">
-          <p className="text-3xl">{myMerchant.status === 'pending' ? '⏳' : '⛔'}</p>
+          {myMerchant.status === 'pending' ? <Hourglass className="mx-auto h-9 w-9 text-brand-dark/30" /> : <Ban className="mx-auto h-9 w-9 text-category-poisson" />}
           <p className="mt-2 text-sm font-medium text-brand-dark">
             {myMerchant.status === 'pending' ? 'En attente de validation' : 'Compte suspendu'}
           </p>
@@ -262,7 +262,7 @@ export default function MerchantSpace() {
       <WovenHeader>
         <div className="flex items-center gap-3">
           <Link to="/profil" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
-            ←
+            <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
             <h1 className="text-xl font-bold">{myMerchant.name}</h1>
@@ -321,7 +321,7 @@ export default function MerchantSpace() {
                 >
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.label}
+                      {cat.label}
                     </option>
                   ))}
                 </select>
@@ -386,7 +386,7 @@ export default function MerchantSpace() {
                       return photo ? (
                         <img src={photo} alt={getProductDisplayName(product)} className="h-full w-full object-cover" />
                       ) : (
-                        product.imageEmoji
+                        <CategoryIcon category={product.category} className="h-6 w-6 text-brand" />
                       )
                     })()}
                   </div>
@@ -488,7 +488,7 @@ export default function MerchantSpace() {
                     </div>
                   )}
                   {order.livreurName && (
-                    <p className="text-[11px] text-brand-dark/40">🛵 Livreur : {order.livreurName}</p>
+                    <p className="text-[11px] text-brand-dark/40"><Bike className="mr-1 inline h-3.5 w-3.5" />Livreur : {order.livreurName}</p>
                   )}
                   {order.shoppingVideoUrl && (
                     <a
@@ -497,7 +497,7 @@ export default function MerchantSpace() {
                       rel="noopener noreferrer"
                       className="block text-[11px] font-semibold text-brand"
                     >
-                      ▶️ Voir la vidéo de la liste de courses
+                      <Play className="mr-1 inline h-3 w-3" />Voir la vidéo de la liste de courses
                     </a>
                   )}
                 </Card>

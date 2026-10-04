@@ -10,11 +10,12 @@ import { useFavorites } from '../context/FavoritesContext'
 import { useAddresses } from '../context/AddressesContext'
 import { useAuth, isAdminEmail } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
+import { MapPin, User, Smartphone, Banknote, CreditCard, type LucideIcon } from 'lucide-react'
 
-const paymentIcon: Record<string, string> = {
-  'pay-1': '📱',
-  'pay-2': '📱',
-  'pay-3': '💵',
+const paymentIcon: Record<string, LucideIcon> = {
+  'pay-1': Smartphone,
+  'pay-2': Smartphone,
+  'pay-3': Banknote,
 }
 
 function formatMemberSince(iso: string) {
@@ -137,7 +138,7 @@ export default function Profile() {
       <WovenHeader>
         <div className="flex items-center gap-3">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-3xl">
-            🧑🏾
+            <User className="h-8 w-8" />
           </div>
           <div>
             <h1 className="text-lg font-bold">
@@ -254,11 +255,12 @@ export default function Profile() {
                 disabled={isLocating}
                 className="w-full rounded-2xl bg-brand/10 px-3 py-2 text-sm font-medium text-brand"
               >
+                <MapPin className="mr-1.5 inline h-4 w-4" />
                 {isLocating
                   ? 'Localisation...'
                   : coords
-                    ? '📍 Position enregistrée ✓'
-                    : '📍 Utiliser ma position actuelle'}
+                    ? 'Position enregistrée'
+                    : 'Utiliser ma position actuelle'}
               </button>
               {locationError && <p className="text-xs text-category-poisson">{locationError}</p>}
               <Button
@@ -274,7 +276,7 @@ export default function Profile() {
           <div className="space-y-2">
             {addresses.map((addr) => (
               <Card key={addr.id} className="flex items-start gap-2">
-                <span className="text-lg">📍</span>
+                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold text-brand-dark">{addr.label}</p>
@@ -304,7 +306,10 @@ export default function Profile() {
           <div className="space-y-2">
             {paymentMethods.map((pm) => (
               <Card key={pm.id} className="flex items-center gap-3">
-                <span className="text-lg">{paymentIcon[pm.id] ?? '💳'}</span>
+                {(() => {
+                  const PaymentIcon = paymentIcon[pm.id] ?? CreditCard
+                  return <PaymentIcon className="h-5 w-5 shrink-0 text-brand" />
+                })()}
                 <div>
                   <p className="text-sm font-medium text-brand-dark">{pm.label}</p>
                   <p className="text-xs text-brand-dark/50">{pm.detail}</p>
@@ -320,7 +325,7 @@ export default function Profile() {
             <Link to={myMerchant ? '/marchand-espace' : '/devenir-marchand'}>
               <Button variant="secondary" fullWidth>
                 {myMerchant
-                  ? `Mon espace marchand 🏪${statusSuffix[myMerchant.status] ?? ''}`
+                  ? `Mon espace marchand${statusSuffix[myMerchant.status] ?? ''}`
                   : 'Devenir marchand'}
               </Button>
             </Link>
@@ -333,7 +338,7 @@ export default function Profile() {
             <Link to={myLivreur ? '/livreur-espace' : '/devenir-livreur'}>
               <Button variant="secondary" fullWidth>
                 {myLivreur
-                  ? `Mon espace livreur 🛵${statusSuffix[myLivreur.status] ?? ''}`
+                  ? `Mon espace livreur${statusSuffix[myLivreur.status] ?? ''}`
                   : 'Devenir livreur'}
               </Button>
             </Link>
@@ -345,7 +350,7 @@ export default function Profile() {
             <h2 className="mb-2 text-sm font-semibold text-brand-dark">Administration</h2>
             <Link to="/admin">
               <Button variant="secondary" fullWidth>
-                Espace admin 🛠️
+                Espace admin
               </Button>
             </Link>
           </section>
@@ -354,12 +359,12 @@ export default function Profile() {
         <section className="space-y-2">
           <Link to="/aide">
             <Button variant="ghost" fullWidth>
-              Aide — Comment sont calculés les prix ? ℹ️
+              Aide — Comment sont calculés les prix ?
             </Button>
           </Link>
           <Link to="/contact">
             <Button variant="ghost" fullWidth>
-              Contact 💬
+              Contact
             </Button>
           </Link>
         </section>

@@ -4,6 +4,7 @@ import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { buildWhatsAppLink, PANIER241_WHATSAPP } from '../lib/whatsapp'
+import { ArrowLeft, MessageCircle, Mail } from 'lucide-react'
 
 const CONTACT_EMAIL = 'contactpanier241@gmail.com'
 
@@ -13,7 +14,7 @@ export default function Contact() {
       <WovenHeader>
         <div className="flex items-center gap-3">
           <Link to="/profil" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg">
-            ←
+            <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="text-xl font-bold">Contact</h1>
         </div>
@@ -22,7 +23,7 @@ export default function Contact() {
       <div className="space-y-4 px-5 pt-5 pb-8">
         <Card className="space-y-3">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🟢</span>
+            <MessageCircle className="h-6 w-6 shrink-0 text-category-legumes" />
             <div>
               <p className="text-sm font-semibold text-brand-dark">WhatsApp</p>
               <p className="text-xs text-brand-dark/50">{PANIER241_WHATSAPP}</p>
@@ -39,7 +40,7 @@ export default function Contact() {
 
         <Card className="space-y-3">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">✉️</span>
+            <Mail className="h-6 w-6 shrink-0 text-brand" />
             <div>
               <p className="text-sm font-semibold text-brand-dark">Email</p>
               <p className="text-xs text-brand-dark/50">{CONTACT_EMAIL}</p>

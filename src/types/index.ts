@@ -3,8 +3,6 @@ export type CategoryId = 'legumes' | 'fruits' | 'poisson' | 'cereales' | 'bricol
 export interface Category {
   id: CategoryId
   label: string
-  /** Emoji utilisé comme icône légère (pas d'image en dur). */
-  icon: string
   /** Doit correspondre à une clé de la palette theme.colors.category. */
   colorClass: string
 }
@@ -14,7 +12,7 @@ export interface Market {
   name: string
   neighborhood: string
   city: string
-  imageEmoji: string
+  kind: 'marche' | 'supermarche'
   merchantCount: number
   lat: number
   lng: number
@@ -27,7 +25,6 @@ export interface Product {
   category: CategoryId
   price: number // en F CFA
   unit: string // ex: "kg", "botte", "pièce"
-  imageEmoji: string
   imageUrl: string | null
   variantLabel: string | null
 }
@@ -43,7 +40,6 @@ export interface Merchant {
   rating: number
   reviewCount: number
   address: string
-  imageEmoji: string
   bannerColor: string
   kioskPhotoUrl: string | null
   status: ApprovalStatus

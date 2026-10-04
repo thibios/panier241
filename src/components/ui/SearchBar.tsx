@@ -1,3 +1,4 @@
+import { Search, X } from 'lucide-react'
 interface SearchBarProps {
   value: string
   onChange: (value: string) => void
@@ -7,7 +8,7 @@ interface SearchBarProps {
 export default function SearchBar({ value, onChange, placeholder = 'Rechercher...' }: SearchBarProps) {
   return (
     <div className="flex items-center gap-2 rounded-pill bg-white px-4 py-3 shadow-card">
-      <span className="text-lg leading-none text-brand-dark/40">🔍</span>
+      <Search className="h-5 w-5 shrink-0 text-brand-dark/40" />
       <input
         type="text"
         value={value}
@@ -22,7 +23,7 @@ export default function SearchBar({ value, onChange, placeholder = 'Rechercher..
           aria-label="Effacer la recherche"
           className="text-brand-dark/40"
         >
-          ✕
+          <X className="h-4 w-4" />
         </button>
       )}
     </div>
