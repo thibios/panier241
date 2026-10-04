@@ -65,7 +65,7 @@ export default function DeliverySlot() {
                 key={day.date}
                 type="button"
                 onClick={() => setActiveDayIndex(index)}
-                className={`shrink-0 rounded-pill px-4 py-2 text-sm font-medium transition ${
+                className={`shrink-0 rounded-xl px-4 py-2 text-sm font-medium transition ${
                   index === activeDayIndex
                     ? 'bg-brand text-white'
                     : 'bg-white text-brand-dark/70 shadow-card'

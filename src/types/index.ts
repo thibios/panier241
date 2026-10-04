@@ -13,7 +13,6 @@ export interface Market {
   neighborhood: string
   city: string
   kind: 'marche' | 'supermarche'
-  merchantCount: number
   lat: number
   lng: number
 }

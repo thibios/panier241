@@ -268,11 +268,11 @@ export default function MerchantSpace() {
       </WovenHeader>
 
       <div className="px-5 pt-5">
-        <div className="mb-4 flex gap-2 rounded-pill bg-brand-light p-1">
+        <div className="mb-4 flex gap-2 rounded-xl bg-brand-light p-1">
           <button
             type="button"
             onClick={() => setTab('produits')}
-            className={`flex-1 rounded-pill py-2 text-sm font-semibold transition ${
+            className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
               tab === 'produits' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
             }`}
           >
@@ -281,7 +281,7 @@ export default function MerchantSpace() {
           <button
             type="button"
             onClick={() => setTab('commandes')}
-            className={`flex-1 rounded-pill py-2 text-sm font-semibold transition ${
+            className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
               tab === 'commandes' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
             }`}
           >

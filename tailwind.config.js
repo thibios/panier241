@@ -27,7 +27,6 @@ export default {
       },
       borderRadius: {
         card: '1.5rem',
-        pill: '999px',
       },
       boxShadow: {
         card: '0 4px 16px -4px rgba(20, 36, 92, 0.12)',

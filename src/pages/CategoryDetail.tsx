@@ -75,7 +75,7 @@ export default function CategoryDetail() {
                     <Link
                       key={seller.id}
                       to={`/marchand/${seller.id}`}
-                      className="rounded-pill bg-brand-light px-2.5 py-1 text-[11px] font-medium text-brand"
+                      className="rounded-xl bg-brand-light px-2.5 py-1 text-[11px] font-medium text-brand"
                     >
                       {seller.name}
                     </Link>

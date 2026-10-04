@@ -6,7 +6,7 @@ interface QuantityStepperProps {
 
 export default function QuantityStepper({ quantity, onIncrement, onDecrement }: QuantityStepperProps) {
   return (
-    <div className="flex items-center gap-3 rounded-pill bg-brand-light px-1 py-1">
+    <div className="flex items-center gap-3 rounded-xl bg-brand-light px-1 py-1">
       <button
         type="button"
         onClick={onDecrement}

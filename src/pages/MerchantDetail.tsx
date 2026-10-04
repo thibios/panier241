@@ -123,12 +123,16 @@ export default function MerchantDetail() {
         <div className="flex items-center justify-between rounded-card bg-white p-4 shadow-card">
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 fill-category-fruits text-category-fruits" />
-            <div>
-              <p className="text-sm font-semibold text-brand-dark">
-                {merchant.rating.toFixed(1)} <span className="font-normal text-brand-dark/50">/ 5</span>
-              </p>
-              <p className="text-xs text-brand-dark/50">{merchant.reviewCount} avis</p>
-            </div>
+            {merchant.reviewCount > 0 ? (
+              <div>
+                <p className="text-sm font-semibold text-brand-dark">
+                  {merchant.rating.toFixed(1)} <span className="font-normal text-brand-dark/50">/ 5</span>
+                </p>
+                <p className="text-xs text-brand-dark/50">{merchant.reviewCount} avis</p>
+              </div>
+            ) : (
+              <p className="text-sm text-brand-dark/60">Pas encore d'avis</p>
+            )}
           </div>
           <div className="flex gap-1.5">
             {merchant.categories.map((cat) => (
@@ -237,7 +241,7 @@ export default function MerchantDetail() {
           <button
             type="button"
             onClick={() => navigate('/creneau')}
-            className="mx-auto flex w-full max-w-md items-center justify-between rounded-pill bg-brand px-5 py-4 text-white shadow-card"
+            className="mx-auto flex w-full max-w-md items-center justify-between rounded-xl bg-brand px-5 py-4 text-white shadow-card"
           >
             <span className="text-sm font-semibold">
               Commander · {itemCount} article{itemCount > 1 ? 's' : ''}

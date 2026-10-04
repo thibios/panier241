@@ -184,11 +184,11 @@ export default function Orders() {
           </div>
         )}
 
-        <div className="mb-4 flex gap-2 rounded-pill bg-brand-light p-1">
+        <div className="mb-4 flex gap-2 rounded-xl bg-brand-light p-1">
           <button
             type="button"
             onClick={() => setTab('en_cours')}
-            className={`flex-1 rounded-pill py-2 text-sm font-semibold transition ${
+            className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
               tab === 'en_cours' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
             }`}
           >
@@ -197,7 +197,7 @@ export default function Orders() {
           <button
             type="button"
             onClick={() => setTab('historique')}
-            className={`flex-1 rounded-pill py-2 text-sm font-semibold transition ${
+            className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
               tab === 'historique' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
             }`}
           >

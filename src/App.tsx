@@ -23,6 +23,8 @@ import CourierSpace from './pages/CourierSpace'
 import AdminSpace from './pages/AdminSpace'
 import Help from './pages/Help'
 import Contact from './pages/Contact'
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
 
 function AuthenticatedApp() {
   return (
@@ -32,8 +34,7 @@ function AuthenticatedApp() {
           <AddressesProvider>
             <CartProvider>
               <OrdersProvider>
-                <BrowserRouter>
-                  <div className="min-h-screen bg-surface">
+                <div className="min-h-screen bg-surface">
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="/marche/:marketId" element={<MarketDetail />} />
@@ -53,7 +54,6 @@ function AuthenticatedApp() {
                     </Routes>
                     <BottomNav />
                   </div>
-                </BrowserRouter>
               </OrdersProvider>
             </CartProvider>
           </AddressesProvider>
@@ -74,13 +74,21 @@ function Gate() {
     )
   }
 
-  return session ? <AuthenticatedApp /> : <AuthPage />
+  return (
+    <Routes>
+      <Route path="/confidentialite" element={<Privacy />} />
+      <Route path="/cgu" element={<Terms />} />
+      <Route path="*" element={session ? <AuthenticatedApp /> : <AuthPage />} />
+    </Routes>
+  )
 }
 
 export default function App() {
   return (
     <AuthProvider>
-      <Gate />
+      <BrowserRouter>
+        <Gate />
+      </BrowserRouter>
     </AuthProvider>
   )
 }

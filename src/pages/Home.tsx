@@ -53,7 +53,7 @@ export default function Home() {
       <WovenHeader className="pb-8">
         <h1 className="text-2xl font-bold">Panier 241</h1>
         <p className="mt-1 text-sm text-white/80">
-          Vos marchés et commerçants préférés, livrés chez vous.
+          Vos courses dans les marchés et magasins de Libreville, livrées chez vous.
         </p>
         <div className="mt-4">
           <SearchBar value={query} onChange={setQuery} placeholder="Un marché, un marchand, un produit..." />

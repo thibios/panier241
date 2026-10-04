@@ -209,7 +209,7 @@ export default function BecomeMerchant() {
                   key={cat.id}
                   type="button"
                   onClick={() => toggleCategory(cat.id)}
-                  className={`rounded-pill px-4 py-2 text-sm font-medium transition ${
+                  className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
                     isActive ? 'bg-brand text-white' : 'bg-white text-brand-dark/70 shadow-card'
                   }`}
                 >

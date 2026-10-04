@@ -9,7 +9,7 @@ const statusMeta: Record<OrderStatus, { label: string; className: string }> = {
 export default function StatusBadge({ status }: { status: OrderStatus }) {
   const meta = statusMeta[status]
   return (
-    <span className={`rounded-pill px-3 py-1 text-xs font-semibold ${meta.className}`}>
+    <span className={`rounded-xl px-3 py-1 text-xs font-semibold ${meta.className}`}>
       {meta.label}
     </span>
   )

@@ -7,7 +7,7 @@ interface SearchBarProps {
 
 export default function SearchBar({ value, onChange, placeholder = 'Rechercher...' }: SearchBarProps) {
   return (
-    <div className="flex items-center gap-2 rounded-pill bg-white px-4 py-3 shadow-card">
+    <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-3 shadow-card">
       <Search className="h-5 w-5 shrink-0 text-brand-dark/40" />
       <input
         type="text"

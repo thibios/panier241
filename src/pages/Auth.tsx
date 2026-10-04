@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -40,19 +41,19 @@ export default function Auth() {
         <WovenHeader>
           <h1 className="text-2xl font-bold">Panier 241</h1>
           <p className="mt-1 text-sm text-white/80">
-            Vos marchés et commerçants préférés, livrés chez vous.
+            Vos courses dans les marchés et magasins de Libreville, livrées chez vous.
           </p>
         </WovenHeader>
 
         <div className="px-5 pt-6">
-          <div className="mb-4 flex gap-2 rounded-pill bg-brand-light p-1">
+          <div className="mb-4 flex gap-2 rounded-xl bg-brand-light p-1">
             <button
               type="button"
               onClick={() => {
                 setMode('signin')
                 setError(null)
               }}
-              className={`flex-1 rounded-pill py-2 text-sm font-semibold transition ${
+              className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
                 mode === 'signin' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
               }`}
             >
@@ -64,7 +65,7 @@ export default function Auth() {
                 setMode('signup')
                 setError(null)
               }}
-              className={`flex-1 rounded-pill py-2 text-sm font-semibold transition ${
+              className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
                 mode === 'signup' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
               }`}
             >
@@ -130,6 +131,17 @@ export default function Auth() {
               </Button>
             </form>
           </Card>
+          <p className="mt-4 text-center text-xs text-brand-dark/50">
+            En créant un compte, vous acceptez nos{' '}
+            <Link to="/cgu" className="font-medium text-brand underline">
+              conditions générales
+            </Link>{' '}
+            et notre{' '}
+            <Link to="/confidentialite" className="font-medium text-brand underline">
+              politique de confidentialité
+            </Link>
+            .
+          </p>
         </div>
       </div>
     </div>

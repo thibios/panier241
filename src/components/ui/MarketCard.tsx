@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom'
 import type { Market } from '../../types'
+import { useCatalog } from '../../context/CatalogContext'
 import { MarketIcon } from './icons'
 
 export default function MarketCard({ market }: { market: Market }) {
+  const { merchants } = useCatalog()
+  const merchantCount = merchants.filter((m) => m.marketId === market.id).length
+
   return (
     <Link
       to={`/marche/${market.id}`}
@@ -14,7 +18,7 @@ export default function MarketCard({ market }: { market: Market }) {
       <div>
         <p className="text-sm font-semibold leading-tight text-brand-dark">{market.name}</p>
         <p className="text-xs text-brand-dark/50">{market.neighborhood}</p>
-        <p className="mt-1 text-xs font-medium text-brand">{market.merchantCount} marchands</p>
+        <p className="mt-1 text-xs font-medium text-brand">{merchantCount === 0 ? 'Bientôt disponible' : `${merchantCount} commerçant${merchantCount > 1 ? 's' : ''}`}</p>
       </div>
     </Link>
   )

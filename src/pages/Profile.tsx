@@ -281,7 +281,7 @@ export default function Profile() {
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold text-brand-dark">{addr.label}</p>
                     {addr.isDefault && (
-                      <span className="rounded-pill bg-brand-light px-2 py-0.5 text-[10px] font-semibold text-brand">
+                      <span className="rounded-xl bg-brand-light px-2 py-0.5 text-[10px] font-semibold text-brand">
                         Par défaut
                       </span>
                     )}
@@ -297,12 +297,7 @@ export default function Profile() {
         </section>
 
         <section>
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-brand-dark">Moyens de paiement</h2>
-            <button type="button" className="text-xs font-semibold text-brand">
-              Ajouter
-            </button>
-          </div>
+          <h2 className="mb-2 text-sm font-semibold text-brand-dark">Moyens de paiement acceptés</h2>
           <div className="space-y-2">
             {paymentMethods.map((pm) => (
               <Card key={pm.id} className="flex items-center gap-3">
@@ -365,6 +360,16 @@ export default function Profile() {
           <Link to="/contact">
             <Button variant="ghost" fullWidth>
               Contact
+            </Button>
+          </Link>
+          <Link to="/cgu">
+            <Button variant="ghost" fullWidth>
+              Conditions générales d'utilisation
+            </Button>
+          </Link>
+          <Link to="/confidentialite">
+            <Button variant="ghost" fullWidth>
+              Politique de confidentialité
             </Button>
           </Link>
         </section>
