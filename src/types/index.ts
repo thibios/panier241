@@ -13,7 +13,8 @@ export interface Market {
   neighborhood: string
   city: string
   kind: 'marche' | 'supermarche'
-  /** Marché traditionnel : rang de la photo Pexels « african market » à afficher. */
+  /** Marché traditionnel : mot-clé Pexels de la photo à afficher, et rang du résultat retenu. */
+  photoQuery?: string
   photoPage?: number
   /** Enseigne : logo officiel, affiché en vignette et en filigrane. */
   logoUrl?: string

@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
 import type { CategoryId } from '../types'
 
-const CACHE_PREFIX = 'pexels-cache:v3:'
+const CACHE_PREFIX = 'pexels-cache:v4:'
 const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 jours
 
-/** Mots-clés Pexels par catégorie (anglais : de meilleurs résultats sur Pexels). */
+/** Mots-clés Pexels par catégorie (anglais : de meilleurs résultats sur Pexels), choisis sur planche de comparaison. */
 const categoryKeywords: Record<CategoryId, string> = {
-  legumes: 'african market vegetables',
-  fruits: 'african market fruits',
-  poisson: 'african fish market',
-  cereales: 'african market spices grains',
-  bricolage: 'african construction site workers',
-  epicerie: 'african grocery shop',
+  legumes: 'vegetables market africa',
+  fruits: 'plantain bananas market',
+  poisson: 'fish market africa',
+  cereales: 'spices market',
+  bricolage: 'hardware store tools',
+  epicerie: 'small shop africa',
 }
 
 interface CacheEntry {
@@ -87,7 +87,7 @@ export function getPexelsPhoto(query: string, options: PexelsOptions = {}): Prom
 }
 
 /** Rang du résultat retenu par catégorie, quand le premier se répète d'une catégorie à l'autre. */
-const categoryPage: Partial<Record<CategoryId, number>> = { fruits: 2 }
+const categoryPage: Partial<Record<CategoryId, number>> = {}
 
 export function getCategoryPhoto(categoryId: CategoryId): Promise<string | null> {
   return getPexelsPhoto(categoryKeywords[categoryId], { page: categoryPage[categoryId] })
