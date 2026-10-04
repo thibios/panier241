@@ -102,28 +102,28 @@ export default function MerchantDetail() {
   return (
     <MerchantThemeProvider theme={resolveMerchantTheme(merchant, market)}>
       <PageShell>
-        <header className="woven-pattern relative overflow-hidden rounded-b-[2rem] bg-header px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white">
-          {market?.logoUrl && <LogoWatermark logoUrl={market.logoUrl} />}
+        <header className="woven-pattern relative overflow-hidden rounded-b-[2rem] bg-header px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-on-header shadow-card">
+          {market?.logoUrl && market.logoWatermark !== false && <LogoWatermark logoUrl={market.logoUrl} />}
           <div className="relative flex items-center justify-between">
             <Link
               to={market ? `/marche/${market.id}` : '/'}
               aria-label="Retour"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-on-header/15 transition active:scale-95"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <button
               type="button"
               onClick={() => toggleFavorite(merchant.id)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-on-header/15 transition active:scale-95"
               aria-label={isFavorite(merchant.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
               aria-pressed={isFavorite(merchant.id)}
             >
-              <Star className={`h-5 w-5 ${isFavorite(merchant.id) ? 'fill-white' : ''}`} />
+              <Star className={`h-5 w-5 ${isFavorite(merchant.id) ? 'fill-current' : ''}`} />
             </button>
           </div>
           <div className="relative mt-4 flex items-center gap-3">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/20">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-on-header/15 ring-1 ring-on-header/10">
               {merchantPhoto ? (
                 <img src={merchantPhoto} alt="" decoding="async" className="h-full w-full bg-white object-cover" />
               ) : (
@@ -132,7 +132,7 @@ export default function MerchantDetail() {
             </div>
             <div>
               <h1 className="text-xl font-bold">{merchant.name}</h1>
-              <p className="text-sm text-white/85">{market?.name}</p>
+              <p className="text-sm text-on-header/80">{market?.name}</p>
             </div>
           </div>
         </header>

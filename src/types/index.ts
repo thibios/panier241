@@ -18,6 +18,8 @@ export interface Market {
   photoPage?: number
   /** Enseigne : logo officiel, affiché en vignette et en filigrane. */
   logoUrl?: string
+  /** Faux pour ne pas répéter le logo en filigrane dans l'en-tête (par défaut : vrai). */
+  logoWatermark?: boolean
   /** Position GPS ; absente tant que l'emplacement exact n'est pas confirmé (forfait de livraison). */
   lat?: number
   lng?: number

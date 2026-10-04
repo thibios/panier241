@@ -26,6 +26,7 @@ import Help from './pages/Help'
 import Contact from './pages/Contact'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
+import ResetPassword from './pages/ResetPassword'
 
 function AuthenticatedApp() {
   return (
@@ -80,6 +81,7 @@ function Gate() {
     <Routes>
       <Route path="/confidentialite" element={<Privacy />} />
       <Route path="/cgu" element={<Terms />} />
+      <Route path="/nouveau-mot-de-passe" element={<ResetPassword />} />
       <Route path="*" element={session ? <AuthenticatedApp /> : <AuthPage />} />
     </Routes>
   )

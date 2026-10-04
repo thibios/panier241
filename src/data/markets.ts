@@ -49,6 +49,7 @@ export const markets: Market[] = [
     id: 'mkt-bati-plus',
     name: 'Bâti Plus',
     logoUrl: 'https://ukaauidavtmtjithahmn.supabase.co/storage/v1/object/public/kiosk-photos/logos/bati-plus-gabon.jpg',
+    logoWatermark: false,
     neighborhood: 'Oloumi',
     city: 'Libreville',
     kind: 'supermarche',

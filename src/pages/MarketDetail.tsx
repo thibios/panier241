@@ -41,16 +41,16 @@ export default function MarketDetail() {
             <Link
               to="/"
               aria-label="Retour à l'accueil"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 transition active:scale-95"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-on-header/15 transition active:scale-95"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/20">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-on-header/15 ring-1 ring-on-header/10">
               <MarketVisual market={market} iconClassName="h-6 w-6" />
             </div>
             <div>
               <h1 className="text-xl font-bold">{market.name}</h1>
-              <p className="text-sm text-white/85">
+              <p className="text-sm text-on-header/80">
                 {market.neighborhood === market.city ? market.city : `${market.neighborhood}, ${market.city}`}
               </p>
             </div>

@@ -16,6 +16,7 @@ export default {
         surface: token('surface'),
         accent: token('accent'),
         header: token('header'),
+        'on-header': token('on-header'),
         category: {
           legumes: token('cat-legumes'),
           fruits: token('cat-fruits'),

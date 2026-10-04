@@ -19,6 +19,8 @@ export interface ThemeTokens {
   accent: string
   /** Fond des en-têtes. */
   header: string
+  /** Texte et icônes posés sur l'en-tête. */
+  onHeader: string
 }
 
 /** ADN Le Panier 241 : Vert Palmier / Vert Lime / Sable / Ivoire / Anthracite. */
@@ -29,6 +31,7 @@ export const baseTheme: ThemeTokens = {
   surface: '#FFFBF5',
   accent: '#84CC16',
   header: '#166534',
+  onHeader: '#FFFFFF',
 }
 
 /** Accents par catégorie de produit (pastilles, fonds de vignette). */
@@ -49,18 +52,20 @@ const freshMarketTheme: ThemeTokens = {
   surface: '#FFFBF5',
   accent: '#3F8F4A',
   header: '#C2542D',
+  onHeader: '#FFFFFF',
 }
 
 /** Thèmes propres à une enseigne, par identifiant de lieu de vente. */
 const marketThemes: Record<string, ThemeTokens> = {
-  // Direction blanc / rouge / noir, à confirmer avec la charte officielle de Batiplus.
+  // Couleurs du logo Batiplus : rouge sur blanc pour l'en-tête, blanc sur rouge pour les actions.
   'mkt-bati-plus': {
     brand: '#D0121A',
     ink: '#111111',
-    soft: '#F3F3F3',
+    soft: '#F5F5F5',
     surface: '#FFFFFF',
     accent: '#D0121A',
-    header: '#111111',
+    header: '#FFFFFF',
+    onHeader: '#D0121A',
   },
   // Bleu du logo du groupe Ceca-Gadis.
   'mkt-ceca-gadis': {
@@ -70,6 +75,7 @@ const marketThemes: Record<string, ThemeTokens> = {
     surface: '#FFFFFF',
     accent: '#F2B705',
     header: '#1B3F8F',
+    onHeader: '#FFFFFF',
   },
 }
 
@@ -95,7 +101,7 @@ function toRgbChannels(hex: string): string {
 /** Variables CSS d'un thème, à poser sur `:root` (thème global) ou sur un conteneur (vitrine d'un commerce). */
 export function themeToCssVars(theme: ThemeTokens): CSSProperties {
   return Object.fromEntries(
-    (Object.keys(theme) as (keyof ThemeTokens)[]).map((token) => [`--color-${token}`, toRgbChannels(theme[token])]),
+    (Object.keys(theme) as (keyof ThemeTokens)[]).map((token) => [`--color-${token.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`, toRgbChannels(theme[token])]),
   ) as CSSProperties
 }
 

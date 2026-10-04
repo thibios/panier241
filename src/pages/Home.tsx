@@ -97,10 +97,10 @@ export default function Home() {
         {stores.length > 0 && (
           <section>
             <h2 className="mb-3 text-base font-semibold text-brand-dark">Magasins et enseignes</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-2">
               {stores.map((market, i) => (
-                <Reveal key={market.id} index={i % 2}>
-                  <MarketCard market={market} className="h-full" />
+                <Reveal key={market.id} index={i} className="shrink-0 snap-start">
+                  <MarketCard market={market} className="h-full w-40" />
                 </Reveal>
               ))}
             </div>
@@ -110,9 +110,9 @@ export default function Home() {
         {localMarkets.length > 0 && (
           <section>
             <h2 className="mb-3 text-base font-semibold text-brand-dark">Marchés de proximité</h2>
-            <div className="flex gap-3 overflow-x-auto pb-1">
+            <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-2">
               {localMarkets.map((market, i) => (
-                <Reveal key={market.id} index={i} className="shrink-0">
+                <Reveal key={market.id} index={i} className="shrink-0 snap-start">
                   <MarketCard market={market} />
                 </Reveal>
               ))}

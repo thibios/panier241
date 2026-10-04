@@ -25,9 +25,9 @@ export function HeroBackdrop({ photo }: { photo: string }) {
 export default function MarketHeader({ market, children }: { market: Market; children: ReactNode }) {
   const photo = useMarketPhoto(market)
   return (
-    <header className="woven-pattern relative overflow-hidden rounded-b-[2rem] bg-header px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-white">
+    <header className="woven-pattern relative overflow-hidden rounded-b-[2rem] bg-header px-5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-on-header shadow-card">
       {photo && <HeroBackdrop photo={photo} />}
-      {market.logoUrl && <LogoWatermark logoUrl={market.logoUrl} />}
+      {market.logoUrl && market.logoWatermark !== false && <LogoWatermark logoUrl={market.logoUrl} />}
       <div className="relative">{children}</div>
     </header>
   )
