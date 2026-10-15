@@ -11,6 +11,9 @@ interface CartContextValue {
   merchantId: string | null
   selectedSlot: DeliverySlotOption | null
   selectedAddressId: string
+  /** Moyen de paiement choisi (réglé au livreur à la réception : pas de paiement en ligne). */
+  paymentMethodId: string
+  setPaymentMethodId: (id: string) => void
   addItem: (merchantId: string, productId: string) => void
   removeItem: (productId: string) => void
   setQuantity: (productId: string, quantity: number) => void
@@ -35,10 +38,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     readSession('cart-slot', null as DeliverySlotOption | null),
   )
   const [selectedAddressId, setSelectedAddressId] = useState<string>(() => readSession('cart-address', ''))
+  const [paymentMethodId, setPaymentMethodId] = useState<string>(() => readSession('cart-payment', 'pay-1'))
 
   useEffect(() => writeSession('cart-items', items), [items])
   useEffect(() => writeSession('cart-slot', selectedSlot), [selectedSlot])
   useEffect(() => writeSession('cart-address', selectedAddressId), [selectedAddressId])
+  useEffect(() => writeSession('cart-payment', paymentMethodId), [paymentMethodId])
 
   const merchantId = items[0]?.merchantId ?? null
 
@@ -101,6 +106,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     merchantId,
     selectedSlot,
     selectedAddressId,
+    paymentMethodId,
+    setPaymentMethodId,
     addItem,
     removeItem,
     setQuantity,

@@ -23,15 +23,25 @@ export interface ThemeTokens {
   onHeader: string
 }
 
-/** ADN Le Panier 241 : Vert Palmier / Vert Lime / Sable / Ivoire / Anthracite. */
+/** ADN Le Panier 241 (projet Sleek « Le Panier 241 ») : vert palmier, lime, sable, ivoire, anthracite. */
 export const baseTheme: ThemeTokens = {
-  brand: '#166534',
-  ink: '#1C1C1C',
-  soft: '#F3E6C8',
-  surface: '#FFFBF5',
-  accent: '#84CC16',
-  header: '#166534',
-  onHeader: '#FFFFFF',
+  brand: '#1F5C3F',
+  ink: '#2A2C2E',
+  soft: '#EFE3CC',
+  surface: '#FBF7EE',
+  accent: '#C5E23A',
+  header: '#1F5C3F',
+  onHeader: '#FBF7EE',
+}
+
+/** Jetons d'interface communs à toute l'app (cartes, bordures, texte secondaire, états). */
+export const uiTokens = {
+  card: '#FFFDF8',
+  line: '#E6DCCB',
+  muted: '#6B6A62',
+  'muted-bg': '#F4EDE0',
+  warn: '#D99A2B',
+  danger: '#A6402A',
 }
 
 /** Accents par catégorie de produit (pastilles, fonds de vignette). */
@@ -109,4 +119,5 @@ export function themeToCssVars(theme: ThemeTokens): CSSProperties {
 export function applyBaseTheme(root: HTMLElement) {
   for (const [name, value] of Object.entries(themeToCssVars(baseTheme))) root.style.setProperty(name, String(value))
   for (const [id, hex] of Object.entries(categoryColors)) root.style.setProperty(`--color-cat-${id}`, toRgbChannels(hex))
+  for (const [name, hex] of Object.entries(uiTokens)) root.style.setProperty(`--color-${name}`, toRgbChannels(hex))
 }

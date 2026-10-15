@@ -1,3 +1,5 @@
+import { Minus, Plus } from 'lucide-react'
+
 interface QuantityStepperProps {
   quantity: number
   onIncrement: () => void
@@ -6,23 +8,23 @@ interface QuantityStepperProps {
 
 export default function QuantityStepper({ quantity, onIncrement, onDecrement }: QuantityStepperProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-brand-light px-1 py-1">
+    <div className="inline-flex items-center gap-3 rounded-full border border-line bg-white px-1 py-1">
       <button
         type="button"
         onClick={onDecrement}
         aria-label="Diminuer la quantité"
-        className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-brand shadow-sm active:scale-95"
+        className="flex h-7 w-7 items-center justify-center rounded-full border border-line bg-card text-brand-dark active:scale-95"
       >
-        −
+        <Minus className="h-3.5 w-3.5" strokeWidth={2.6} aria-hidden="true" />
       </button>
-      <span className="min-w-4 text-center text-sm font-semibold text-brand-dark">{quantity}</span>
+      <span className="w-4 text-center text-sm font-semibold tabular-nums text-brand-dark">{quantity}</span>
       <button
         type="button"
         onClick={onIncrement}
         aria-label="Augmenter la quantité"
-        className="flex h-7 w-7 items-center justify-center rounded-full bg-brand text-white shadow-sm active:scale-95"
+        className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-brand-dark active:scale-95"
       >
-        +
+        <Plus className="h-3.5 w-3.5" strokeWidth={2.6} aria-hidden="true" />
       </button>
     </div>
   )

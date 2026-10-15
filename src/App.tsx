@@ -10,6 +10,7 @@ import { AddressesProvider } from './context/AddressesContext'
 import { PexelsProvider } from './context/PexelsContext'
 import AuthPage from './pages/Auth'
 import Home from './pages/Home'
+import Search from './pages/Search'
 import MarketDetail from './pages/MarketDetail'
 import CategoryDetail from './pages/CategoryDetail'
 import MerchantDetail from './pages/MerchantDetail'
@@ -40,6 +41,7 @@ function AuthenticatedApp() {
                     <OfflineBanner />
                     <Routes>
                       <Route path="/" element={<Home />} />
+                      <Route path="/recherche" element={<Search />} />
                       <Route path="/marche/:marketId" element={<MarketDetail />} />
                       <Route path="/categorie/:categoryId" element={<CategoryDetail />} />
                       <Route path="/marchand/:merchantId" element={<MerchantDetail />} />

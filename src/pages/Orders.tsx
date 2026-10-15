@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PageShell from '../components/layout/PageShell'
-import WovenHeader from '../components/layout/WovenHeader'
-import Card from '../components/ui/Card'
-import Button from '../components/ui/Button'
 import StatusBadge from '../components/ui/StatusBadge'
 import OrderProgress from '../components/ui/OrderProgress'
 import StarPicker from '../components/ui/StarPicker'
@@ -13,16 +10,28 @@ import { useCatalog } from '../context/CatalogContext'
 import { supabase } from '../lib/supabaseClient'
 import { formatFCFA } from '../lib/format'
 import { buildWhatsAppLink } from '../lib/whatsapp'
+import { markets } from '../data/markets'
 import type { Order } from '../types'
-import { Bike, Package, Archive, Star, Check } from 'lucide-react'
+import { Bike, Package, Archive, Star, Check, MessageCircle, Clock } from 'lucide-react'
 
 type Tab = 'en_cours' | 'historique'
 
+const card = 'rounded-[1.75rem] border border-line bg-card p-4 shadow-card'
+const box = 'rounded-card border border-line bg-white p-3'
+const label = 'text-[10px] font-semibold uppercase tracking-[0.14em] text-muted'
+
 function formatDate(iso: string) {
   const date = new Date(iso)
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) +
+  return (
+    date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) +
     ' à ' +
     date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  )
+}
+
+/** Référence courte et lisible d'une commande (fin de son identifiant). */
+function orderRef(id: string) {
+  return id.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase()
 }
 
 function ReviewForm({ order, onSubmitted }: { order: Order; onSubmitted: () => void }) {
@@ -52,19 +61,24 @@ function ReviewForm({ order, onSubmitted }: { order: Order; onSubmitted: () => v
   }
 
   return (
-    <div className="space-y-2 border-t border-brand-light pt-3">
+    <div className="mt-4 space-y-2 border-t border-line pt-4">
       <StarPicker value={rating} onChange={setRating} />
       <textarea
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="Un commentaire (optionnel)"
         rows={2}
-        className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
+        className="w-full rounded-card border border-line bg-white px-3 py-2 text-sm text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
       />
-      {error && <p className="text-xs text-category-poisson">{error}</p>}
-      <Button fullWidth disabled={rating === 0 || isSubmitting} onClick={handleSubmit}>
-        {isSubmitting ? 'Envoi...' : "Envoyer l'avis"}
-      </Button>
+      {error && <p className="text-xs text-danger">{error}</p>}
+      <button
+        type="button"
+        disabled={rating === 0 || isSubmitting}
+        onClick={handleSubmit}
+        className="h-11 w-full rounded-full bg-brand text-sm font-semibold text-on-header disabled:opacity-50"
+      >
+        {isSubmitting ? 'Envoi…' : "Envoyer l'avis"}
+      </button>
     </div>
   )
 }
@@ -78,60 +92,87 @@ function OrderCard({
   hasReview: boolean
   onReviewSubmitted: () => void
 }) {
-  const itemsSummary = order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')
+  const { merchants } = useCatalog()
   const [isReviewing, setIsReviewing] = useState(false)
+  const merchant = merchants.find((m) => m.id === order.merchantId)
+  const market = merchant ? markets.find((m) => m.id === merchant.marketId) : undefined
+  const itemsSummary = order.items.map((i) => `${i.quantity} × ${i.productName}`).join(', ')
 
   return (
-    <Card className="space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-semibold text-brand-dark">{order.merchantName}</p>
-          <p className="text-xs text-brand-dark/50">{formatDate(order.createdAt)}</p>
+    <div className={card}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Commande #{orderRef(order.id)}</p>
+          <p className="mt-0.5 truncate font-display text-base font-bold text-brand-dark">{order.merchantName}</p>
+          <p className="text-[11px] text-muted">{formatDate(order.createdAt)}</p>
         </div>
         <StatusBadge status={order.status} />
       </div>
 
-      <p className="truncate text-xs text-brand-dark/60">{itemsSummary}</p>
-
-      {order.livreurName && (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-brand-dark/60"><Bike className="mr-1 inline h-3.5 w-3.5" />Livreur : {order.livreurName}</p>
-          {order.livreurPhone && (
-            <a
-              href={buildWhatsAppLink(order.livreurPhone, 'Bonjour, je vous contacte au sujet de ma livraison Panier 241. ')}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs font-semibold text-brand"
-            >
-              Contacter sur WhatsApp
-            </a>
-          )}
-        </div>
-      )}
-
-      {order.status !== 'livree' && <OrderProgress status={order.status} />}
-
-      <div className="flex items-center justify-between border-t border-brand-light pt-2 text-xs text-brand-dark/60">
-        <span>{order.slotLabel}</span>
-        <span className="font-semibold text-brand-dark">{formatFCFA(order.total)}</span>
+      <div className="mt-5">
+        <OrderProgress status={order.status} startedAt={order.createdAt} />
       </div>
+
+      <p className="mt-4 rounded-card bg-muted-bg p-3 text-xs text-brand-dark/80">{itemsSummary}</p>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className={box}>
+          <p className={label}>Commerçant</p>
+          <p className="mt-1 truncate text-sm font-semibold text-brand-dark">{order.merchantName}</p>
+          <p className="truncate text-[11px] text-muted">{market?.neighborhood ?? '—'}</p>
+        </div>
+        <div className={`${box} flex items-center gap-2`}>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-light">
+            <Bike className="h-5 w-5 text-brand" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className={label}>Livreur</p>
+            <p className="truncate text-sm font-semibold text-brand-dark">{order.livreurName ?? 'Pas encore attribué'}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center gap-1.5 text-xs text-muted">
+        <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+        {order.slotLabel}
+      </div>
+
+      <div className="mt-4 flex items-center justify-between">
+        <p className="text-sm text-muted">Total à régler</p>
+        <p className="font-display text-lg font-bold tabular-nums text-brand-dark">{formatFCFA(order.total)}</p>
+      </div>
+
+      {order.livreurPhone && order.status !== 'livree' && (
+        <a
+          href={buildWhatsAppLink(order.livreurPhone, 'Bonjour, je vous contacte au sujet de ma livraison Panier 241. ')}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand text-sm font-semibold text-on-header"
+        >
+          <MessageCircle className="h-5 w-5" aria-hidden="true" />
+          Contacter le livreur sur WhatsApp
+        </a>
+      )}
 
       {order.status === 'livree' && !hasReview && !isReviewing && (
         <button
           type="button"
           onClick={() => setIsReviewing(true)}
-          className="text-xs font-semibold text-brand"
+          className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-line bg-card text-sm font-semibold text-brand-dark"
         >
-          Laisser un avis <Star className="inline h-3.5 w-3.5" />
+          <Star className="h-4 w-4 text-warn" aria-hidden="true" />
+          Laisser un avis
         </button>
       )}
 
       {order.status === 'livree' && hasReview && (
-        <p className="text-xs text-category-legumes">Merci pour ton avis <Check className="inline h-3.5 w-3.5" /></p>
+        <p className="mt-4 flex items-center justify-center gap-1 text-xs font-semibold text-brand">
+          Merci pour votre avis <Check className="h-3.5 w-3.5" aria-hidden="true" />
+        </p>
       )}
 
       {isReviewing && <ReviewForm order={order} onSubmitted={onReviewSubmitted} />}
-    </Card>
+    </div>
   )
 }
 
@@ -171,42 +212,32 @@ export default function Orders() {
   const historique = useMemo(() => orders.filter((o) => o.status === 'livree'), [orders])
   const visibleOrders = tab === 'en_cours' ? enCours : historique
 
+  const tabClass = (active: boolean) =>
+    `h-10 rounded-full text-sm font-semibold transition ${active ? 'bg-brand text-on-header' : 'text-muted'}`
+
   return (
     <PageShell>
-      <WovenHeader>
-        <h1 className="text-xl font-bold">Mes commandes</h1>
-      </WovenHeader>
+      <header className="px-5 pb-2 pt-6">
+        <h1 className="font-display text-2xl font-bold text-brand-dark">Mes commandes</h1>
+        <div className="mt-4 grid grid-cols-2 gap-2 rounded-full bg-brand-light p-1" role="tablist">
+          <button type="button" role="tab" aria-selected={tab === 'en_cours'} onClick={() => setTab('en_cours')} className={tabClass(tab === 'en_cours')}>
+            En cours{enCours.length > 0 ? ` (${enCours.length})` : ''}
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'historique'} onClick={() => setTab('historique')} className={tabClass(tab === 'historique')}>
+            Passées{historique.length > 0 ? ` (${historique.length})` : ''}
+          </button>
+        </div>
+      </header>
 
       <div className="px-5 pt-5">
         {hadUnseenOnArrival && (
-          <div className="mb-4 rounded-card bg-brand-light p-3 text-sm text-brand">
-            Une ou plusieurs commandes ont été mises à jour depuis ta dernière visite.
+          <div className="mb-4 rounded-card bg-brand-light p-3 text-sm font-semibold text-brand">
+            Une ou plusieurs commandes ont été mises à jour depuis votre dernière visite.
           </div>
         )}
 
-        <div className="mb-4 flex gap-2 rounded-xl bg-brand-light p-1">
-          <button
-            type="button"
-            onClick={() => setTab('en_cours')}
-            className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
-              tab === 'en_cours' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
-            }`}
-          >
-            En cours {enCours.length > 0 && `(${enCours.length})`}
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('historique')}
-            className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
-              tab === 'historique' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
-            }`}
-          >
-            Historique {historique.length > 0 && `(${historique.length})`}
-          </button>
-        </div>
-
         {visibleOrders.length > 0 ? (
-          <div className="space-y-3 pb-4">
+          <div className="space-y-5 pb-4">
             {visibleOrders.map((order) => (
               <OrderCard
                 key={order.id}
@@ -216,24 +247,31 @@ export default function Orders() {
               />
             ))}
           </div>
-        ) : tab === 'en_cours' ? (
-          <div className="rounded-card bg-white p-5 text-center shadow-card">
-            <Package className="mx-auto h-9 w-9 text-brand-dark/30" />
-            <p className="mt-2 text-sm font-medium text-brand-dark">Aucune commande en cours</p>
-            <p className="mt-1 text-xs text-brand-dark/50">
-              Passe commande chez un marchand pour la suivre ici en temps réel.
-            </p>
-            <Link to="/" className="mt-4 inline-block">
-              <Button>Découvrir les marchands</Button>
-            </Link>
-          </div>
         ) : (
-          <div className="rounded-card bg-white p-5 text-center shadow-card">
-            <Archive className="mx-auto h-9 w-9 text-brand-dark/30" />
-            <p className="mt-2 text-sm font-medium text-brand-dark">Aucune commande livrée pour l'instant</p>
-            <p className="mt-1 text-xs text-brand-dark/50">
-              Ton historique de commandes apparaîtra ici une fois livré.
+          <div className={`${card} p-6 text-center`}>
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-light">
+              {tab === 'en_cours' ? (
+                <Package className="h-6 w-6 text-brand" aria-hidden="true" />
+              ) : (
+                <Archive className="h-6 w-6 text-brand" aria-hidden="true" />
+              )}
+            </span>
+            <p className="mt-3 font-display text-base font-bold text-brand-dark">
+              {tab === 'en_cours' ? 'Aucune commande en cours' : 'Aucune commande livrée pour le moment'}
             </p>
+            <p className="mt-1 text-xs text-muted">
+              {tab === 'en_cours'
+                ? 'Passez commande chez un commerçant pour suivre ici sa préparation et sa livraison.'
+                : 'Vos commandes livrées apparaîtront ici.'}
+            </p>
+            {tab === 'en_cours' && (
+              <Link
+                to="/"
+                className="mt-4 inline-flex h-10 items-center rounded-full bg-brand px-5 text-xs font-semibold text-on-header"
+              >
+                Découvrir les commerçants
+              </Link>
+            )}
           </div>
         )}
       </div>

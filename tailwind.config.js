@@ -14,6 +14,11 @@ export default {
           light: token('soft'), // champs, boutons secondaires
         },
         surface: token('surface'),
+        card: token('card'),
+        line: token('line'),
+        muted: { DEFAULT: token('muted'), bg: token('muted-bg') },
+        warn: token('warn'),
+        danger: token('danger'),
         accent: token('accent'),
         header: token('header'),
         'on-header': token('on-header'),
@@ -27,14 +32,16 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        sans: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Quicksand', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Nunito', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
-        card: '1.25rem',
+        card: '1.5rem',
       },
       boxShadow: {
-        card: '0 2px 10px -4px rgb(var(--color-ink) / 0.10)',
+        card: '0 8px 20px -12px rgb(var(--color-brand) / 0.30)',
+        float: '0 12px 30px -10px rgb(var(--color-brand) / 0.35)',
+        field: '0 6px 18px -8px rgb(var(--color-brand) / 0.25)',
       },
       transitionTimingFunction: {
         // Courbe « spring » douce : léger dépassement puis stabilisation.

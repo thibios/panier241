@@ -150,3 +150,11 @@ h4 {
     transform: none;
   }
 }
+
+/* Rangées horizontales (catégories, commerces, filtres) : défilement au doigt sans barre visible. */
+.overflow-x-auto {
+  scrollbar-width: none;
+}
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}

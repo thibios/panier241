@@ -10,15 +10,15 @@ export default function MarketCard({ market, className = 'w-40 shrink-0' }: { ma
   return (
     <Link
       to={`/marche/${market.id}`}
-      className={`group flex flex-col gap-2 rounded-card bg-white p-3 shadow-card transition duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 ${className}`}
+      className={`flex flex-col overflow-hidden rounded-card border border-line bg-card shadow-card transition duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 ${className}`}
     >
-      <div className="flex h-24 items-center justify-center overflow-hidden rounded-2xl bg-brand-light">
+      <div className="flex h-24 w-full items-center justify-center overflow-hidden bg-brand-light">
         <MarketVisual market={market} iconClassName="h-9 w-9 text-brand" />
       </div>
-      <div>
-        <p className="text-sm font-semibold leading-tight text-brand-dark">{market.name}</p>
-        <p className="text-xs text-brand-dark/60">{market.neighborhood}</p>
-        <p className={`mt-1 text-xs font-medium ${merchantCount === 0 ? 'text-brand-dark/50' : 'text-brand'}`}>
+      <div className="p-3">
+        <p className="truncate text-sm font-semibold text-brand-dark">{market.name}</p>
+        <p className="truncate text-[11px] text-muted">{market.neighborhood}</p>
+        <p className={`mt-1 text-[11px] font-semibold ${merchantCount === 0 ? 'text-muted' : 'text-brand'}`}>
           {merchantCount === 0
             ? 'Bientôt disponible'
             : `${merchantCount} commerçant${merchantCount > 1 ? 's' : ''}`}
