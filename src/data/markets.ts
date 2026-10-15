@@ -68,10 +68,11 @@ export const markets: Market[] = [
   },
   {
     id: 'mkt-centre-affaires',
-    name: 'Centre Affaires',
+    name: "Centr' Affaires",
     neighborhood: 'Glass',
     city: 'Libreville',
     kind: 'supermarche',
+    logoUrl: '/logos/centr-affaires.png',
     lat: 0.3936,
     lng: 9.4523,
   },
