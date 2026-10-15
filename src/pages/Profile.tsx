@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
 import PageShell from '../components/layout/PageShell'
 import WovenHeader from '../components/layout/WovenHeader'
@@ -10,7 +10,8 @@ import { useFavorites } from '../context/FavoritesContext'
 import { useAddresses } from '../context/AddressesContext'
 import { useAuth, isAdminEmail } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { MapPin, User, Smartphone, Banknote, CreditCard, type LucideIcon } from 'lucide-react'
+import { uploadAvatar, removeAvatar } from '../lib/avatar'
+import { MapPin, User, Smartphone, Banknote, CreditCard, Camera, Loader2, type LucideIcon } from 'lucide-react'
 
 const paymentIcon: Record<string, LucideIcon> = {
   'pay-1': Smartphone,
@@ -48,16 +49,22 @@ export default function Profile() {
   const [phoneDraft, setPhoneDraft] = useState('')
   const [isSavingPhone, setIsSavingPhone] = useState(false)
 
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+  const avatarInput = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     if (!user) return
     supabase
       .from('profiles')
-      .select('first_name, last_name, phone')
+      .select('first_name, last_name, phone, avatar_url')
       .eq('id', user.id)
       .single()
       .then(({ data }) => {
         if (data) {
           setProfile({ firstName: data.first_name, lastName: data.last_name, phone: data.phone })
+          setAvatarUrl(data.avatar_url ?? null)
         }
       })
     supabase
@@ -109,6 +116,33 @@ export default function Profile() {
     )
   }
 
+  async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !user) return
+    setIsUploadingAvatar(true)
+    setAvatarError(null)
+    try {
+      setAvatarUrl(await uploadAvatar(user.id, file, avatarUrl))
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : "La photo n'a pas pu être envoyée.")
+    }
+    setIsUploadingAvatar(false)
+  }
+
+  async function handleRemoveAvatar() {
+    if (!user || !avatarUrl) return
+    setIsUploadingAvatar(true)
+    setAvatarError(null)
+    try {
+      await removeAvatar(user.id, avatarUrl)
+      setAvatarUrl(null)
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : "La photo n'a pas pu être retirée.")
+    }
+    setIsUploadingAvatar(false)
+  }
+
   async function handleSavePhone() {
     if (!user || !phoneDraft.trim()) return
     setIsSavingPhone(true)
@@ -137,10 +171,41 @@ export default function Profile() {
     <PageShell>
       <WovenHeader>
         <div className="flex items-center gap-3">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-3xl">
-            <User className="h-8 w-8" />
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => avatarInput.current?.click()}
+              disabled={isUploadingAvatar}
+              aria-label={avatarUrl ? 'Changer la photo de profil' : 'Ajouter une photo de profil'}
+              className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-8 w-8" aria-hidden="true" />
+              )}
+              {isUploadingAvatar && (
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+                  <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />
+                </span>
+              )}
+            </button>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-header bg-accent text-brand-dark"
+            >
+              <Camera className="h-3.5 w-3.5" />
+            </span>
+            <input
+              ref={avatarInput}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleAvatarChange}
+              className="sr-only"
+              tabIndex={-1}
+            />
           </div>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-lg font-bold">
               {profile ? `${profile.firstName} ${profile.lastName}` : user?.email}
             </h1>
@@ -148,9 +213,19 @@ export default function Profile() {
             {user?.created_at && (
               <p className="text-xs text-white/60">Membre depuis {formatMemberSince(user.created_at)}</p>
             )}
+            {avatarUrl && !isUploadingAvatar && (
+              <button type="button" onClick={handleRemoveAvatar} className="mt-1 text-xs font-semibold text-white/80 underline">
+                Retirer la photo
+              </button>
+            )}
           </div>
         </div>
       </WovenHeader>
+      {avatarError && (
+        <p role="alert" className="mx-5 mt-4 rounded-card bg-danger/10 p-3 text-xs font-semibold text-danger">
+          {avatarError}
+        </p>
+      )}
 
       <div className="space-y-5 px-5 pt-5">
         <div className="grid grid-cols-2 gap-3">

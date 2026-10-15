@@ -88,15 +88,19 @@ export default function Home() {
   const { user } = useAuth()
   const { addresses } = useAddresses()
   const [firstName, setFirstName] = useState<string | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
     supabase
       .from('profiles')
-      .select('first_name')
+      .select('first_name, avatar_url')
       .eq('id', user.id)
       .single()
-      .then(({ data }) => setFirstName(data?.first_name?.trim() || null))
+      .then(({ data }) => {
+        setFirstName(data?.first_name?.trim() || null)
+        setAvatarUrl(data?.avatar_url ?? null)
+      })
   }, [user])
 
   const defaultAddress = addresses.find((a) => a.isDefault) ?? addresses[0]
@@ -144,9 +148,13 @@ export default function Home() {
         <Link
           to="/profil"
           aria-label="Mon profil"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-card font-display text-base font-bold text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-card font-display text-base font-bold text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
         >
-          {(firstName ?? user?.email ?? '?').charAt(0).toUpperCase()}
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            (firstName ?? user?.email ?? '?').charAt(0).toUpperCase()
+          )}
         </Link>
       </header>
 
