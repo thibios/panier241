@@ -7,6 +7,7 @@ import Button from '../components/ui/Button'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth, isAdminEmail } from '../context/AuthContext'
 import type { ApprovalStatus } from '../types'
+import { useMarkets, type CustomMarketRow } from '../context/MarketsContext'
 import { ArrowLeft, Lock } from 'lucide-react'
 
 interface MerchantRow {
@@ -29,13 +30,17 @@ export default function AdminSpace() {
   const [merchants, setMerchants] = useState<MerchantRow[]>([])
   const [livreurs, setLivreurs] = useState<LivreurRow[]>([])
   const [loading, setLoading] = useState(false)
+  const [proposedMarkets, setProposedMarkets] = useState<CustomMarketRow[]>([])
+  const { refresh: refreshMarkets } = useMarkets()
 
   async function fetchAll() {
     setLoading(true)
-    const [merchantsRes, livreursRes] = await Promise.all([
+    const [merchantsRes, livreursRes, marketsRes] = await Promise.all([
       supabase.from('merchants').select('id, name, address, status').order('name'),
       supabase.from('livreurs').select('id, name, phone, vehicle, status').order('name'),
+      supabase.from('custom_markets').select('id, name, neighborhood, city, status, created_at').eq('status', 'pending').order('created_at'),
     ])
+    if (marketsRes.data) setProposedMarkets(marketsRes.data as CustomMarketRow[])
     if (merchantsRes.data) setMerchants(merchantsRes.data)
     if (livreursRes.data) setLivreurs(livreursRes.data)
     setLoading(false)
@@ -48,6 +53,11 @@ export default function AdminSpace() {
   async function setMerchantStatus(id: string, status: ApprovalStatus) {
     await supabase.from('merchants').update({ status }).eq('id', id)
     await fetchAll()
+  }
+
+  async function setMarketStatus(id: string, status: 'approved' | 'rejected') {
+    await supabase.from('custom_markets').update({ status }).eq('id', id)
+    await Promise.all([fetchAll(), refreshMarkets()])
   }
 
   async function setLivreurStatus(id: string, status: ApprovalStatus) {
@@ -108,6 +118,32 @@ export default function AdminSpace() {
             </div>
           ) : (
             <p className="text-center text-sm text-brand-dark/50">Aucune demande en attente.</p>
+          )}
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-brand-dark">
+            Marchés proposés {proposedMarkets.length > 0 && `(${proposedMarkets.length})`}
+          </h2>
+          {proposedMarkets.length > 0 ? (
+            <div className="space-y-2">
+              {proposedMarkets.map((m) => (
+                <Card key={m.id} className="space-y-2">
+                  <p className="text-sm font-semibold text-brand-dark">{m.name}</p>
+                  <p className="text-xs text-brand-dark/50">
+                    {m.neighborhood}, {m.city}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setMarketStatus(m.id, 'approved')}>Approuver</Button>
+                    <Button variant="secondary" onClick={() => setMarketStatus(m.id, 'rejected')}>
+                      Rejeter
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-sm text-brand-dark/50">Aucun marché proposé.</p>
           )}
         </section>
 

@@ -5,10 +5,12 @@ import PageShell from '../components/layout/PageShell'
 import MarketCard from '../components/ui/MarketCard'
 import ProductTile from '../components/ui/ProductTile'
 import Reveal from '../components/ui/Reveal'
+import ScrollRow from '../components/ui/ScrollRow'
+import AddMarketCard from '../components/ui/AddMarketCard'
+import { useMarkets } from '../context/MarketsContext'
 import CatalogState from '../components/ui/CatalogState'
 import { CategoryIcon } from '../components/ui/icons'
 import { useMarketPhoto } from '../components/ui/MarketVisual'
-import { markets } from '../data/markets'
 import { categories } from '../data/categories'
 import { useCatalog } from '../context/CatalogContext'
 import { useAuth } from '../context/AuthContext'
@@ -40,7 +42,7 @@ function FeaturedCard({ market, merchantCount }: { market: Market; merchantCount
         </span>
         <p className="mt-2 font-display text-lg font-bold leading-tight">{market.name}</p>
         <p className="text-xs opacity-85">
-          {merchantCount} commerçant{merchantCount > 1 ? 's' : ''} · {market.neighborhood}
+          {merchantCount > 0 ? `${merchantCount} commerçant${merchantCount > 1 ? 's' : ''}` : 'Bientôt disponible'} · {market.neighborhood}
         </p>
       </div>
     </Link>
@@ -50,6 +52,7 @@ function FeaturedCard({ market, merchantCount }: { market: Market; merchantCount
 /** Carte compacte d'un commerçant dans la rangée horizontale. */
 function MerchantTile({ merchant }: { merchant: Merchant }) {
   const pexelsPhotos = usePexelsPhotos()
+  const { markets } = useMarkets()
   const market = markets.find((m) => m.id === merchant.marketId)
   const photo = merchant.kioskPhotoUrl
     ? resolveImage(merchant.kioskPhotoUrl, merchant.categories[0], pexelsPhotos)
@@ -89,6 +92,8 @@ export default function Home() {
   const { addresses } = useAddresses()
   const [firstName, setFirstName] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const { markets } = useMarkets()
+  const categoryPhotos = usePexelsPhotos()
 
   useEffect(() => {
     if (!user) return
@@ -112,7 +117,10 @@ export default function Home() {
     return counts
   }, [merchants])
 
-  const featured = markets.filter((m) => (merchantCountByMarket.get(m.id) ?? 0) > 0)
+  // À la une : d'abord les lieux qui ont des commerçants, puis les enseignes avec logo et les marchés.
+  const featured = markets
+    .filter((m) => (merchantCountByMarket.get(m.id) ?? 0) > 0 || m.logoUrl || m.kind === 'marche')
+    .sort((a, b) => (merchantCountByMarket.get(b.id) ?? 0) - (merchantCountByMarket.get(a.id) ?? 0))
   const stores = markets.filter((m) => m.kind === 'supermarche')
   const localMarkets = markets.filter((m) => m.kind === 'marche')
 
@@ -176,11 +184,11 @@ export default function Home() {
 
       {featured.length > 0 && (
         <section className="mt-6">
-          <div className="flex snap-x gap-3 overflow-x-auto px-5 pb-1">
+          <ScrollRow label="À la une" dots arrowTop="top-[30%]">
             {featured.map((market) => (
               <FeaturedCard key={market.id} market={market} merchantCount={merchantCountByMarket.get(market.id) ?? 0} />
             ))}
-          </div>
+          </ScrollRow>
         </section>
       )}
 
@@ -191,12 +199,16 @@ export default function Home() {
             <Reveal key={cat.id} index={i}>
               <Link
                 to={`/categorie/${cat.id}`}
-                className="flex h-full flex-col items-center gap-2 rounded-card border border-line bg-card p-3 shadow-card transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+                className="flex h-full flex-col overflow-hidden rounded-card border border-line bg-card shadow-card transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-light">
-                  <CategoryIcon category={cat.id} className="h-6 w-6 text-brand" />
+                <span className="flex h-20 w-full items-center justify-center bg-brand-light">
+                  {categoryPhotos[cat.id] ? (
+                    <img src={categoryPhotos[cat.id] as string} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  ) : (
+                    <CategoryIcon category={cat.id} className="h-6 w-6 text-brand" />
+                  )}
                 </span>
-                <span className="text-center text-xs font-semibold leading-tight text-brand-dark">{cat.label}</span>
+                <span className="flex flex-1 items-center justify-center px-2 py-2 text-center text-xs font-semibold leading-tight text-brand-dark">{cat.label}</span>
               </Link>
             </Reveal>
           ))}
@@ -208,31 +220,32 @@ export default function Home() {
           <h2 className={sectionTitle}>Magasins et enseignes</h2>
           <span className="text-xs font-semibold text-muted">{stores.length} lieux</span>
         </div>
-        <div className="flex snap-x gap-3 overflow-x-auto px-5 pb-1">
+        <ScrollRow label="Magasins et enseignes">
           {stores.map((market) => (
             <MarketCard key={market.id} market={market} className="w-40 shrink-0 snap-start" />
           ))}
-        </div>
+        </ScrollRow>
       </section>
 
       {merchants.length > 0 && (
         <section className="mt-7">
           <h2 className={`${sectionTitle} mb-3 px-5`}>Commerçants</h2>
-          <div className="flex snap-x gap-3 overflow-x-auto px-5 pb-1">
+          <ScrollRow label="Commerçants">
             {merchants.map((merchant) => (
               <MerchantTile key={merchant.id} merchant={merchant} />
             ))}
-          </div>
+          </ScrollRow>
         </section>
       )}
 
       <section className="mt-7">
         <h2 className={`${sectionTitle} mb-3 px-5`}>Marchés de proximité</h2>
-        <div className="flex snap-x gap-3 overflow-x-auto px-5 pb-1">
+        <ScrollRow label="Marchés de proximité">
           {localMarkets.map((market) => (
             <MarketCard key={market.id} market={market} className="w-40 shrink-0 snap-start" />
           ))}
-        </div>
+          <AddMarketCard />
+        </ScrollRow>
       </section>
 
       {discoverProducts.length > 0 && (

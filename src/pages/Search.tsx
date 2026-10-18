@@ -5,7 +5,7 @@ import PageShell from '../components/layout/PageShell'
 import ProductTile from '../components/ui/ProductTile'
 import MarketVisual from '../components/ui/MarketVisual'
 import Reveal from '../components/ui/Reveal'
-import { markets } from '../data/markets'
+import { useMarkets } from '../context/MarketsContext'
 import { categories } from '../data/categories'
 import { useCatalog } from '../context/CatalogContext'
 import type { CategoryId } from '../types'
@@ -22,6 +22,7 @@ function normalize(text: string) {
 
 export default function Search() {
   const { merchants, products } = useCatalog()
+  const { markets } = useMarkets()
   const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState(params.get('q') ?? '')
   const [category, setCategory] = useState<CategoryId | null>(null)
@@ -45,7 +46,7 @@ export default function Search() {
   const matchedPlaces = useMemo(() => {
     if (!q) return []
     return markets.filter((m) => normalize(`${m.name} ${m.neighborhood}`).includes(q))
-  }, [q])
+  }, [q, markets])
 
   const matchedMerchants = useMemo(() => {
     return merchants.filter((m) => {

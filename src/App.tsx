@@ -8,6 +8,7 @@ import { OrdersProvider } from './context/OrdersContext'
 import { FavoritesProvider } from './context/FavoritesContext'
 import { AddressesProvider } from './context/AddressesContext'
 import { PexelsProvider } from './context/PexelsContext'
+import { MarketsProvider } from './context/MarketsContext'
 import AuthPage from './pages/Auth'
 import Home from './pages/Home'
 import Search from './pages/Search'
@@ -32,6 +33,7 @@ import ResetPassword from './pages/ResetPassword'
 function AuthenticatedApp() {
   return (
     <PexelsProvider>
+      <MarketsProvider>
       <CatalogProvider>
         <FavoritesProvider>
           <AddressesProvider>
@@ -64,6 +66,7 @@ function AuthenticatedApp() {
           </AddressesProvider>
         </FavoritesProvider>
       </CatalogProvider>
+      </MarketsProvider>
     </PexelsProvider>
   )
 }

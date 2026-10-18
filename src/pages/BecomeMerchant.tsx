@@ -5,7 +5,7 @@ import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { categories } from '../data/categories'
-import { markets } from '../data/markets'
+import { useMarkets } from '../context/MarketsContext'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../context/CatalogContext'
@@ -35,6 +35,7 @@ export default function BecomeMerchant() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { refresh } = useCatalog()
+  const { markets } = useMarkets()
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')

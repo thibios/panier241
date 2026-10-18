@@ -7,7 +7,7 @@ import MerchantCard from '../components/ui/MerchantCard'
 import MarketVisual from '../components/ui/MarketVisual'
 import Reveal from '../components/ui/Reveal'
 import CatalogState from '../components/ui/CatalogState'
-import { markets } from '../data/markets'
+import { useMarkets } from '../context/MarketsContext'
 import { useCatalog } from '../context/CatalogContext'
 import MerchantThemeProvider from '../theme/MerchantThemeProvider'
 import { resolveMarketTheme } from '../theme/tokens'
@@ -15,6 +15,7 @@ import { resolveMarketTheme } from '../theme/tokens'
 export default function MarketDetail() {
   const { marketId } = useParams()
   const { merchants, loading, error } = useCatalog()
+  const { markets } = useMarkets()
   const market = markets.find((m) => m.id === marketId)
 
   if (!market) {
