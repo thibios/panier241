@@ -1,5 +1,8 @@
 import type { Market } from '../types'
 
+// Lieux de vente fixes. Les marchés et magasins ajoutés depuis l'application
+// (table custom_markets) s'y ajoutent au chargement, via MarketsContext.
+// Règle : un magasin ou une enseigne n'apparaît que s'il a un logo.
 export const markets: Market[] = [
   {
     id: 'mkt-mont-bouet',
@@ -42,114 +45,5 @@ export const markets: Market[] = [
     logoUrl: '/logos/centr-affaires.png',
     lat: 0.3936,
     lng: 9.4523,
-  },
-  {
-    id: 'mkt-sans-gel',
-    name: 'Sans Gel',
-    neighborhood: 'Nombakélé',
-    city: 'Libreville',
-    kind: 'supermarche',
-    lat: 0.388,
-    lng: 9.46,
-  },
-  {
-    id: 'mkt-carrefour-market',
-    name: 'Carrefour Market',
-    neighborhood: 'Akanda',
-    city: 'Libreville',
-    kind: 'supermarche',
-    lat: 0.52,
-    lng: 9.42,
-  },
-  {
-    id: 'mkt-carrefour',
-    name: 'Carrefour',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-mega-market-super-u',
-    name: 'Mega Market by Super U',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-super-gros',
-    name: 'Super Gros',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-mbolo',
-    name: 'Centre commercial Mbolo',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-prix-import',
-    name: 'Prix Import',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-geant-ckdo',
-    name: 'Géant CKDO',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-super-ckdo',
-    name: 'Super CKDO',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-pelisson',
-    name: 'Pélisson',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-sobraga',
-    name: 'Sobraga',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-patisserie-ogooue',
-    name: "Pâtisserie de l'Ogooué",
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-halle-poisson',
-    name: 'Nouvelle Halle de Poisson',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-escale-gourmet',
-    name: 'Escale Gourmet',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
-  },
-  {
-    id: 'mkt-chez-paul',
-    name: 'Chez Paul',
-    neighborhood: 'Libreville',
-    city: 'Libreville',
-    kind: 'supermarche',
   },
 ]

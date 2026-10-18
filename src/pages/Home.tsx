@@ -188,12 +188,12 @@ export default function Home() {
       <section className="mt-7">
         <div className="mb-3 flex items-center justify-between px-5">
           <h2 className={sectionTitle}>Magasins et enseignes</h2>
-          <span className="text-xs font-semibold text-muted">{stores.length} lieux</span>
         </div>
         <ScrollRow label="Magasins et enseignes">
           {stores.map((market) => (
             <MarketCard key={market.id} market={market} className="w-40 shrink-0 snap-start" />
           ))}
+          <AddMarketCard kind="supermarche" />
         </ScrollRow>
       </section>
 

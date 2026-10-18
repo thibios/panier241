@@ -38,7 +38,7 @@ export default function AdminSpace() {
     const [merchantsRes, livreursRes, marketsRes] = await Promise.all([
       supabase.from('merchants').select('id, name, address, status').order('name'),
       supabase.from('livreurs').select('id, name, phone, vehicle, status').order('name'),
-      supabase.from('custom_markets').select('id, name, neighborhood, city, status, created_at').eq('status', 'pending').order('created_at'),
+      supabase.from('custom_markets').select('id, name, neighborhood, city, status, kind, logo_url, created_at').eq('status', 'pending').order('created_at'),
     ])
     if (marketsRes.data) setProposedMarkets(marketsRes.data as CustomMarketRow[])
     if (merchantsRes.data) setMerchants(merchantsRes.data)
@@ -123,16 +123,21 @@ export default function AdminSpace() {
 
         <section>
           <h2 className="mb-2 text-sm font-semibold text-brand-dark">
-            Marchés proposés {proposedMarkets.length > 0 && `(${proposedMarkets.length})`}
+            Marchés et magasins proposés {proposedMarkets.length > 0 && `(${proposedMarkets.length})`}
           </h2>
           {proposedMarkets.length > 0 ? (
             <div className="space-y-2">
               {proposedMarkets.map((m) => (
                 <Card key={m.id} className="space-y-2">
-                  <p className="text-sm font-semibold text-brand-dark">{m.name}</p>
-                  <p className="text-xs text-brand-dark/50">
-                    {m.neighborhood}, {m.city}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    {m.logo_url && <img src={m.logo_url} alt={`Logo ${m.name}`} className="h-12 w-12 rounded-xl bg-white object-contain" />}
+                    <div>
+                      <p className="text-sm font-semibold text-brand-dark">{m.name}</p>
+                      <p className="text-xs text-brand-dark/50">
+                        {m.kind === 'supermarche' ? 'Magasin / enseigne' : 'Marché'} · {m.neighborhood}, {m.city}
+                      </p>
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <Button onClick={() => setMarketStatus(m.id, 'approved')}>Approuver</Button>
                     <Button variant="secondary" onClick={() => setMarketStatus(m.id, 'rejected')}>
