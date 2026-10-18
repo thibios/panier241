@@ -81,7 +81,7 @@ export interface CartItem {
   quantity: number
 }
 
-export type OrderStatus = 'en_preparation' | 'en_livraison' | 'livree'
+export type OrderStatus = 'en_preparation' | 'en_livraison' | 'livree' | 'annulee'
 
 export interface OrderItem {
   productId: string
@@ -110,6 +110,9 @@ export interface Order {
   livreurPhone: string | null
   shoppingVideoUrl: string | null
   clientPhone: string | null
+  /** Annulation par le client (commande encore en préparation). */
+  cancelledAt?: string | null
+  cancelReason?: string | null
 }
 
 export interface Livreur {

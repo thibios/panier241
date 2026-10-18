@@ -12,7 +12,7 @@ import { formatFCFA } from '../lib/format'
 import { buildWhatsAppLink } from '../lib/whatsapp'
 import { markets } from '../data/markets'
 import type { Order } from '../types'
-import { Bike, Package, Archive, Star, Check, MessageCircle, Clock } from 'lucide-react'
+import { Bike, Package, Archive, Star, Check, MessageCircle, Clock, XCircle, Scale } from 'lucide-react'
 
 type Tab = 'en_cours' | 'historique'
 
@@ -83,6 +83,67 @@ function ReviewForm({ order, onSubmitted }: { order: Order; onSubmitted: () => v
   )
 }
 
+const CANCEL_REASONS = ['Le prix est trop élevé', "Je me suis trompé d'articles", 'Le délai est trop long', 'Autre raison']
+
+/** Annulation d'une commande encore en préparation, avec confirmation et motif. */
+function CancelOrder({ order }: { order: Order }) {
+  const { cancelOrder } = useOrders()
+  const [open, setOpen] = useState(false)
+  const [reason, setReason] = useState(CANCEL_REASONS[0])
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function confirm() {
+    setIsCancelling(true)
+    setError(null)
+    const result = await cancelOrder(order.id, reason)
+    setIsCancelling(false)
+    if (result.error) setError(result.error)
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-line bg-card text-sm font-semibold text-danger"
+      >
+        <XCircle className="h-5 w-5" aria-hidden="true" />
+        Annuler la commande
+      </button>
+    )
+  }
+
+  return (
+    <div className="mt-4 space-y-3 rounded-card border border-danger/30 bg-danger/5 p-3">
+      <p className="text-sm font-semibold text-brand-dark">Pourquoi annulez-vous cette commande ?</p>
+      <div className="space-y-1.5" role="radiogroup" aria-label="Motif d'annulation">
+        {CANCEL_REASONS.map((r) => (
+          <label key={r} className="flex cursor-pointer items-center gap-2 text-sm text-brand-dark">
+            <input type="radio" name={`cancel-${order.id}`} checked={reason === r} onChange={() => setReason(r)} className="h-4 w-4 accent-[rgb(var(--color-brand))]" />
+            {r}
+          </label>
+        ))}
+      </div>
+      {reason === CANCEL_REASONS[0] && (
+        <Link to="/prix-officiels" className="flex items-center gap-1.5 text-xs font-semibold text-brand underline">
+          <Scale className="h-3.5 w-3.5" aria-hidden="true" />
+          Comparer avec les prix officiels de la DGCCRF
+        </Link>
+      )}
+      {error && <p role="alert" className="text-xs font-semibold text-danger">{error}</p>}
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" onClick={() => setOpen(false)} disabled={isCancelling} className="h-11 rounded-full border border-line bg-card text-sm font-semibold text-brand-dark">
+          Garder
+        </button>
+        <button type="button" onClick={confirm} disabled={isCancelling} className="h-11 rounded-full bg-danger text-sm font-semibold text-white disabled:opacity-50">
+          {isCancelling ? 'Annulation…' : "Confirmer l'annulation"}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function OrderCard({
   order,
   hasReview,
@@ -109,9 +170,16 @@ function OrderCard({
         <StatusBadge status={order.status} />
       </div>
 
-      <div className="mt-5">
-        <OrderProgress status={order.status} startedAt={order.createdAt} />
-      </div>
+      {order.status === 'annulee' ? (
+        <p className="mt-4 rounded-card bg-danger/5 p-3 text-xs text-danger">
+          Annulée{order.cancelledAt ? ` le ${formatDate(order.cancelledAt)}` : ''}
+          {order.cancelReason ? ` · ${order.cancelReason}` : ''}
+        </p>
+      ) : (
+        <div className="mt-5">
+          <OrderProgress status={order.status} startedAt={order.createdAt} />
+        </div>
+      )}
 
       <p className="mt-4 rounded-card bg-muted-bg p-3 text-xs text-brand-dark/80">{itemsSummary}</p>
 
@@ -138,11 +206,13 @@ function OrderCard({
       </div>
 
       <div className="mt-4 flex items-center justify-between">
-        <p className="text-sm text-muted">Total à régler</p>
+        <p className="text-sm text-muted">{order.status === 'annulee' ? 'Total (non dû)' : 'Total à régler'}</p>
         <p className="font-display text-lg font-bold tabular-nums text-brand-dark">{formatFCFA(order.total)}</p>
       </div>
 
-      {order.livreurPhone && order.status !== 'livree' && (
+      {order.status === 'en_preparation' && <CancelOrder order={order} />}
+
+      {order.livreurPhone && order.status !== 'livree' && order.status !== 'annulee' && (
         <a
           href={buildWhatsAppLink(order.livreurPhone, 'Bonjour, je vous contacte au sujet de ma livraison Panier 241. ')}
           target="_blank"
@@ -208,8 +278,8 @@ export default function Orders() {
     refreshCatalog()
   }
 
-  const enCours = useMemo(() => orders.filter((o) => o.status !== 'livree'), [orders])
-  const historique = useMemo(() => orders.filter((o) => o.status === 'livree'), [orders])
+  const enCours = useMemo(() => orders.filter((o) => o.status === 'en_preparation' || o.status === 'en_livraison'), [orders])
+  const historique = useMemo(() => orders.filter((o) => o.status === 'livree' || o.status === 'annulee'), [orders])
   const visibleOrders = tab === 'en_cours' ? enCours : historique
 
   const tabClass = (active: boolean) =>

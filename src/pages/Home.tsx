@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, ChevronRight } from 'lucide-react'
+import { Search, ChevronRight, Scale } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
 import MarketCard from '../components/ui/MarketCard'
 import ProductTile from '../components/ui/ProductTile'
@@ -213,6 +213,22 @@ export default function Home() {
             </Reveal>
           ))}
         </div>
+      </section>
+
+      <section className="mt-5 px-5">
+        <Link
+          to="/prix-officiels"
+          className="flex items-center gap-3 rounded-card border border-line bg-card p-4 shadow-card transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-brand-dark">
+            <Scale className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-brand-dark">Prix officiels de l'État</span>
+            <span className="block text-xs text-muted">Riz, sucre, huile, lait, poulet… les prix plafonds à ne pas dépasser</span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
+        </Link>
       </section>
 
       <section className="mt-7">

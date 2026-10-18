@@ -8,6 +8,7 @@ interface OrdersContextValue {
   orders: Order[]
   loading: boolean
   addOrder: (order: Order) => Promise<void>
+  cancelOrder: (orderId: string, reason: string) => Promise<{ error: string | null }>
   unseenCount: number
   markAllSeen: () => void
 }
@@ -33,6 +34,8 @@ interface OrderRow {
   livreur_phone: string | null
   shopping_video_url: string | null
   client_phone: string | null
+  cancelled_at: string | null
+  cancel_reason: string | null
 }
 
 function fromRow(row: OrderRow): Order {
@@ -55,11 +58,13 @@ function fromRow(row: OrderRow): Order {
     livreurPhone: row.livreur_phone,
     shoppingVideoUrl: row.shopping_video_url,
     clientPhone: row.client_phone,
+    cancelledAt: row.cancelled_at,
+    cancelReason: row.cancel_reason,
   }
 }
 
 const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url, client_phone'
+  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url, client_phone, cancelled_at, cancel_reason'
 
 type SeenStatuses = Record<string, Order['status']>
 
@@ -122,6 +127,26 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  /** Annule une commande encore en préparation (règle vérifiée aussi par la base). */
+  async function cancelOrder(orderId: string, reason: string) {
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status: 'annulee', cancel_reason: reason.slice(0, 300) })
+      .eq('id', orderId)
+      .eq('status', 'en_preparation')
+      .select(ORDER_COLUMNS)
+      .maybeSingle()
+    if (error || !data) return { error: "La commande n'a pas pu être annulée : elle est peut-être déjà en livraison." }
+    const updated = fromRow(data)
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)))
+    setSeenStatuses((prev) => {
+      const next = { ...prev, [orderId]: updated.status }
+      writeLocal(seenKey, next)
+      return next
+    })
+    return { error: null }
+  }
+
   const unseenCount = useMemo(
     () => orders.filter((o) => seenStatuses[o.id] !== o.status).length,
     [orders, seenStatuses],
@@ -135,7 +160,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <OrdersContext.Provider value={{ orders, loading, addOrder, unseenCount, markAllSeen }}>
+    <OrdersContext.Provider value={{ orders, loading, addOrder, cancelOrder, unseenCount, markAllSeen }}>
       {children}
     </OrdersContext.Provider>
   )

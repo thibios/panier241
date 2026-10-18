@@ -4,6 +4,7 @@ const statusMeta: Record<OrderStatus, { label: string; className: string }> = {
   en_preparation: { label: 'En préparation', className: 'text-warn' },
   en_livraison: { label: 'En cours de livraison', className: 'text-brand' },
   livree: { label: 'Livrée', className: 'text-brand' },
+  annulee: { label: 'Annulée', className: 'text-danger' },
 }
 
 export default function StatusBadge({ status }: { status: OrderStatus }) {

@@ -12,6 +12,7 @@ import { MarketsProvider } from './context/MarketsContext'
 import AuthPage from './pages/Auth'
 import Home from './pages/Home'
 import Search from './pages/Search'
+import OfficialPrices from './pages/OfficialPrices'
 import MarketDetail from './pages/MarketDetail'
 import CategoryDetail from './pages/CategoryDetail'
 import MerchantDetail from './pages/MerchantDetail'
@@ -44,6 +45,7 @@ function AuthenticatedApp() {
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="/recherche" element={<Search />} />
+                      <Route path="/prix-officiels" element={<OfficialPrices />} />
                       <Route path="/marche/:marketId" element={<MarketDetail />} />
                       <Route path="/categorie/:categoryId" element={<CategoryDetail />} />
                       <Route path="/marchand/:merchantId" element={<MerchantDetail />} />
