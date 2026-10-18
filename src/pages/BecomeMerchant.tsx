@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Camera, Plus, X, ChevronDown } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
 import { categories } from '../data/categories'
-import { businessTypes, neighborhoods, INDEPENDENT_MARKET_ID } from '../data/businessTypes'
+import { businessTypes, INDEPENDENT_MARKET_ID } from '../data/businessTypes'
+import NeighborhoodPicker from '../components/ui/NeighborhoodPicker'
 import { useMarkets } from '../context/MarketsContext'
 import { supabase } from '../lib/supabaseClient'
 import { compressImage } from '../lib/compressImage'
@@ -47,7 +48,6 @@ export default function BecomeMerchant() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [neighborhood, setNeighborhood] = useState('')
-  const [otherNeighborhood, setOtherNeighborhood] = useState('')
   const [marketId, setMarketId] = useState(INDEPENDENT_MARKET_ID)
   const [address, setAddress] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([])
@@ -59,7 +59,7 @@ export default function BecomeMerchant() {
   const businessType = businessTypes.find((b) => b.id === businessTypeId)
   const itemWord = businessType?.itemWord ?? 'produit'
   const groups = useMemo(() => [...new Set(businessTypes.map((b) => b.group))], [])
-  const finalNeighborhood = neighborhood === 'autre' ? otherNeighborhood.trim() : neighborhood
+  const finalNeighborhood = neighborhood.trim()
 
   function chooseBusinessType(id: string) {
     const type = businessTypes.find((b) => b.id === id)
@@ -209,19 +209,7 @@ export default function BecomeMerchant() {
             </div>
             <div>
               <label htmlFor="m-area" className={label}>Quartier</label>
-              <div className="relative">
-                <select id="m-area" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} className={`${field} appearance-none pr-9`}>
-                  <option value="">Choisir le quartier</option>
-                  {neighborhoods.map((n) => (
-                    <option key={n} value={n}>{n}</option>
-                  ))}
-                  <option value="autre">Autre quartier…</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
-              </div>
-              {neighborhood === 'autre' && (
-                <input value={otherNeighborhood} onChange={(e) => setOtherNeighborhood(e.target.value)} maxLength={80} placeholder="Nom du quartier" aria-label="Nom du quartier" className={`${field} mt-2`} />
-              )}
+              <NeighborhoodPicker value={neighborhood} onChange={setNeighborhood} inputClassName={field} />
             </div>
             <div>
               <label htmlFor="m-market" className={label}>Dans un marché ou un magasin ? (facultatif)</label>

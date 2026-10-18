@@ -41,20 +41,16 @@ export const businessTypes: BusinessType[] = [
   { id: 'alimentation-generale', label: 'Alimentation générale / boutique de quartier', group: 'Épicerie et maison', categories: ['epicerie'], itemWord: 'produit', productTypes: ['Épicerie', 'Boisson', 'Produit laitier', 'Conserve', 'Hygiène'], defaultUnit: 'pièce' },
   { id: 'superette', label: 'Supérette / supermarché', group: 'Épicerie et maison', categories: ['epicerie'], itemWord: 'produit', productTypes: ['Épicerie', 'Frais', 'Boisson', 'Hygiène', 'Entretien'], defaultUnit: 'pièce' },
   { id: 'boissons', label: 'Dépôt de boissons', group: 'Épicerie et maison', categories: ['epicerie'], itemWord: 'produit', productTypes: ['Eau', 'Jus', 'Soda', 'Bière', 'Vin'], defaultUnit: 'casier' },
+  { id: 'ameublement', label: 'Ameublement et décoration (chaises, tapis, meubles)', group: 'Épicerie et maison', categories: ['epicerie'], itemWord: 'article', productTypes: ['Chaise', 'Table', 'Tapis', 'Canapé', 'Lit et matelas', 'Rangement', 'Décoration', 'Luminaire'], defaultUnit: 'pièce' },
+  { id: 'librairie', label: 'Librairie et papeterie (livres, cahiers, fournitures)', group: 'Épicerie et maison', categories: ['epicerie'], itemWord: 'article', productTypes: ['Livre', 'Manuel scolaire', 'Cahier', 'Fournitures scolaires', 'Fournitures de bureau', 'Cartable'], defaultUnit: 'pièce' },
   { id: 'hygiene-beaute', label: 'Hygiène, beauté et cosmétiques', group: 'Épicerie et maison', categories: ['epicerie'], itemWord: 'produit', productTypes: ['Soin du corps', 'Cheveux', 'Maquillage', 'Hygiène'], defaultUnit: 'pièce' },
 
   // Bricolage et construction
   { id: 'quincaillerie', label: 'Quincaillerie / matériaux de construction', group: 'Bricolage et construction', categories: ['bricolage'], itemWord: 'produit', productTypes: ['Ciment', 'Fer', 'Outillage', 'Plomberie', 'Électricité', 'Peinture'], defaultUnit: 'pièce' },
 
-  { id: 'autre', label: 'Autre commerce', group: 'Autre', categories: ['epicerie'], itemWord: 'produit', productTypes: [], defaultUnit: 'pièce' },
-]
+  { id: 'menuiserie', label: 'Menuiserie (bois, meubles sur mesure)', group: 'Bricolage et construction', categories: ['bricolage'], itemWord: 'article', productTypes: ['Planche', 'Chevron', 'Contreplaqué', 'Porte', 'Fenêtre', 'Meuble sur mesure'], defaultUnit: 'pièce' },
 
-/** Quartiers et communes du Grand Libreville proposés à l'inscription d'un commerçant. */
-export const neighborhoods = [
-  'Akanda', 'Akébé', 'Alibandeng', 'Angondjé', 'Atong Abè', 'Awendjé', 'Batterie IV', 'Beau Séjour', 'Belle-Vue',
-  'Bikélé', 'Charbonnages', 'Cocotiers', 'Derrière la prison', 'Glass', 'Kinguélé', 'Lalala', 'London', 'Louis',
-  'Melen', 'Mindoubé', 'Mont-Bouët', 'Nkembo', 'Nombakélé', 'Ntoum', 'Nzeng-Ayong', 'Okala', 'Oloumi', 'Owendo',
-  'PK5 - PK12', 'Plaine Orety', 'Quaben', 'Sotega', 'Venez-Voir',
+  { id: 'autre', label: 'Autre commerce', group: 'Autre', categories: ['epicerie'], itemWord: 'produit', productTypes: [], defaultUnit: 'pièce' },
 ]
 
 /** market_id d'un commerçant qui n'est rattaché à aucun marché ni magasin. */
