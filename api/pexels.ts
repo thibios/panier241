@@ -8,7 +8,7 @@ export default async function handler(req: any, res: any) {
   }
 
   const query = typeof req.query?.query === 'string' ? req.query.query : ''
-  if (!query.trim()) {
+  if (!query.trim() || query.length > 100) {
     res.status(400).json({ error: 'Paramètre "query" requis.' })
     return
   }
