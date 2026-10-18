@@ -14,6 +14,18 @@ const categoryKeywords: Record<CategoryId, string> = {
   boulangerie: 'pastry bakery',
   bricolage: 'hardware store tools',
   epicerie: 'small shop africa',
+  'high-tech': 'smartphone laptop electronics',
+  maison: 'living room furniture',
+  mode: 'clothing boutique',
+  beaute: 'cosmetics perfume',
+  'auto-moto': 'car parts tires',
+  bebe: 'baby nursery',
+  livres: 'bookshop',
+  jeux: 'board games toys',
+  sport: 'sports equipment',
+  industrie: 'industrial safety equipment',
+  chr: 'restaurant kitchen equipment',
+  numerique: 'laptop online course',
 }
 
 interface CacheEntry {

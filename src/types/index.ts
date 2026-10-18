@@ -7,10 +7,24 @@ export type CategoryId =
   | 'boulangerie'
   | 'bricolage'
   | 'epicerie'
+  | 'high-tech'
+  | 'maison'
+  | 'mode'
+  | 'beaute'
+  | 'auto-moto'
+  | 'bebe'
+  | 'livres'
+  | 'jeux'
+  | 'sport'
+  | 'industrie'
+  | 'chr'
+  | 'numerique'
 
 export interface Category {
   id: CategoryId
   label: string
+  /** Libellé court pour la grille de l'accueil ; à défaut, `label`. */
+  shortLabel?: string
   /** Doit correspondre à une clé de la palette theme.colors.category. */
   colorClass: string
 }

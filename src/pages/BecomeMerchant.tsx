@@ -225,6 +225,11 @@ export default function BecomeMerchant() {
               )
             })}
           </div>
+          {businessType?.categories.includes('numerique') && (
+            <p className="mt-2 text-xs text-muted">
+              Les produits numériques ne sont pas livrés : précisez au client comment il les reçoit (e-mail, WhatsApp, lien).
+            </p>
+          )}
         </section>
 
         {/* 2. Le commerce */}

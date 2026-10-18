@@ -33,6 +33,18 @@ const categoryDotClass: Record<string, string> = {
   boulangerie: 'bg-category-boulangerie',
   bricolage: 'bg-category-bricolage',
   epicerie: 'bg-category-epicerie',
+  'high-tech': 'bg-category-high-tech',
+  maison: 'bg-category-maison',
+  mode: 'bg-category-mode',
+  beaute: 'bg-category-beaute',
+  'auto-moto': 'bg-category-auto-moto',
+  bebe: 'bg-category-bebe',
+  livres: 'bg-category-livres',
+  jeux: 'bg-category-jeux',
+  sport: 'bg-category-sport',
+  industrie: 'bg-category-industrie',
+  chr: 'bg-category-chr',
+  numerique: 'bg-category-numerique',
 }
 
 export default function MerchantDetail() {

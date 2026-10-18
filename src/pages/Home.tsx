@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, MapPin, Plus, Search } from 'lucide-react'
+import { ChevronDown, ChevronRight, MapPin, Plus, Search } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
 import MarketCard from '../components/ui/MarketCard'
 import ProductTile from '../components/ui/ProductTile'
@@ -21,6 +21,9 @@ import { supabase } from '../lib/supabaseClient'
 import type { Market } from '../types'
 
 const sectionTitle = 'font-display text-lg font-bold text-brand-dark'
+
+/** Nombre de catégories visibles avant « Voir toutes les catégories ». */
+const VISIBLE_CATEGORIES = 8
 
 /** Grande carte du carrousel « À la une » : un lieu de vente qui a déjà des commerçants. */
 function FeaturedCard({ market, merchantCount }: { market: Market; merchantCount: number }) {
@@ -57,6 +60,8 @@ export default function Home() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const { markets } = useMarkets()
   const categoryPhotos = usePexelsPhotos()
+  const [showAllCategories, setShowAllCategories] = useState(false)
+  const shownCategories = showAllCategories ? categories : categories.slice(0, VISIBLE_CATEGORIES)
 
   useEffect(() => {
     if (!user) return
@@ -165,10 +170,11 @@ export default function Home() {
       <section className="mt-7 px-5">
         <h2 className={`${sectionTitle} mb-3`}>Catégories</h2>
         <div className="grid grid-cols-4 gap-2">
-          {categories.map((cat, i) => (
-            <Reveal key={cat.id} index={i}>
+          {shownCategories.map((cat, i) => (
+            <Reveal key={cat.id} index={i % VISIBLE_CATEGORIES}>
               <Link
                 to={`/categorie/${cat.id}`}
+                aria-label={cat.label}
                 className="flex h-full flex-col overflow-hidden rounded-card border border-line bg-card shadow-card transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
               >
                 <span className="flex h-16 w-full items-center justify-center bg-brand-light">
@@ -178,11 +184,22 @@ export default function Home() {
                     <CategoryIcon category={cat.id} className="h-6 w-6 text-brand" />
                   )}
                 </span>
-                <span className="flex flex-1 items-center justify-center px-1 py-1.5 text-center text-[11px] font-semibold leading-tight text-brand-dark">{cat.label}</span>
+                <span className="flex flex-1 items-center justify-center px-1 py-1.5 text-center text-[11px] font-semibold leading-tight text-brand-dark">{cat.shortLabel ?? cat.label}</span>
               </Link>
             </Reveal>
           ))}
         </div>
+        {categories.length > VISIBLE_CATEGORIES && (
+          <button
+            type="button"
+            onClick={() => setShowAllCategories((v) => !v)}
+            aria-expanded={showAllCategories}
+            className="mx-auto mt-3 flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+          >
+            {showAllCategories ? 'Voir moins' : 'Voir toutes les catégories'}
+            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showAllCategories ? 'rotate-180' : ''}`} aria-hidden="true" />
+          </button>
+        )}
       </section>
 
       <section className="mt-7">

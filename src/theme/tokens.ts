@@ -54,6 +54,18 @@ export const categoryColors: Record<CategoryId, string> = {
   boulangerie: '#C9922F',
   bricolage: '#5B7C99',
   epicerie: '#2FA3A3',
+  'high-tech': '#34495E',
+  maison: '#7E8F5A',
+  mode: '#A65D57',
+  beaute: '#C0796A',
+  'auto-moto': '#4A4F55',
+  bebe: '#5B93AB',
+  livres: '#8A5A3C',
+  jeux: '#D08A2E',
+  sport: '#2F7F6F',
+  industrie: '#6B7280',
+  chr: '#7A6A2E',
+  numerique: '#3F6E9A',
 }
 
 /** Univers visuels réutilisables par type de commerce. */
