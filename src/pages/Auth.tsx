@@ -95,7 +95,7 @@ export default function Auth() {
       <div className="mx-auto min-h-screen max-w-md">
         <header className="px-5 pt-6 text-center">
           <h1>
-            <img src="/logos/le-panier-241.webp" alt="Le Panier 241, marketplace : tout le Gabon à portée de main" className="mx-auto w-64 max-w-full" />
+            <img src="/logos/le-panier-241.webp" alt="Le Panier 241, marketplace : tout le Gabon à portée de main" className="mx-auto w-60 max-w-full rounded-[1.75rem] bg-white p-2 shadow-card ring-1 ring-black/5" />
           </h1>
           <p className="mx-auto mt-2 max-w-xs text-sm text-muted">
             Vos courses dans les marchés et magasins de Libreville, livrées chez vous.
