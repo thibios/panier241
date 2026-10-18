@@ -4,7 +4,8 @@ import { MarketIcon } from './icons'
 
 /** Photo Pexels d'un marché traditionnel (null pour une enseigne ou tant qu'elle charge). */
 export function useMarketPhoto(market: Market): string | null {
-  return usePexelsPhoto(market.photoQuery ?? null, undefined, market.photoPage ?? 1)
+  const pexels = usePexelsPhoto(market.photoUrl ? null : market.photoQuery ?? null, undefined, market.photoPage ?? 1)
+  return market.photoUrl ?? pexels
 }
 
 /**

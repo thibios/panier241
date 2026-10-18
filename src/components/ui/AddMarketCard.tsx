@@ -1,6 +1,18 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Plus, X, Check } from 'lucide-react'
+import { Plus, X, Check, Camera, ChevronDown } from 'lucide-react'
+import NeighborhoodPicker from './NeighborhoodPicker'
 import { useMarkets } from '../../context/MarketsContext'
+
+const MARKET_TYPES = [
+  'Marché vivrier (fruits, légumes, tubercules)',
+  'Marché de poisson / débarcadère',
+  'Marché de viande',
+  'Marché de nuit',
+  'Marché de gros',
+  'Marché artisanal',
+  'Marché de vêtements / friperie',
+  'Marché mixte (tout type de produits)',
+]
 
 const field =
   'w-full rounded-card border border-line bg-white px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
@@ -15,6 +27,10 @@ export default function AddMarketCard({ kind = 'marche' }: { kind?: 'marche' | '
   const [neighborhood, setNeighborhood] = useState('')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [marketType, setMarketType] = useState('')
+  const [address, setAddress] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<null | 'approved' | 'pending'>(null)
@@ -25,6 +41,10 @@ export default function AddMarketCard({ kind = 'marche' }: { kind?: 'marche' | '
     setNeighborhood('')
     setLogoFile(null)
     setLogoPreview(null)
+    setMarketType('')
+    setAddress('')
+    setPhotoFile(null)
+    setPhotoPreview(null)
     setError(null)
     setDone(null)
   }
@@ -49,7 +69,7 @@ export default function AddMarketCard({ kind = 'marche' }: { kind?: 'marche' | '
     }
     setIsSaving(true)
     setError(null)
-    const result = await addMarket(name, neighborhood, kind, logoFile)
+    const result = await addMarket({ name, neighborhood, kind, logoFile, photoFile, marketType, address })
     setIsSaving(false)
     if (result.error) setError(result.error)
     else setDone(result.approved ? 'approved' : 'pending')
@@ -70,7 +90,7 @@ export default function AddMarketCard({ kind = 'marche' }: { kind?: 'marche' | '
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="add-market-title">
-          <div className="w-full max-w-md rounded-[1.75rem] bg-card p-5 shadow-float">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[1.75rem] bg-card p-5 shadow-float">
             <div className="flex items-start justify-between gap-3">
               <h2 id="add-market-title" className="font-display text-lg font-bold text-brand-dark">
                 {title}
@@ -111,8 +131,52 @@ export default function AddMarketCard({ kind = 'marche' }: { kind?: 'marche' | '
                   <label htmlFor="market-area" className="mb-1 block text-xs font-semibold text-brand-dark">
                     Quartier
                   </label>
-                  <input id="market-area" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} maxLength={80} placeholder="Ex. : Nkembo" className={field} />
+                  <NeighborhoodPicker value={neighborhood} onChange={setNeighborhood} inputClassName={field} inputId="market-area" />
                 </div>
+                {!isStore && (
+                  <>
+                    <div>
+                      <label htmlFor="market-type" className="mb-1 block text-xs font-semibold text-brand-dark">
+                        Type de marché
+                      </label>
+                      <div className="relative">
+                        <select id="market-type" value={marketType} onChange={(e) => setMarketType(e.target.value)} className={`${field} appearance-none pr-9`}>
+                          <option value="">Choisir le type de marché</option>
+                          {MARKET_TYPES.map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="market-address" className="mb-1 block text-xs font-semibold text-brand-dark">
+                        Adresse ou repère (facultatif)
+                      </label>
+                      <input id="market-address" value={address} onChange={(e) => setAddress(e.target.value)} maxLength={200} placeholder="Ex. : derrière la gare routière" className={field} />
+                    </div>
+                    <div>
+                      <p className="mb-1 block text-xs font-semibold text-brand-dark">Photo du marché (facultatif)</p>
+                      <label className="flex cursor-pointer items-center gap-3 rounded-card border border-dashed border-line bg-white p-3">
+                        <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-light">
+                          {photoPreview ? <img src={photoPreview} alt="" className="h-full w-full object-cover" /> : <Camera className="h-5 w-5 text-brand" aria-hidden="true" />}
+                        </span>
+                        <span className="text-xs text-muted">{photoFile ? photoFile.name : 'Prendre ou choisir une photo réelle du marché'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          className="sr-only"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] ?? null
+                            setPhotoFile(file)
+                            setPhotoPreview(file ? URL.createObjectURL(file) : null)
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </>
+                )}
                 {isStore && (
                   <div>
                     <p className="mb-1 block text-xs font-semibold text-brand-dark">Logo (obligatoire)</p>

@@ -3,6 +3,7 @@ import type { Market } from '../types'
 import { markets as staticMarkets } from '../data/markets'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth, isAdminEmail } from './AuthContext'
+import { compressImage } from '../lib/compressImage'
 
 /** Marché proposé ou ajouté depuis l'application (table custom_markets). */
 export interface CustomMarketRow {
@@ -13,7 +14,21 @@ export interface CustomMarketRow {
   status: 'pending' | 'approved' | 'rejected'
   kind: 'marche' | 'supermarche'
   logo_url: string | null
+  market_type?: string | null
+  address?: string | null
+  photo_url?: string | null
   created_at: string
+}
+
+/** Données saisies dans le formulaire d'ajout d'un marché ou d'un magasin. */
+export interface NewPlace {
+  name: string
+  neighborhood: string
+  kind?: 'marche' | 'supermarche'
+  logoFile?: File | null
+  photoFile?: File | null
+  marketType?: string
+  address?: string
 }
 
 /** Identifiant d'un marché ajouté, côté application (merchants.market_id est un texte). */
@@ -30,7 +45,11 @@ function toMarket(row: CustomMarketRow): Market {
     kind: row.kind,
     ...(row.kind === 'supermarche' && row.logo_url
       ? { logoUrl: row.logo_url }
-      : { photoQuery: 'african market', photoPage: 1 + (hash % 8) }),
+      : row.photo_url
+        ? { photoUrl: row.photo_url }
+        : { photoQuery: 'african market', photoPage: 1 + (hash % 8) }),
+    ...(row.market_type ? { marketType: row.market_type } : {}),
+    ...(row.address ? { address: row.address } : {}),
   }
 }
 
@@ -38,12 +57,7 @@ interface MarketsContextValue {
   /** Lieux de vente affichés : liste fixe + marchés approuvés. */
   markets: Market[]
   /** Propose un marché (en attente) ou l'ajoute directement si l'utilisateur est administrateur. */
-  addMarket: (
-    name: string,
-    neighborhood: string,
-    kind?: 'marche' | 'supermarche',
-    logoFile?: File | null,
-  ) => Promise<{ error: string | null; approved: boolean }>
+  addMarket: (place: NewPlace) => Promise<{ error: string | null; approved: boolean }>
   refresh: () => Promise<void>
 }
 
@@ -56,7 +70,7 @@ export function MarketsProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     const { data } = await supabase
       .from('custom_markets')
-      .select('id, name, neighborhood, city, status, kind, logo_url, created_at')
+      .select('id, name, neighborhood, city, status, kind, logo_url, market_type, address, photo_url, created_at')
       .eq('status', 'approved')
       .order('created_at')
     const extra = (data ?? []).map((row) => toMarket(row as CustomMarketRow))
@@ -70,7 +84,7 @@ export function MarketsProvider({ children }: { children: ReactNode }) {
     refresh()
   }, [refresh])
 
-  async function addMarket(name: string, neighborhood: string, kind: 'marche' | 'supermarche' = 'marche', logoFile: File | null = null) {
+  async function addMarket({ name, neighborhood, kind = 'marche', logoFile = null, photoFile = null, marketType, address }: NewPlace) {
     if (!user) return { error: 'Connectez-vous pour ajouter un marché.', approved: false }
     const approved = isAdminEmail(user.email)
 
@@ -88,6 +102,16 @@ export function MarketsProvider({ children }: { children: ReactNode }) {
       logoUrl = supabase.storage.from('kiosk-photos').getPublicUrl(path).data.publicUrl
     }
 
+    // Photo du marché (facultative), réduite avant l'envoi.
+    let photoUrl: string | null = null
+    if (kind === 'marche' && photoFile) {
+      const small = await compressImage(photoFile)
+      const path = `${user.id}/marche-${Date.now()}.jpg`
+      const { error: uploadError } = await supabase.storage.from('kiosk-photos').upload(path, small, { contentType: small.type })
+      if (uploadError) return { error: "La photo du marché n'a pas pu être envoyée. Réessayez.", approved }
+      photoUrl = supabase.storage.from('kiosk-photos').getPublicUrl(path).data.publicUrl
+    }
+
     const { error } = await supabase.from('custom_markets').insert({
       name: name.trim(),
       neighborhood: neighborhood.trim(),
@@ -95,6 +119,9 @@ export function MarketsProvider({ children }: { children: ReactNode }) {
       status: approved ? 'approved' : 'pending',
       kind,
       logo_url: logoUrl,
+      photo_url: photoUrl,
+      market_type: marketType?.trim() || null,
+      address: address?.trim() || null,
       created_by: user.id,
     })
     if (error) return { error: "Le marché n'a pas pu être enregistré. Vérifiez le nom et le quartier.", approved }

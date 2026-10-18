@@ -52,7 +52,7 @@ export default function MarketDetail() {
             <div>
               <h1 className="text-xl font-bold">{market.name}</h1>
               <p className="text-sm text-on-header/80">
-                {market.neighborhood === market.city ? market.city : `${market.neighborhood}, ${market.city}`}
+                {[market.marketType, market.neighborhood === market.city ? market.city : `${market.neighborhood}, ${market.city}`].filter(Boolean).join(' · ')}
               </p>
             </div>
           </div>

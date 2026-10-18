@@ -20,10 +20,12 @@ export default function NeighborhoodPicker({
   value,
   onChange,
   inputClassName,
+  inputId = 'm-area',
 }: {
   value: string
   onChange: (name: string) => void
   inputClassName: string
+  inputId?: string
 }) {
   const listId = useId()
   const [query, setQuery] = useState(value)
@@ -47,7 +49,7 @@ export default function NeighborhoodPicker({
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
         <input
-          id="m-area"
+          id={inputId}
           role="combobox"
           aria-expanded={open}
           aria-controls={listId}

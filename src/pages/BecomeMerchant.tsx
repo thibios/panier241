@@ -45,6 +45,7 @@ export default function BecomeMerchant() {
   const { markets } = useMarkets()
 
   const [businessTypeId, setBusinessTypeId] = useState('')
+  const [openGroup, setOpenGroup] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [neighborhood, setNeighborhood] = useState('')
@@ -177,21 +178,52 @@ export default function BecomeMerchant() {
         {/* 1. Type de commerce */}
         <section>
           <h2 className={sectionTitle}>Type de commerce</h2>
-          <div className="space-y-3">
-            {groups.map((group) => (
-              <div key={group}>
-                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">{group}</p>
-                <div className="flex flex-wrap gap-2">
-                  {businessTypes
-                    .filter((b) => b.group === group)
-                    .map((b) => (
-                      <button key={b.id} type="button" onClick={() => chooseBusinessType(b.id)} aria-pressed={businessTypeId === b.id} className={chip(businessTypeId === b.id)}>
-                        {b.label}
-                      </button>
-                    ))}
+          <div className="overflow-hidden rounded-card border border-line bg-card shadow-card">
+            {groups.map((group, gi) => {
+              const isOpen = openGroup === group
+              const chosen = businessType?.group === group ? businessType : undefined
+              return (
+                <div key={group} className={gi > 0 ? 'border-t border-line' : ''}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenGroup(isOpen ? null : group)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-brand-dark">{group}</span>
+                      <span className={`block truncate text-xs ${chosen ? 'font-semibold text-brand' : 'text-muted'}`}>
+                        {chosen ? chosen.label : `${businessTypes.filter((b) => b.group === group).length} types`}
+                      </span>
+                    </span>
+                    <ChevronDown className={`h-5 w-5 shrink-0 text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                  </button>
+                  {isOpen && (
+                    <ul className="border-t border-line bg-white py-1" role="listbox" aria-label={group}>
+                      {businessTypes
+                        .filter((b) => b.group === group)
+                        .map((b) => (
+                          <li key={b.id} role="option" aria-selected={businessTypeId === b.id}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                chooseBusinessType(b.id)
+                                setOpenGroup(null)
+                              }}
+                              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-brand-dark hover:bg-brand-light/60"
+                            >
+                              <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${businessTypeId === b.id ? 'border-brand' : 'border-line'}`}>
+                                {businessTypeId === b.id && <span className="h-2 w-2 rounded-full bg-brand" />}
+                              </span>
+                              {b.label}
+                            </button>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </section>
 
