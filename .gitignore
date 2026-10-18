@@ -7,3 +7,4 @@ dist-ssr
 vite.config.js
 vite.config.d.ts
 vite.config.ts.timestamp-*.mjs
+.claude/hooks/prompts-en-attente.jsonl

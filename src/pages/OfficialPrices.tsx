@@ -71,7 +71,7 @@ export default function OfficialPrices() {
           Prix plafonds fixés par l'État pour les produits défiscalisés à prix bloqués. Un commerçant ne peut pas vendre
           plus cher.
         </p>
-        <label className="mt-4 flex h-12 items-center gap-3 rounded-full border border-line bg-white px-4 shadow-field focus-within:ring-2 focus-within:ring-brand/40">
+        <label className="mt-4 flex h-12 items-center gap-3 rounded-full border border-line-strong bg-white px-4 shadow-field focus-within:ring-2 focus-within:ring-brand">
           <Search className="h-5 w-5 shrink-0 text-brand" aria-hidden="true" />
           <input
             type="search"

@@ -27,7 +27,7 @@ export default function LegalPage({
       </WovenHeader>
 
       <div className="space-y-5 px-5 pt-5 text-sm leading-relaxed text-brand-dark/80">
-        <p className="text-xs text-brand-dark/50">Dernière mise à jour : {updatedAt}</p>
+        <p className="text-xs text-muted">Dernière mise à jour : {updatedAt}</p>
         {children}
       </div>
     </div>

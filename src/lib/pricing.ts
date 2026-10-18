@@ -1,7 +1,22 @@
+import type { FulfillmentMode } from '../types'
+
+/**
+ * Barème d'ESTIMATION affiché avant la commande. La base de données (table app_settings,
+ * fonction create_order de la migration 022) est la seule source de vérité : le montant
+ * final est celui qu'elle renvoie à la création de la commande.
+ * Valeurs alignées sur app_settings (confirmées par le propriétaire).
+ */
 export const BASE_DELIVERY_FEE = 2000
 export const RATE_PER_KM = 300
-export const FALLBACK_DISTANCE_FEE = 1500
+/** Livraison sans position GPS (lieu de vente ou adresse) : forfait TOTAL. */
+export const FALLBACK_DELIVERY_FEE = 1500
 export const SERVICE_FEE_RATE = 0.05
+/** Acompte dû quand le total dépasse ce seuil (F CFA). */
+export const DEPOSIT_THRESHOLD = 100000
+/** Acompte : part du total de la commande. */
+export const DEPOSIT_RATE = 0.05
+
+export type { FulfillmentMode }
 
 export interface Coordinates {
   lat: number
@@ -28,30 +43,39 @@ export interface DeliveryComputation {
   distanceKm: number | null
   deliveryFee: number
   total: number
+  /** Acompte estimé (0 si le total ne dépasse pas le seuil). */
+  deposit: number
+}
+
+/** Acompte estimé : DEPOSIT_RATE du total, au-delà de DEPOSIT_THRESHOLD. */
+export function computeDeposit(total: number): number {
+  return total > DEPOSIT_THRESHOLD ? Math.round(total * DEPOSIT_RATE) : 0
 }
 
 /**
- * Calcule la tarification d'une commande :
- * total = sous-total + commission (5%) + livraison (2000 F CFA de base + distance x 300 F CFA/km).
- * Sans coordonnées disponibles (marché ou adresse), la partie distance est remplacée par un
- * forfait fixe pour ne jamais bloquer la commande.
+ * Estimation de la tarification d'une commande :
+ * total = sous-total + commission (5 %) + livraison.
+ * Livraison avec GPS : 2 000 F + 300 F/km ; sans GPS : forfait total de 1 500 F ; retrait sur stand : 0 F.
  */
 export function computeDelivery(
   subtotal: number,
   marketCoords: Coordinates | null,
   addressCoords: Coordinates | null,
+  mode: FulfillmentMode = 'livraison',
 ): DeliveryComputation {
   const serviceFee = Math.round(subtotal * SERVICE_FEE_RATE)
 
   let distanceKm: number | null = null
-  let distanceFee = FALLBACK_DISTANCE_FEE
-  if (marketCoords && addressCoords) {
-    distanceKm = haversineDistanceKm(marketCoords, addressCoords)
-    distanceFee = Math.round(distanceKm * RATE_PER_KM)
+  let deliveryFee = 0
+  if (mode === 'livraison') {
+    if (marketCoords && addressCoords) {
+      distanceKm = haversineDistanceKm(marketCoords, addressCoords)
+      deliveryFee = BASE_DELIVERY_FEE + Math.round(distanceKm * RATE_PER_KM)
+    } else {
+      deliveryFee = FALLBACK_DELIVERY_FEE
+    }
   }
 
-  const deliveryFee = BASE_DELIVERY_FEE + distanceFee
   const total = subtotal + serviceFee + deliveryFee
-
-  return { serviceFee, distanceKm, deliveryFee, total }
+  return { serviceFee, distanceKm, deliveryFee, total, deposit: computeDeposit(total) }
 }

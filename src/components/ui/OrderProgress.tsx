@@ -1,16 +1,34 @@
 import { Check } from 'lucide-react'
-import type { OrderStatus } from '../../types'
+import type { FulfillmentMode, OrderStatus } from '../../types'
 
-const steps: { key: OrderStatus; label: string }[] = [
+const deliverySteps: { key: OrderStatus; label: string }[] = [
   { key: 'en_preparation', label: 'Préparation' },
+  { key: 'prete_a_livrer', label: 'Prête' },
   { key: 'en_livraison', label: 'En route' },
   { key: 'livree', label: 'Livrée' },
 ]
 
-/** Frise des trois statuts réels d'une commande ; `startedAt` s'affiche sous la première étape. */
-export default function OrderProgress({ status, startedAt }: { status: OrderStatus; startedAt?: string }) {
-  const currentIndex = steps.findIndex((s) => s.key === status)
-  const fill = currentIndex <= 0 ? '0%' : currentIndex === 1 ? '50%' : '100%'
+const pickupSteps: { key: OrderStatus; label: string }[] = [
+  { key: 'en_preparation', label: 'Préparation' },
+  { key: 'prete_a_retirer', label: 'Prête à retirer' },
+  { key: 'retiree', label: 'Retirée' },
+]
+
+/** Frise des statuts réels d'une commande (livraison ou retrait) ; `startedAt` s'affiche sous la première étape. */
+export default function OrderProgress({
+  status,
+  startedAt,
+  mode = 'livraison',
+}: {
+  status: OrderStatus
+  startedAt?: string
+  mode?: FulfillmentMode
+}) {
+  const steps = mode === 'retrait' ? pickupSteps : deliverySteps
+  const lastKey = steps[steps.length - 1].key
+  const currentIndex = Math.max(0, steps.findIndex((s) => s.key === status))
+  const fill = `${(currentIndex / (steps.length - 1)) * 100}%`
+  const isFinished = status === lastKey
 
   return (
     <div className="relative flex items-start justify-between px-2">
@@ -18,13 +36,13 @@ export default function OrderProgress({ status, startedAt }: { status: OrderStat
         <div className="h-full bg-accent transition-all duration-500" style={{ width: fill }} />
       </div>
       {steps.map((step, index) => {
-        const isDone = index < currentIndex || status === 'livree'
-        const isCurrent = index === currentIndex && status !== 'livree'
+        const isDone = index < currentIndex || isFinished
+        const isCurrent = index === currentIndex && !isFinished
         return (
           <div key={step.key} className="relative flex w-16 flex-col items-center gap-1.5">
             <span
               className={`flex h-5 w-5 items-center justify-center rounded-full ring-4 ring-card ${
-                isDone || isCurrent ? 'bg-accent' : 'bg-line'
+                isDone || isCurrent ? 'bg-accent' : 'bg-line-strong'
               }`}
             >
               {isDone && <Check className="h-3 w-3 text-brand-dark" strokeWidth={3} aria-hidden="true" />}

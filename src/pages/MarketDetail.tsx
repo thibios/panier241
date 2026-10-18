@@ -22,7 +22,7 @@ export default function MarketDetail() {
     return (
       <PageShell>
         <div className="px-5 pt-6">
-          <p className="text-sm text-brand-dark/60">Marché introuvable.</p>
+          <p className="text-sm text-muted">Marché introuvable.</p>
           <Link to="/" className="mt-3 inline-block text-sm font-semibold text-brand">
             <ArrowLeft className="inline h-4 w-4" /> Retour à l'accueil
           </Link>
@@ -78,7 +78,7 @@ export default function MarketDetail() {
               <div className="rounded-card bg-white p-5 text-center shadow-card">
                 <ShoppingBasket className="mx-auto h-9 w-9 text-brand-dark/30" aria-hidden="true" />
                 <p className="mt-2 text-sm font-medium text-brand-dark">Bientôt disponible</p>
-                <p className="mt-1 text-xs text-brand-dark/60">
+                <p className="mt-1 text-xs text-muted">
                   Aucun commerçant n'est encore rattaché à ce lieu sur Le Panier 241. Si tu vends ici, sois le
                   premier à t'inscrire.
                 </p>

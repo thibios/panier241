@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Camera, Plus, X, ChevronDown } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
-import { categories } from '../data/categories'
+import { useTaxonomy } from '../context/TaxonomyContext'
+import ProductCategoryFields, { categoryErrorMessage } from '../components/merchant/ProductCategoryFields'
 import { businessTypes, INDEPENDENT_MARKET_ID } from '../data/businessTypes'
 import NeighborhoodPicker from '../components/ui/NeighborhoodPicker'
 import { useMarkets } from '../context/MarketsContext'
@@ -21,18 +22,21 @@ interface ProductDraft {
   unit: string
   variantLabel: string
   showVariant: boolean
+  /** Catégorie choisie par le commerçant ; null = déduite du type de commerce. */
+  category: CategoryId | null
+  subcategoryId: string | null
   photoFile: File | null
   photoPreview: string | null
 }
 
 let draftKey = 0
 function emptyProduct(unit: string): ProductDraft {
-  return { key: ++draftKey, name: '', productType: '', price: '', unit, variantLabel: '', showVariant: false, photoFile: null, photoPreview: null }
+  return { key: ++draftKey, name: '', productType: '', price: '', unit, variantLabel: '', showVariant: false, category: null, subcategoryId: null, photoFile: null, photoPreview: null }
 }
 
 const MAX_KIOSK_PHOTOS = 4
 const field =
-  'w-full rounded-card border border-line bg-white px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+  'w-full rounded-card border border-line-strong bg-white px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand'
 const label = 'mb-1 block text-xs font-semibold text-brand-dark'
 const sectionTitle = 'mb-3 font-display text-lg font-bold text-brand-dark'
 const chip = (active: boolean) =>
@@ -43,6 +47,7 @@ export default function BecomeMerchant() {
   const { user } = useAuth()
   const { refresh } = useCatalog()
   const { markets } = useMarkets()
+  const { families: categories } = useTaxonomy()
 
   const [businessTypeId, setBusinessTypeId] = useState('')
   const [openGroup, setOpenGroup] = useState<string | null>(null)
@@ -99,8 +104,9 @@ export default function BecomeMerchant() {
   if (kioskPhotos.length === 0) missing.push('une photo du commerce')
   if (validProducts.length === 0) missing.push(`un ${itemWord} avec son nom et son prix`)
 
-  /** Catégorie d'un produit : déduite de son type quand le commerce couvre plusieurs catégories. */
+  /** Catégorie d'un produit : choisie par le commerçant, sinon déduite de son type quand le commerce couvre plusieurs catégories. */
   function categoryFor(p: ProductDraft): CategoryId {
+    if (p.category && selectedCategories.includes(p.category)) return p.category
     if (selectedCategories.includes('fruits') && /fruit|banane/i.test(p.productType)) return 'fruits'
     return selectedCategories[0] ?? businessType?.categories[0] ?? 'epicerie'
   }
@@ -145,6 +151,8 @@ export default function BecomeMerchant() {
           merchant_id: merchant.id,
           name: p.name.trim(),
           category: categoryFor(p),
+          // Colonne de 023 envoyée seulement si une sous-catégorie est choisie (compatibilité avant migration).
+          ...(p.subcategoryId && categoryFor(p) === p.category ? { subcategory_id: p.subcategoryId } : {}),
           product_type: p.productType.trim() || null,
           price: Math.round(Number(p.price)),
           unit: p.unit.trim(),
@@ -152,7 +160,10 @@ export default function BecomeMerchant() {
           variant_label: p.variantLabel.trim() || null,
         })),
       )
-      if (productsError) throw new Error(`Votre commerce est créé, mais les ${itemWord}s n'ont pas pu être ajoutés. Ajoutez-les depuis votre espace marchand.`)
+      if (productsError) {
+        const reason = categoryErrorMessage(productsError.message)
+        throw new Error(`Votre commerce est créé, mais les ${itemWord}s n'ont pas pu être ajoutés${reason ? ` (${reason})` : ''}. Ajoutez-les depuis votre espace marchand.`)
+      }
 
       await refresh()
       navigate('/marchand-espace')
@@ -212,7 +223,7 @@ export default function BecomeMerchant() {
                               }}
                               className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-brand-dark hover:bg-brand-light/60"
                             >
-                              <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${businessTypeId === b.id ? 'border-brand' : 'border-line'}`}>
+                              <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${businessTypeId === b.id ? 'border-brand' : 'border-line-strong'}`}>
                                 {businessTypeId === b.id && <span className="h-2 w-2 rounded-full bg-brand" />}
                               </span>
                               {b.label}
@@ -360,10 +371,23 @@ export default function BecomeMerchant() {
                       maxLength={60}
                       placeholder="Autre type…"
                       aria-label={`Autre type de ${itemWord}`}
-                      className="w-32 rounded-full border border-line bg-white px-3 py-2 text-xs text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                      className="w-32 rounded-full border border-line-strong bg-white px-3 py-2 text-xs text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                     />
                   </div>
                 </div>
+
+                {selectedCategories.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1.5 text-[11px] font-semibold text-muted">Catégorie du {itemWord}</p>
+                    <ProductCategoryFields
+                      category={categoryFor(p)}
+                      subcategoryId={categoryFor(p) === p.category ? p.subcategoryId : null}
+                      onChange={(v) => updateProduct(p.key, { category: v.category, subcategoryId: v.subcategoryId })}
+                      allowedFamilies={selectedCategories}
+                      idPrefix={`bm-${p.key}`}
+                    />
+                  </div>
+                )}
 
                 {p.showVariant ? (
                   <input value={p.variantLabel} onChange={(e) => updateProduct(p.key, { variantLabel: e.target.value })} maxLength={40} placeholder="Variante (ex. : grande part, 1 kg, 12 mm)" aria-label="Variante" className={`${field} mt-3`} />

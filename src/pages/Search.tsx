@@ -6,7 +6,8 @@ import ProductTile from '../components/ui/ProductTile'
 import MarketVisual from '../components/ui/MarketVisual'
 import Reveal from '../components/ui/Reveal'
 import { useMarkets } from '../context/MarketsContext'
-import { categories } from '../data/categories'
+import { useTaxonomy } from '../context/TaxonomyContext'
+import { visibleFamilies } from '../lib/catalogTaxonomy'
 import { useCatalog } from '../context/CatalogContext'
 import type { CategoryId } from '../types'
 
@@ -23,6 +24,9 @@ function normalize(text: string) {
 export default function Search() {
   const { merchants, products } = useCatalog()
   const { markets } = useMarkets()
+  const { families, labelOf } = useTaxonomy()
+  // Filtres : familles non vides seulement.
+  const categories = useMemo(() => visibleFamilies(families, products), [families, products])
   const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState(params.get('q') ?? '')
   const [category, setCategory] = useState<CategoryId | null>(null)
@@ -63,10 +67,14 @@ export default function Search() {
       if (category && p.category !== category) return false
       if (!q) return true
       const merchant = merchants.find((m) => m.id === p.merchantId)
-      return normalize(`${p.name} ${p.variantLabel ?? ''} ${merchant?.name ?? ''}`).includes(q)
+      // Catalogue global : nom, variante, vendeur, famille et sous-catégorie (« plomberie » trouve les robinets).
+      // Une ligne par produit : les rubriques des commerçants n'entrent pas dans la recherche, donc aucun doublon.
+      return normalize(
+        `${p.name} ${p.variantLabel ?? ''} ${merchant?.name ?? ''} ${labelOf(p.category) ?? ''} ${labelOf(p.subcategoryId) ?? ''}`,
+      ).includes(q)
     })
     return sortByPrice ? [...list].sort((a, b) => a.price - b.price) : list
-  }, [products, merchants, q, category, sortByPrice, hasCriteria])
+  }, [products, merchants, q, category, sortByPrice, hasCriteria, labelOf])
 
   // Suggestions : noms de produits qui commencent comme la saisie.
   const suggestions = useMemo(() => {
@@ -85,7 +93,7 @@ export default function Search() {
     <PageShell>
       <header className="px-5 pb-3 pt-6">
         <h1 className="font-display text-2xl font-bold text-brand-dark">Recherche</h1>
-        <label className="mt-4 flex h-14 items-center gap-3 rounded-full border border-line bg-white px-5 shadow-field focus-within:ring-2 focus-within:ring-brand/40">
+        <label className="mt-4 flex h-14 items-center gap-3 rounded-full border border-line-strong bg-white px-5 shadow-field focus-within:ring-2 focus-within:ring-brand">
           <SearchIcon className="h-5 w-5 shrink-0 text-brand" aria-hidden="true" />
           <input
             type="search"

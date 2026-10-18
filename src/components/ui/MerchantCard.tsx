@@ -39,7 +39,7 @@ export default function MerchantCard({ merchant }: { merchant: Merchant }) {
   return (
     <Link
       to={`/marchand/${merchant.id}`}
-      className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card transition duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+      className="flex items-center gap-3 rounded-card bg-white p-3 shadow-card transition duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
     >
       <div
         className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand-light"
@@ -47,7 +47,7 @@ export default function MerchantCard({ merchant }: { merchant: Merchant }) {
         {photo ? (
           <img src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full bg-white object-cover" />
         ) : (
-          <CategoryIcon category={merchant.categories[0]} className="h-7 w-7 text-brand-dark/60" />
+          <CategoryIcon category={merchant.categories[0]} className="h-7 w-7 text-muted" />
         )}
       </div>
       <div className="min-w-0 flex-1">
@@ -55,15 +55,15 @@ export default function MerchantCard({ merchant }: { merchant: Merchant }) {
           <p className="truncate text-sm font-semibold text-brand-dark">{merchant.name}</p>
           {isFavorite(merchant.id) && <Star className="h-3 w-3 shrink-0 fill-category-fruits text-category-fruits" />}
         </div>
-        <p className="truncate text-xs text-brand-dark/50">{market?.name}</p>
+        <p className="truncate text-xs text-muted">{market?.name}</p>
         <div className="mt-1 flex items-center gap-2">
           {merchant.reviewCount > 0 ? (
             <span className="flex items-center gap-1 text-xs font-medium text-brand-dark">
               <Star className="h-3.5 w-3.5 fill-category-fruits text-category-fruits" /> {merchant.rating.toFixed(1)}
-              <span className="text-brand-dark/40">({merchant.reviewCount})</span>
+              <span className="text-muted">({merchant.reviewCount})</span>
             </span>
           ) : (
-            <span className="text-xs text-brand-dark/40">Pas encore d'avis</span>
+            <span className="text-xs text-muted">Pas encore d'avis</span>
           )}
           <span className="flex gap-1">
             {merchant.categories.map((cat) => (

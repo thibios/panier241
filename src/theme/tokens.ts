@@ -23,7 +23,7 @@ export interface ThemeTokens {
   onHeader: string
 }
 
-/** ADN Le Panier 241 (projet Sleek « Le Panier 241 ») : vert palmier, lime, sable, ivoire, anthracite. */
+/** ADN Le Panier 241 : vert profond, olive, jaune ivoire, ivoire, encre vert-noir. */
 export const baseTheme: ThemeTokens = {
   brand: '#1B4A2E', // vert profond du logo
   ink: '#22261F',
@@ -38,9 +38,15 @@ export const baseTheme: ThemeTokens = {
 export const uiTokens = {
   card: '#FFFDF6',
   line: '#E6DDBF',
+  /** Bordure de champ, case à cocher, contour d'étape inactive (3,28:1 sur surface). */
+  'line-strong': '#8E8A6E',
   muted: '#676A58',
   'muted-bg': '#F5EFD9',
   warn: '#D99A2B',
+  /** Texte d'avertissement sur fond clair (4,83:1 sur soft, 5,56:1 sur surface). */
+  'warn-ink': '#8A5A0E',
+  /** Olive foncé pour texte et états actifs sur fond clair (6,05:1 sur surface). */
+  'accent-ink': '#59641C',
   danger: '#A6402A',
 }
 
@@ -73,7 +79,7 @@ const freshMarketTheme: ThemeTokens = {
   brand: '#C2542D',
   ink: '#2A1D16',
   soft: '#FBEBDD',
-  surface: '#FFFBF5',
+  surface: baseTheme.surface,
   accent: '#3F8F4A',
   header: '#C2542D',
   onHeader: '#FFFFFF',

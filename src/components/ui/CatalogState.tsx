@@ -38,7 +38,7 @@ export default function CatalogState() {
       <div className="rounded-card bg-white p-5 text-center shadow-card" role="alert">
         <WifiOff className="mx-auto h-9 w-9 text-brand-dark/30" aria-hidden="true" />
         <p className="mt-2 text-sm font-medium text-brand-dark">Impossible de charger le catalogue</p>
-        <p className="mt-1 text-xs text-brand-dark/60">Vérifie ta connexion, puis réessaie.</p>
+        <p className="mt-1 text-xs text-muted">Vérifie ta connexion, puis réessaie.</p>
         <Button className="mt-4" onClick={() => refresh()}>
           Réessayer
         </Button>

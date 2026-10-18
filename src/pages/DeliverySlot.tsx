@@ -34,7 +34,7 @@ export default function DeliverySlot() {
         <div className="px-5 pt-6 text-center">
           <ShoppingBasket className="mx-auto h-9 w-9 text-brand-dark/30" />
           <p className="mt-2 text-sm font-medium text-brand-dark">Ton panier est vide</p>
-          <p className="mt-1 text-xs text-brand-dark/50">
+          <p className="mt-1 text-xs text-muted">
             Ajoute des produits depuis une fiche marchand avant de choisir un créneau.
           </p>
           <Link to="/" className="mt-4 inline-block">
@@ -97,7 +97,7 @@ export default function DeliverySlot() {
                   })()}
                   <div className="flex-1">
                     <p className="text-sm font-semibold">{slot.periodLabel}</p>
-                    <p className={`text-xs ${isSelected ? 'text-white/80' : 'text-brand-dark/50'}`}>
+                    <p className={`text-xs ${isSelected ? 'text-white/80' : 'text-muted'}`}>
                       {slot.timeRange}
                     </p>
                   </div>
@@ -109,7 +109,9 @@ export default function DeliverySlot() {
         </section>
 
         <section>
-          <h2 className="mb-3 text-sm font-semibold text-brand-dark">Adresse de livraison</h2>
+          <h2 className="mb-3 text-sm font-semibold text-brand-dark">
+            {selectedSlot?.period === 'retrait' ? 'Adresse (inutile pour un retrait sur stand)' : 'Adresse de livraison'}
+          </h2>
           {!selectedAddress ? (
             <Card className="text-center">
               <p className="text-sm text-brand-dark/70">
@@ -126,8 +128,8 @@ export default function DeliverySlot() {
                   <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
                   <div>
                     <p className="text-sm font-semibold text-brand-dark">{selectedAddress.label}</p>
-                    <p className="text-xs text-brand-dark/50">{selectedAddress.fullAddress}</p>
-                    <p className="text-xs text-brand-dark/50">
+                    <p className="text-xs text-muted">{selectedAddress.fullAddress}</p>
+                    <p className="text-xs text-muted">
                       {selectedAddress.neighborhood}, {selectedAddress.city}
                     </p>
                   </div>
@@ -159,7 +161,7 @@ export default function DeliverySlot() {
                 >
                   <span>
                     <span className="font-medium text-brand-dark">{addr.label}</span>{' '}
-                    <span className="text-brand-dark/50">— {addr.neighborhood}</span>
+                    <span className="text-muted">— {addr.neighborhood}</span>
                   </span>
                   {addr.id === selectedAddressId && <Check className="h-4 w-4 text-brand" />}
                 </button>
@@ -169,7 +171,11 @@ export default function DeliverySlot() {
         </section>
 
         <div className="pb-4 pt-2">
-          <Button fullWidth disabled={!selectedSlot || !selectedAddress} onClick={() => navigate('/panier')}>
+          <Button
+            fullWidth
+            disabled={!selectedSlot || (selectedSlot.period !== 'retrait' && !selectedAddress)}
+            onClick={() => navigate('/panier')}
+          >
             Valider le créneau
           </Button>
         </div>

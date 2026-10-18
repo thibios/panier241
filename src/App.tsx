@@ -9,6 +9,7 @@ import { FavoritesProvider } from './context/FavoritesContext'
 import { AddressesProvider } from './context/AddressesContext'
 import { PexelsProvider } from './context/PexelsContext'
 import { MarketsProvider } from './context/MarketsContext'
+import { TaxonomyProvider } from './context/TaxonomyContext'
 import AuthPage from './pages/Auth'
 import Home from './pages/Home'
 import Search from './pages/Search'
@@ -35,6 +36,7 @@ function AuthenticatedApp() {
   return (
     <PexelsProvider>
       <MarketsProvider>
+      <TaxonomyProvider>
       <CatalogProvider>
         <FavoritesProvider>
           <AddressesProvider>
@@ -68,6 +70,7 @@ function AuthenticatedApp() {
           </AddressesProvider>
         </FavoritesProvider>
       </CatalogProvider>
+      </TaxonomyProvider>
       </MarketsProvider>
     </PexelsProvider>
   )
@@ -79,7 +82,7 @@ function Gate() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface">
-        <p className="text-sm text-brand-dark/50">Chargement...</p>
+        <p className="text-sm text-muted">Chargement...</p>
       </div>
     )
   }

@@ -5,67 +5,29 @@ import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import StatusBadge from '../components/ui/StatusBadge'
-import { categories } from '../data/categories'
+import ProductCategoryFields, { categoryErrorMessage } from '../components/merchant/ProductCategoryFields'
+import ShopSectionsManager from '../components/merchant/ShopSectionsManager'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../context/CatalogContext'
 import { formatFCFA } from '../lib/format'
 import { SERVICE_FEE_RATE } from '../lib/pricing'
-import type { CategoryId, Merchant, Order, OrderStatus } from '../types'
+import {
+  ORDER_COLUMNS,
+  PAYMENT_METHOD_LABELS,
+  isBeforeDeparture,
+  orderFromRow,
+  translateDbError,
+  type OrderRow,
+} from '../lib/orderEngine'
+import type { CategoryId, Merchant, Order, OrderStatus, PaymentMethodCode } from '../types'
 import { ArrowLeft, Bike, Store, Hourglass, Ban, Play } from 'lucide-react'
 import ProductPhoto from '../components/ui/ProductPhoto'
 
 type Tab = 'produits' | 'commandes'
 
 const inputClass =
-  'w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none'
-
-interface OrderRow {
-  id: string
-  merchant_id: string
-  merchant_name: string
-  items: Order['items']
-  subtotal: number
-  service_fee: number
-  delivery_fee: number
-  distance_km: number | null
-  total: number
-  status: OrderStatus
-  slot_label: string
-  address_label: string
-  created_at: string
-  livreur_id: string | null
-  livreur_name: string | null
-  livreur_phone: string | null
-  shopping_video_url: string | null
-  client_phone: string | null
-}
-
-function orderFromRow(row: OrderRow): Order {
-  return {
-    id: row.id,
-    merchantId: row.merchant_id,
-    merchantName: row.merchant_name,
-    items: row.items,
-    subtotal: row.subtotal,
-    serviceFee: row.service_fee,
-    deliveryFee: row.delivery_fee,
-    distanceKm: row.distance_km,
-    total: row.total,
-    status: row.status,
-    createdAt: row.created_at,
-    slotLabel: row.slot_label,
-    addressLabel: row.address_label,
-    livreurId: row.livreur_id,
-    livreurName: row.livreur_name,
-    livreurPhone: row.livreur_phone,
-    shoppingVideoUrl: row.shopping_video_url,
-    clientPhone: row.client_phone,
-  }
-}
-
-const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url, client_phone'
+  'w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted focus:outline-none'
 
 export default function MerchantSpace() {
   const { user } = useAuth()
@@ -79,10 +41,18 @@ export default function MerchantSpace() {
 
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null)
   const [editedSubtotal, setEditedSubtotal] = useState('')
+  const [adjustReason, setAdjustReason] = useState('')
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null)
+  const [cancelReason, setCancelReason] = useState('')
+  const [busyOrderId, setBusyOrderId] = useState<string | null>(null)
+  const [orderErrors, setOrderErrors] = useState<Record<string, string>>({})
+  const [ordersError, setOrdersError] = useState<string | null>(null)
 
   const [isAddingProduct, setIsAddingProduct] = useState(false)
   const [draftName, setDraftName] = useState('')
   const [draftCategory, setDraftCategory] = useState<CategoryId>('legumes')
+  const [draftSubcategory, setDraftSubcategory] = useState<string | null>(null)
+  const [productError, setProductError] = useState<string | null>(null)
   const [draftPrice, setDraftPrice] = useState('')
   const [draftUnit, setDraftUnit] = useState('kg')
   const [draftVariantLabel, setDraftVariantLabel] = useState('')
@@ -120,12 +90,13 @@ export default function MerchantSpace() {
 
   async function fetchOrders(merchantId: string) {
     setOrdersLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('orders')
       .select(ORDER_COLUMNS)
       .eq('merchant_id', merchantId)
       .order('created_at', { ascending: false })
-    if (data) setOrders(data.map(orderFromRow))
+    setOrdersError(error ? translateDbError(error) : null)
+    if (data) setOrders((data as unknown as OrderRow[]).map(orderFromRow))
     setOrdersLoading(false)
   }
 
@@ -133,31 +104,100 @@ export default function MerchantSpace() {
     if (myMerchant && myMerchant.status === 'approved') fetchOrders(myMerchant.id)
   }, [myMerchant])
 
-  async function updateOrderStatus(orderId: string, status: OrderStatus) {
-    setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)))
-    await supabase.from('orders').update({ status }).eq('id', orderId)
+  function setOrderError(orderId: string, message: string | null) {
+    setOrderErrors((prev) => {
+      const next = { ...prev }
+      if (message) next[orderId] = message
+      else delete next[orderId]
+      return next
+    })
+  }
+
+  function replaceOrder(row: unknown) {
+    const updated = orderFromRow(row as OrderRow)
+    setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))
+  }
+
+  /** Changement de statut contrôlé par la base (machine à états de la migration 022). */
+  async function updateOrderStatus(orderId: string, status: OrderStatus, reason?: string) {
+    setBusyOrderId(orderId)
+    setOrderError(orderId, null)
+    const { data, error } = await supabase.rpc('set_order_status', {
+      p_order_id: orderId,
+      p_new_status: status,
+      p_reason: reason ?? null,
+    })
+    setBusyOrderId(null)
+    if (error || !data) {
+      setOrderError(orderId, translateDbError(error))
+      return false
+    }
+    replaceOrder(data)
+    return true
+  }
+
+  async function handleCancelOrder(order: Order) {
+    const reason = cancelReason.trim()
+    if (!reason) {
+      setOrderError(order.id, "Indiquez le motif de l'annulation (rupture, fermeture...).")
+      return
+    }
+    if (await updateOrderStatus(order.id, 'annulee', reason)) {
+      setCancellingOrderId(null)
+      setCancelReason('')
+    }
+  }
+
+  /** Encaissement hors ligne déclaré par le commerçant (solde d'un retrait ou acompte). */
+  async function recordPayment(order: Order, part: 'solde' | 'acompte') {
+    const method: PaymentMethodCode = order.paymentMethod ?? 'especes'
+    setBusyOrderId(order.id)
+    setOrderError(order.id, null)
+    const { data, error } = await supabase.rpc('record_payment', {
+      p_order_id: order.id,
+      p_part: part,
+      p_method: method,
+    })
+    setBusyOrderId(null)
+    if (error || !data) {
+      setOrderError(order.id, translateDbError(error))
+      return
+    }
+    replaceOrder(data)
   }
 
   function startEditingAmount(order: Order) {
     setEditingOrderId(order.id)
     setEditedSubtotal(String(order.subtotal))
+    setAdjustReason('')
+    setOrderError(order.id, null)
   }
 
+  /** Ajustement unique du montant réel (adjust_order_amount) : au-delà de +10 %, le client doit accepter. */
   async function handleSaveAmount(order: Order) {
     const newSubtotal = Math.round(Number(editedSubtotal))
-    if (!Number.isFinite(newSubtotal) || newSubtotal < 0) return
-    const newServiceFee = Math.round(newSubtotal * SERVICE_FEE_RATE)
-    const newTotal = newSubtotal + newServiceFee + order.deliveryFee
-
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === order.id ? { ...o, subtotal: newSubtotal, serviceFee: newServiceFee, total: newTotal } : o,
-      ),
-    )
-    await supabase
-      .from('orders')
-      .update({ subtotal: newSubtotal, service_fee: newServiceFee, total: newTotal })
-      .eq('id', order.id)
+    const reason = adjustReason.trim()
+    if (!Number.isFinite(newSubtotal) || newSubtotal <= 0) {
+      setOrderError(order.id, 'Indiquez un montant valide, en F CFA.')
+      return
+    }
+    if (!reason) {
+      setOrderError(order.id, "Le motif de l'ajustement est obligatoire.")
+      return
+    }
+    setBusyOrderId(order.id)
+    setOrderError(order.id, null)
+    const { data, error } = await supabase.rpc('adjust_order_amount', {
+      p_order_id: order.id,
+      p_new_subtotal: newSubtotal,
+      p_reason: reason,
+    })
+    setBusyOrderId(null)
+    if (error || !data) {
+      setOrderError(order.id, translateDbError(error))
+      return
+    }
+    replaceOrder(data)
     setEditingOrderId(null)
   }
 
@@ -178,15 +218,24 @@ export default function MerchantSpace() {
       }
     }
 
-    await supabase.from('products').insert({
+    setProductError(null)
+    const { error: insertError } = await supabase.from('products').insert({
       merchant_id: myMerchant.id,
       name: draftName.trim(),
       category: draftCategory,
+      // Colonne de 023 envoyée seulement si une sous-catégorie est choisie.
+      ...(draftSubcategory ? { subcategory_id: draftSubcategory } : {}),
       price: Math.round(Number(draftPrice)),
       unit: draftUnit.trim(),
       image_url: imageUrl,
       variant_label: draftVariantLabel.trim() || null,
     })
+    if (insertError) {
+      // Publication bloquée : la saisie est conservée et l'erreur affichée.
+      setProductError(categoryErrorMessage(insertError.message) ?? "Le produit n'a pas pu être ajouté. Réessaie.")
+      return
+    }
+    setDraftSubcategory(null)
     setDraftName('')
     setDraftPrice('')
     setDraftUnit('kg')
@@ -205,7 +254,7 @@ export default function MerchantSpace() {
   if (myMerchant === undefined) {
     return (
       <PageShell>
-        <div className="px-5 pt-8 text-center text-sm text-brand-dark/50">Chargement...</div>
+        <div className="px-5 pt-8 text-center text-sm text-muted">Chargement...</div>
       </PageShell>
     )
   }
@@ -219,7 +268,7 @@ export default function MerchantSpace() {
         <div className="px-5 pt-8 text-center">
           <Store className="mx-auto h-9 w-9 text-brand-dark/30" />
           <p className="mt-2 text-sm font-medium text-brand-dark">Tu n'as pas encore de marchand</p>
-          <p className="mt-1 text-xs text-brand-dark/50">
+          <p className="mt-1 text-xs text-muted">
             Crée ton profil marchand pour vendre tes produits sur Panier 241.
           </p>
           <Link to="/devenir-marchand" className="mt-4 inline-block">
@@ -245,7 +294,7 @@ export default function MerchantSpace() {
           <p className="mt-2 text-sm font-medium text-brand-dark">
             {myMerchant.status === 'pending' ? 'En attente de validation' : 'Compte suspendu'}
           </p>
-          <p className="mt-1 text-xs text-brand-dark/50">{message}</p>
+          <p className="mt-1 text-xs text-muted">{message}</p>
         </div>
       </PageShell>
     )
@@ -273,7 +322,7 @@ export default function MerchantSpace() {
             type="button"
             onClick={() => setTab('produits')}
             className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
-              tab === 'produits' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
+              tab === 'produits' ? 'bg-white text-brand shadow-card' : 'text-muted'
             }`}
           >
             Mes produits
@@ -282,7 +331,7 @@ export default function MerchantSpace() {
             type="button"
             onClick={() => setTab('commandes')}
             className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
-              tab === 'commandes' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
+              tab === 'commandes' ? 'bg-white text-brand shadow-card' : 'text-muted'
             }`}
           >
             Commandes reçues {orders.length > 0 && `(${orders.length})`}
@@ -310,17 +359,15 @@ export default function MerchantSpace() {
                   placeholder="Nom du produit"
                   className={inputClass}
                 />
-                <select
-                  value={draftCategory}
-                  onChange={(e) => setDraftCategory(e.target.value as CategoryId)}
-                  className={inputClass}
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
+                <ProductCategoryFields
+                  category={draftCategory}
+                  subcategoryId={draftSubcategory}
+                  onChange={(v) => {
+                    setDraftCategory(v.category)
+                    setDraftSubcategory(v.subcategoryId)
+                  }}
+                  idPrefix="ms-new"
+                />
                 <div className="flex gap-2">
                   <input
                     type="number"
@@ -345,7 +392,7 @@ export default function MerchantSpace() {
                   placeholder="Variante (ex: 12mm, 1kg, Rouge...) — optionnel"
                   className={inputClass}
                 />
-                <p className="text-xs text-brand-dark/40">
+                <p className="text-xs text-muted">
                   Donne le même nom qu'un produit existant pour créer une variante supplémentaire.
                 </p>
                 <div className="flex items-center gap-2">
@@ -370,6 +417,7 @@ export default function MerchantSpace() {
                 >
                   Ajouter
                 </Button>
+                {productError && <p role="alert" className="text-xs font-semibold text-danger">{productError}</p>}
               </Card>
             )}
 
@@ -381,10 +429,10 @@ export default function MerchantSpace() {
                     <p className="truncate text-sm font-medium text-brand-dark">
                       {product.name}
                       {product.variantLabel && (
-                        <span className="ml-1 font-normal text-brand-dark/40">· {product.variantLabel}</span>
+                        <span className="ml-1 font-normal text-muted">· {product.variantLabel}</span>
                       )}
                     </p>
-                    <p className="text-xs text-brand-dark/50">
+                    <p className="text-xs text-muted">
                       {formatFCFA(product.price)} / {product.unit}
                     </p>
                   </div>
@@ -398,8 +446,10 @@ export default function MerchantSpace() {
                 </Card>
               ))
             ) : (
-              <p className="text-center text-sm text-brand-dark/50">Aucun produit pour l'instant.</p>
+              <p className="text-center text-sm text-muted">Aucun produit pour l'instant.</p>
             )}
+
+            <ShopSectionsManager merchant={myMerchant} products={myProducts} />
           </div>
         )}
 
@@ -415,13 +465,18 @@ export default function MerchantSpace() {
               </button>
             </div>
 
+            {ordersError && (
+              <p role="alert" className="text-xs font-semibold text-danger">
+                {ordersError}
+              </p>
+            )}
             {orders.length > 0 ? (
               orders.map((order) => (
                 <Card key={order.id} className="space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-xs text-brand-dark/50">{order.slotLabel}</p>
-                      <p className="text-xs text-brand-dark/50">{order.addressLabel}</p>
+                      <p className="text-xs text-muted">{order.slotLabel}</p>
+                      <p className="text-xs text-muted">{order.addressLabel}</p>
                     </div>
                     <StatusBadge status={order.status} />
                   </div>
@@ -429,53 +484,179 @@ export default function MerchantSpace() {
                     {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
                   </p>
 
+                  {order.fulfillmentMode === 'retrait' && (
+                    <p className="text-[11px] font-semibold text-brand-dark">
+                      <Store className="mr-1 inline h-3.5 w-3.5" />
+                      Retrait sur stand : le client vient chercher la commande.
+                    </p>
+                  )}
+
                   {editingOrderId === order.id ? (
-                    <div className="flex items-center gap-2 border-t border-brand-light pt-2">
+                    <div className="space-y-2 border-t border-brand-light pt-2">
                       <input
                         type="number"
-                        min="0"
+                        min="1"
                         value={editedSubtotal}
                         onChange={(e) => setEditedSubtotal(e.target.value)}
-                        placeholder="Sous-total réel (F CFA)"
+                        placeholder="Montant réel des marchandises (F CFA)"
                         className={inputClass}
                       />
-                      <Button onClick={() => handleSaveAmount(order)}>Valider</Button>
-                      <button
-                        type="button"
-                        onClick={() => setEditingOrderId(null)}
-                        className="text-xs font-semibold text-brand-dark/50"
-                      >
-                        Annuler
-                      </button>
+                      <input
+                        type="text"
+                        maxLength={300}
+                        value={adjustReason}
+                        onChange={(e) => setAdjustReason(e.target.value)}
+                        placeholder="Motif (obligatoire) : prix du jour, article manquant..."
+                        className={inputClass}
+                      />
+                      <p className="text-[11px] text-muted">
+                        Un seul ajustement possible. Jusqu'à {formatFCFA(Math.floor(order.subtotal * 1.1))} (+10 %), il
+                        est appliqué directement ; au-delà, le client doit l'accepter. Une baisse est toujours
+                        acceptée. Frais de service recalculés par la base ({Math.round(SERVICE_FEE_RATE * 100)} %).
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button onClick={() => handleSaveAmount(order)} disabled={busyOrderId === order.id}>
+                          Valider
+                        </Button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingOrderId(null)}
+                          className="text-xs font-semibold text-muted"
+                        >
+                          Annuler
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between border-t border-brand-light pt-2">
-                      <div>
-                        <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
-                        {order.status !== 'livree' && (
-                          <button
-                            type="button"
-                            onClick={() => startEditingAmount(order)}
-                            className="ml-2 text-[11px] font-semibold text-brand"
+                    <div className="space-y-2 border-t border-brand-light pt-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
+                          {isBeforeDeparture(order.status) && order.adjustmentStatus === 'aucun' && (
+                            <button
+                              type="button"
+                              onClick={() => startEditingAmount(order)}
+                              className="ml-2 text-[11px] font-semibold text-brand"
+                            >
+                              Ajuster le montant réel
+                            </button>
+                          )}
+                        </div>
+                        {order.status === 'en_preparation' && (
+                          <Button
+                            disabled={busyOrderId === order.id || order.adjustmentStatus === 'en_attente'}
+                            onClick={() =>
+                              updateOrderStatus(
+                                order.id,
+                                order.fulfillmentMode === 'retrait' ? 'prete_a_retirer' : 'prete_a_livrer',
+                              )
+                            }
                           >
-                            Ajuster le montant réel
-                          </button>
+                            {order.fulfillmentMode === 'retrait' ? 'Marquer prête à retirer' : 'Marquer prête (inviter un livreur)'}
+                          </Button>
+                        )}
+                        {order.status === 'prete_a_retirer' && (
+                          <Button
+                            disabled={busyOrderId === order.id || order.adjustmentStatus === 'en_attente'}
+                            onClick={() => updateOrderStatus(order.id, 'retiree')}
+                          >
+                            Remise au client
+                          </Button>
                         )}
                       </div>
-                      {order.status === 'en_preparation' && (
-                        <Button onClick={() => updateOrderStatus(order.id, 'en_livraison')}>
-                          Marquer prête (inviter un livreur)
-                        </Button>
+                      {order.adjustmentStatus === 'en_attente' && order.proposedSubtotal != null && (
+                        <p className="text-[11px] text-warn-ink">
+                          Nouveau montant de {formatFCFA(order.proposedSubtotal)} en attente d'accord du client.
+                        </p>
                       )}
-                      {order.status === 'en_livraison' && (
-                        <Button variant="secondary" onClick={() => updateOrderStatus(order.id, 'livree')}>
-                          Marquer livrée
-                        </Button>
+                      {order.adjustmentStatus === 'refuse' && (
+                        <p className="text-[11px] text-muted">Le client a refusé l'ajustement : montant initial conservé.</p>
                       )}
+                      {order.status === 'prete_a_livrer' && (
+                        <p className="text-[11px] text-muted">En attente d'un livreur. Seul le livreur marque la commande livrée.</p>
+                      )}
+                      {order.depositAmount > 0 && order.status !== 'annulee' && (
+                        <div className="flex items-center justify-between text-[11px] text-brand-dark">
+                          <span>
+                            Acompte {formatFCFA(order.depositAmount)}
+                            {order.depositStatus === 'encaisse' ? ' : reçu' : order.depositStatus === 'du' ? ' : dû' : ''}
+                          </span>
+                          {order.depositStatus === 'du' && (
+                            <button
+                              type="button"
+                              disabled={busyOrderId === order.id}
+                              onClick={() => recordPayment(order, 'acompte')}
+                              className="font-semibold text-brand"
+                            >
+                              Acompte reçu
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {order.fulfillmentMode === 'retrait' &&
+                        (order.status === 'prete_a_retirer' || order.status === 'retiree') &&
+                        order.paymentStatus !== 'encaisse' && (
+                          <button
+                            type="button"
+                            disabled={busyOrderId === order.id}
+                            onClick={() => recordPayment(order, 'solde')}
+                            className="text-[11px] font-semibold text-brand"
+                          >
+                            Paiement reçu ({order.paymentMethod ? PAYMENT_METHOD_LABELS[order.paymentMethod] : 'Espèces'})
+                          </button>
+                        )}
+                      {order.fulfillmentMode === 'retrait' && order.paymentStatus === 'encaisse' && (
+                        <p className="text-[11px] text-muted">Paiement reçu.</p>
+                      )}
+                      {isBeforeDeparture(order.status) &&
+                        (cancellingOrderId === order.id ? (
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              maxLength={300}
+                              value={cancelReason}
+                              onChange={(e) => setCancelReason(e.target.value)}
+                              placeholder="Motif de l'annulation (obligatoire)"
+                              className={inputClass}
+                            />
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="danger"
+                                disabled={busyOrderId === order.id}
+                                onClick={() => handleCancelOrder(order)}
+                              >
+                                Confirmer l'annulation
+                              </Button>
+                              <button
+                                type="button"
+                                onClick={() => setCancellingOrderId(null)}
+                                className="text-xs font-semibold text-muted"
+                              >
+                                Garder
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCancellingOrderId(order.id)
+                              setCancelReason('')
+                            }}
+                            className="text-[11px] font-semibold text-danger"
+                          >
+                            Annuler la commande
+                          </button>
+                        ))}
                     </div>
                   )}
+                  {orderErrors[order.id] && (
+                    <p role="alert" className="text-[11px] font-semibold text-danger">
+                      {orderErrors[order.id]}
+                    </p>
+                  )}
                   {order.livreurName && (
-                    <p className="text-[11px] text-brand-dark/40"><Bike className="mr-1 inline h-3.5 w-3.5" />Livreur : {order.livreurName}</p>
+                    <p className="text-[11px] text-muted"><Bike className="mr-1 inline h-3.5 w-3.5" />Livreur : {order.livreurName}</p>
                   )}
                   {order.shoppingVideoUrl && (
                     <a
@@ -490,7 +671,7 @@ export default function MerchantSpace() {
                 </Card>
               ))
             ) : (
-              <p className="text-center text-sm text-brand-dark/50">Aucune commande reçue pour l'instant.</p>
+              <p className="text-center text-sm text-muted">Aucune commande reçue pour l'instant.</p>
             )}
           </div>
         )}

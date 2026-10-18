@@ -27,7 +27,62 @@ export interface Category {
   shortLabel?: string
   /** Doit correspondre à une clé de la palette theme.colors.category. */
   colorClass: string
+  /** Champs issus de la table categories (023) ; absents dans le repli statique. */
+  sortOrder?: number
+  isActive?: boolean
+  /** Indicateur éditorial : affichée à l'accueil même sans produit publiable. */
+  isFeatured?: boolean
+  imageUrl?: string | null
 }
+
+/** Sous-catégorie globale (categories.parent_id non nul, migration 023). */
+export interface Subcategory {
+  id: string
+  parentId: CategoryId
+  label: string
+  shortLabel?: string
+  sortOrder: number
+  isActive: boolean
+  imageUrl: string | null
+}
+
+/** Attribut filtrable d'une famille ou d'une sous-catégorie (table category_attributes). */
+export interface CategoryAttribute {
+  id: string
+  categoryId: string
+  key: string
+  label: string
+  valueType: 'texte' | 'nombre' | 'oui_non'
+  unit: string | null
+  isFilterable: boolean
+  sortOrder: number
+  isActive: boolean
+}
+
+/** Catégorie mise en avant par une enseigne (marketId) ou une boutique (merchantId). */
+export interface StorefrontCategory {
+  id: string
+  marketId: string | null
+  merchantId: string | null
+  categoryId: string
+  sortOrder: number
+}
+
+/** Rubrique propre à un commerçant (« Promotions »...), table merchant_sections. */
+export interface MerchantSection {
+  id: string
+  merchantId: string
+  name: string
+  sortOrder: number
+  isVisible: boolean
+  isActive: boolean
+  imageUrl: string | null
+  /** Produits liés (merchant_section_products), dans l'ordre de la rubrique. */
+  productIds: string[]
+}
+
+/** Valeur d'attribut d'un produit (products.attributes). */
+export type AttributeValue = string | number | boolean
 
 export interface Market {
   id: string
@@ -63,6 +118,10 @@ export interface Product {
   variantLabel: string | null
   /** Type de produit saisi par le commerçant (Plat, Boisson, Gâteau...). */
   productType?: string | null
+  /** Sous-catégorie globale (023) ; null = classé au niveau famille. */
+  subcategoryId?: string | null
+  /** Valeurs des attributs filtrables (023) ; un attribut absent ne bloque rien. */
+  attributes?: Record<string, AttributeValue>
 }
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
@@ -114,7 +173,19 @@ export interface CartItem {
   quantity: number
 }
 
-export type OrderStatus = 'en_preparation' | 'en_livraison' | 'livree' | 'annulee'
+/** Statuts de commande (machine à états de la base, migration 022). */
+export type OrderStatus =
+  | 'en_preparation'
+  | 'prete_a_livrer'
+  | 'en_livraison'
+  | 'livree'
+  | 'prete_a_retirer'
+  | 'retiree'
+  | 'annulee'
+
+export type FulfillmentMode = 'livraison' | 'retrait'
+
+export type PaymentMethodCode = 'airtel_money' | 'moov_money' | 'especes'
 
 export interface OrderItem {
   productId: string
@@ -143,9 +214,33 @@ export interface Order {
   livreurPhone: string | null
   shoppingVideoUrl: string | null
   clientPhone: string | null
-  /** Annulation par le client (commande encore en préparation). */
+  /** Annulation (client, commerçant ou administrateur), motif obligatoire. */
   cancelledAt?: string | null
   cancelReason?: string | null
+  /** Livraison ou retrait sur stand. */
+  fulfillmentMode: FulfillmentMode
+  discountAmount: number
+  /** Acompte dû au commerçant quand le total dépasse le seuil (0 sinon). */
+  depositAmount: number
+  depositStatus: 'non_requis' | 'du' | 'encaisse' | 'inclus_solde'
+  paymentMethod: PaymentMethodCode | null
+  /** Null pour les commandes antérieures au moteur de commande. */
+  paymentStatus: 'du' | 'encaisse' | null
+  /** Sous-total calculé à la création, avant ajustement éventuel. */
+  initialSubtotal: number
+  adjustmentStatus: 'aucun' | 'applique' | 'en_attente' | 'accepte' | 'refuse' | 'caduc'
+  /** Nouveau sous-total proposé par le commerçant, en attente d'accord du client. */
+  proposedSubtotal: number | null
+  acceptedAt: string | null
+}
+
+/** Adresse complète d'une livraison (table order_delivery_details). */
+export interface OrderDeliveryDetails {
+  orderId: string
+  fullAddress: string
+  landmark: string | null
+  lat: number | null
+  lng: number | null
 }
 
 export interface Livreur {

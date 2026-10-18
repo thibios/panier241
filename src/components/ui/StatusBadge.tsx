@@ -1,19 +1,22 @@
 import type { OrderStatus } from '../../types'
+import { ORDER_STATUS_LABELS } from '../../lib/orderEngine'
 
-const statusMeta: Record<OrderStatus, { label: string; className: string }> = {
-  en_preparation: { label: 'En préparation', className: 'text-warn' },
-  en_livraison: { label: 'En cours de livraison', className: 'text-brand' },
-  livree: { label: 'Livrée', className: 'text-brand' },
-  annulee: { label: 'Annulée', className: 'text-danger' },
+const statusClass: Record<OrderStatus, string> = {
+  en_preparation: 'text-warn-ink',
+  prete_a_livrer: 'text-warn-ink',
+  en_livraison: 'text-brand',
+  livree: 'text-brand',
+  prete_a_retirer: 'text-brand',
+  retiree: 'text-brand',
+  annulee: 'text-danger',
 }
 
 export default function StatusBadge({ status }: { status: OrderStatus }) {
-  const meta = statusMeta[status]
   return (
     <span
-      className={`shrink-0 rounded-full bg-brand-light px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${meta.className}`}
+      className={`shrink-0 rounded-md bg-brand-light px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${statusClass[status]}`}
     >
-      {meta.label}
+      {ORDER_STATUS_LABELS[status]}
     </span>
   )
 }

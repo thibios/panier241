@@ -32,7 +32,7 @@ async function offerToSaveCredentials(email: string, password: string) {
 }
 
 const inputClass =
-  'w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50'
+  'w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand'
 
 export default function Auth() {
   const { signIn, signUp } = useAuth()
@@ -112,7 +112,7 @@ export default function Auth() {
                   onClick={() => switchMode(tab)}
                   aria-pressed={mode === tab}
                   className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${
-                    mode === tab ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
+                    mode === tab ? 'bg-white text-brand shadow-card' : 'text-muted'
                   }`}
                 >
                   {tab === 'signin' ? 'Connexion' : 'Créer un compte'}
@@ -125,7 +125,7 @@ export default function Auth() {
             {mode === 'forgot' && resetSent ? (
               <div className="space-y-3 text-center">
                 <p className="text-sm font-medium text-brand-dark">Vérifie ta boîte mail</p>
-                <p className="text-xs text-brand-dark/60">
+                <p className="text-xs text-muted">
                   Si un compte existe pour {email.trim()}, un lien pour choisir un nouveau mot de passe vient d'y
                   être envoyé. Pense à regarder dans les courriers indésirables.
                 </p>
@@ -138,7 +138,7 @@ export default function Auth() {
                 {mode === 'forgot' && (
                   <div>
                     <h2 className="text-base font-semibold text-brand-dark">Mot de passe oublié</h2>
-                    <p className="mt-1 text-xs text-brand-dark/60">
+                    <p className="mt-1 text-xs text-muted">
                       Saisis l'adresse email de ton compte : nous t'envoyons un lien pour choisir un nouveau mot de
                       passe.
                     </p>
@@ -249,7 +249,7 @@ export default function Auth() {
             )}
           </Card>
 
-          <p className="mt-4 text-center text-xs text-brand-dark/60">
+          <p className="mt-4 text-center text-xs text-muted">
             En créant un compte, vous acceptez nos{' '}
             <Link to="/cgu" className="font-medium text-brand underline">
               conditions générales

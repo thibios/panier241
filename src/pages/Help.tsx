@@ -55,7 +55,7 @@ export default function Help() {
               disponible).
             </li>
           </ul>
-          <p className="rounded-2xl bg-brand-light p-3 text-xs text-brand-dark/60">
+          <p className="rounded-2xl bg-brand-light p-3 text-xs text-muted">
             Exemple : pour 10 000 F CFA d'achats et une livraison à 4 km, le total serait 10 000 +{' '}
             {formatFCFA(Math.round(10000 * SERVICE_FEE_RATE))} (service) +{' '}
             {formatFCFA(BASE_DELIVERY_FEE + 4 * RATE_PER_KM)} (livraison) ={' '}

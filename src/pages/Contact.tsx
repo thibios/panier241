@@ -26,7 +26,7 @@ export default function Contact() {
             <MessageCircle className="h-6 w-6 shrink-0 text-category-legumes" />
             <div>
               <p className="text-sm font-semibold text-brand-dark">WhatsApp</p>
-              <p className="text-xs text-brand-dark/50">{PANIER241_WHATSAPP}</p>
+              <p className="text-xs text-muted">{PANIER241_WHATSAPP}</p>
             </div>
           </div>
           <a
@@ -43,7 +43,7 @@ export default function Contact() {
             <Mail className="h-6 w-6 shrink-0 text-brand" />
             <div>
               <p className="text-sm font-semibold text-brand-dark">Email</p>
-              <p className="text-xs text-brand-dark/50">{CONTACT_EMAIL}</p>
+              <p className="text-xs text-muted">{CONTACT_EMAIL}</p>
             </div>
           </div>
           <a href={`mailto:${CONTACT_EMAIL}`}>
@@ -53,7 +53,7 @@ export default function Contact() {
           </a>
         </Card>
 
-        <p className="text-center text-xs text-brand-dark/40">
+        <p className="text-center text-xs text-muted">
           Certaines photos sont fournies par{' '}
           <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer" className="underline">
             Pexels

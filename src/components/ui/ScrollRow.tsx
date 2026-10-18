@@ -70,7 +70,7 @@ export default function ScrollRow({
   }
 
   const arrow =
-    `absolute ${arrowTop} z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-card/95 text-brand-dark shadow-float backdrop-blur transition hover:bg-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50`
+    `absolute ${arrowTop} z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-card/95 text-brand-dark shadow-float backdrop-blur transition hover:bg-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand`
 
   return (
     <div className={`relative ${className}`} role="region" aria-label={label}>

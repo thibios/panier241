@@ -1,3 +1,8 @@
+-- DONNÉES DE DÉMONSTRATION : le seed de la section 4 (6 commerçants fictifs, owner_id null, et leurs
+-- produits) est une donnée de démonstration, jamais visible du public. Ces commerçants sont marqués
+-- is_demo et neutralisés par supabase/020_demo_data_isolation.sql (suspendus, jamais approuvés,
+-- lisibles par l'administrateur seulement). Notes et nombres d'avis du seed ramenés à 0 : aucune note inventée.
+--
 -- Panier 241 — espace marchand
 -- À exécuter dans Supabase : Dashboard > SQL Editor > New query > Run
 -- (à exécuter une fois, après supabase/schema.sql)
@@ -79,12 +84,12 @@ create policy "Seul le marchand met a jour le statut de sa commande"
 
 -- 4. Seed : catalogue de demo actuel, non lie a un compte (owner_id null)
 insert into public.merchants (id, owner_id, name, market_id, categories, rating, review_count, address, image_emoji, banner_color) values
-  ('10000000-0000-0000-0000-000000000001', null, 'Chez Maman Adjoua', 'mkt-mont-bouet', array['legumes','fruits'], 4.8, 156, 'Marché Mont-Bouët, Allée B, Libreville', '👩🏾‍🌾', '#3FAE5C'),
-  ('10000000-0000-0000-0000-000000000002', null, 'Étal Nguema Fruits', 'mkt-mont-bouet', array['fruits'], 4.6, 89, 'Marché Mont-Bouët, Entrée principale, Libreville', '🧑🏾‍🌾', '#F2994A'),
-  ('10000000-0000-0000-0000-000000000003', null, 'Poissonnerie de Nkembo', 'mkt-nkembo', array['poisson'], 4.7, 121, 'Marché Nkembo, Quai poisson, Libreville', '🎣', '#E8543A'),
-  ('10000000-0000-0000-0000-000000000004', null, 'Boucherie Centrale Oloumi', 'mkt-oloumi', array['poisson'], 4.5, 74, 'Marché Oloumi, Stand 12, Libreville', '🥩', '#E8543A'),
-  ('10000000-0000-0000-0000-000000000005', null, 'Épicerie Traditionnelle Akébé', 'mkt-akebe', array['cereales','legumes'], 4.9, 203, 'Marché Akébé, Allée des épices, Libreville', '🌾', '#C08A3E'),
-  ('10000000-0000-0000-0000-000000000006', null, 'Le Jardin de Mont-Bouët', 'mkt-mont-bouet', array['legumes'], 4.4, 62, 'Marché Mont-Bouët, Allée C, Libreville', '🥬', '#3FAE5C');
+  ('10000000-0000-0000-0000-000000000001', null, 'Chez Maman Adjoua', 'mkt-mont-bouet', array['legumes','fruits'], 0, 0, 'Marché Mont-Bouët, Allée B, Libreville', '👩🏾‍🌾', '#3FAE5C'),
+  ('10000000-0000-0000-0000-000000000002', null, 'Étal Nguema Fruits', 'mkt-mont-bouet', array['fruits'], 0, 0, 'Marché Mont-Bouët, Entrée principale, Libreville', '🧑🏾‍🌾', '#F2994A'),
+  ('10000000-0000-0000-0000-000000000003', null, 'Poissonnerie de Nkembo', 'mkt-nkembo', array['poisson'], 0, 0, 'Marché Nkembo, Quai poisson, Libreville', '🎣', '#E8543A'),
+  ('10000000-0000-0000-0000-000000000004', null, 'Boucherie Centrale Oloumi', 'mkt-oloumi', array['poisson'], 0, 0, 'Marché Oloumi, Stand 12, Libreville', '🥩', '#E8543A'),
+  ('10000000-0000-0000-0000-000000000005', null, 'Épicerie Traditionnelle Akébé', 'mkt-akebe', array['cereales','legumes'], 0, 0, 'Marché Akébé, Allée des épices, Libreville', '🌾', '#C08A3E'),
+  ('10000000-0000-0000-0000-000000000006', null, 'Le Jardin de Mont-Bouët', 'mkt-mont-bouet', array['legumes'], 0, 0, 'Marché Mont-Bouët, Allée C, Libreville', '🥬', '#3FAE5C');
 
 insert into public.products (merchant_id, name, category, price, unit, image_emoji) values
   -- Chez Maman Adjoua

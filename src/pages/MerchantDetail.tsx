@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, MapPin, Star, MessageCircle, ChevronDown } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
@@ -14,6 +14,9 @@ import { useCart } from '../context/CartContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { useCatalog } from '../context/CatalogContext'
 import { usePexelsPhotos } from '../context/PexelsContext'
+import { useTaxonomy } from '../context/TaxonomyContext'
+import { useMerchantSections } from '../lib/merchantSections'
+import { productMatchesCategory, relevantStorefrontCategories } from '../lib/catalogTaxonomy'
 import { formatFCFA } from '../lib/format'
 import { buildWhatsAppLink } from '../lib/whatsapp'
 import { resolveImage } from '../lib/images'
@@ -50,18 +53,34 @@ const categoryDotClass: Record<string, string> = {
 export default function MerchantDetail() {
   const { merchantId } = useParams()
   const navigate = useNavigate()
-  const { merchants, getProductsForMerchant, loading, error } = useCatalog()
+  const { merchants, products, loading, error } = useCatalog()
   const merchant = merchants.find((m) => m.id === merchantId)
   const { items, merchantId: cartMerchantId, addItem, setQuantity, itemCount, subtotal } = useCart()
   const { isFavorite, toggleFavorite } = useFavorites()
   const pexelsPhotos = usePexelsPhotos()
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
+  const { storefronts, labelOf } = useTaxonomy()
+  const { sections } = useMerchantSections(merchant?.id)
+  /** Vue de la vitrine : « all », « s:<rubrique> » ou « c:<catégorie> ». */
+  const [view, setView] = useState('all')
 
   // Le composant n'est pas remonté quand on navigue d'une fiche marchand à une
   // autre (même route, param différent) : on réinitialise l'accordéon nous-mêmes.
   useEffect(() => {
     setExpandedGroup(null)
+    setView('all')
   }, [merchantId])
+
+  const allProducts = useMemo(() => (merchant ? products.filter((p) => p.merchantId === merchant.id) : []), [merchant, products])
+  // Rubriques du commerçant qui contiennent au moins un produit visible (état vide propre).
+  const shownSections = sections.filter((sec) => sec.isVisible && sec.isActive && sec.productIds.some((id) => allProducts.some((p) => p.id === id)))
+  const shownCategories = useMemo(
+    () =>
+      merchant
+        ? relevantStorefrontCategories({ merchantId: merchant.id, marketId: merchant.marketId, storefronts, products: allProducts, labelOf })
+        : [],
+    [merchant, storefronts, labelOf, allProducts],
+  )
 
   if (!merchant) {
     return (
@@ -70,7 +89,7 @@ export default function MerchantDetail() {
           {loading || error ? (
             <CatalogState />
           ) : (
-            <p className="text-sm text-brand-dark/60">Marchand introuvable.</p>
+            <p className="text-sm text-muted">Marchand introuvable.</p>
           )}
           <Link to="/" className="inline-block text-sm font-semibold text-brand">
             <ArrowLeft className="inline h-4 w-4" /> Retour à l'accueil
@@ -82,7 +101,14 @@ export default function MerchantDetail() {
 
   const currentMerchantId = merchant.id
   const market = markets.find((m) => m.id === merchant.marketId)
-  const merchantProducts = getProductsForMerchant(currentMerchantId)
+  const activeSection = view.startsWith('s:') ? shownSections.find((sec) => `s:${sec.id}` === view) : undefined
+  const activeCategory = view.startsWith('c:') ? view.slice(2) : null
+  const merchantProducts = activeSection
+    ? activeSection.productIds.map((id) => allProducts.find((p) => p.id === id)).filter((p): p is Product => Boolean(p))
+    : activeCategory
+      ? allProducts.filter((p) => productMatchesCategory(p, activeCategory))
+      : allProducts
+  const showViewTabs = shownSections.length > 0 || shownCategories.length > 1
   const productGroups = groupProducts(merchantProducts)
   const isOtherMerchantInCart = cartMerchantId !== null && cartMerchantId !== currentMerchantId
   const merchantPhoto = resolveImage(merchant.kioskPhotoUrl, merchant.categories[0], pexelsPhotos)
@@ -160,12 +186,12 @@ export default function MerchantDetail() {
               {merchant.reviewCount > 0 ? (
                 <div>
                   <p className="text-sm font-semibold text-brand-dark">
-                    {merchant.rating.toFixed(1)} <span className="font-normal text-brand-dark/60">/ 5</span>
+                    {merchant.rating.toFixed(1)} <span className="font-normal text-muted">/ 5</span>
                   </p>
-                  <p className="text-xs text-brand-dark/60">{merchant.reviewCount} avis</p>
+                  <p className="text-xs text-muted">{merchant.reviewCount} avis</p>
                 </div>
               ) : (
-                <p className="text-sm text-brand-dark/60">Pas encore d'avis</p>
+                <p className="text-sm text-muted">Pas encore d'avis</p>
               )}
             </div>
             <div className="flex gap-1.5">
@@ -194,7 +220,7 @@ export default function MerchantDetail() {
                 <MessageCircle className="h-6 w-6 shrink-0 text-category-legumes" aria-hidden="true" />
                 <div>
                   <p className="text-sm font-medium text-brand-dark">Contacter sur WhatsApp</p>
-                  <p className="text-xs text-brand-dark/60">{merchant.phone}</p>
+                  <p className="text-xs text-muted">{merchant.phone}</p>
                 </div>
               </div>
               <ArrowRight className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
@@ -210,6 +236,32 @@ export default function MerchantDetail() {
 
           <div>
             <h2 className="mb-3 text-base font-semibold text-brand-dark">Produits disponibles</h2>
+            {showViewTabs && (
+              <div className="-mx-5 mb-3 flex gap-2 overflow-x-auto px-5 pb-1" role="group" aria-label="Rubriques et catégories de la boutique">
+                {[
+                  { key: 'all', label: 'Tout' },
+                  ...shownSections.map((sec) => ({ key: `s:${sec.id}`, label: sec.name })),
+                  ...(shownCategories.length > 1 ? shownCategories.map((c) => ({ key: `c:${c.id}`, label: c.label })) : []),
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    aria-pressed={view === tab.key}
+                    onClick={() => setView(tab.key)}
+                    className={`flex h-9 shrink-0 items-center rounded-xl px-3 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+                      view === tab.key ? 'bg-brand text-on-header' : 'border border-line bg-card text-brand-dark'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {productGroups.length === 0 && (
+              <p className="rounded-card bg-white p-4 text-center text-sm text-muted shadow-card">
+                {allProducts.length === 0 ? "Ce commerçant n'a pas encore publié de produit." : 'Aucun produit dans cette rubrique pour le moment.'}
+              </p>
+            )}
             <div className="space-y-3">
               {productGroups.map((group, i) => {
                 if (group.variants.length === 1) {
@@ -224,7 +276,7 @@ export default function MerchantDetail() {
                           </p>
                           <p className="text-xs font-semibold text-brand">
                             {formatFCFA(product.price)}{' '}
-                            <span className="font-normal text-brand-dark/60">/ {product.unit}</span>
+                            <span className="font-normal text-muted">/ {product.unit}</span>
                           </p>
                         </div>
                         {addControl(product)}
@@ -247,13 +299,13 @@ export default function MerchantDetail() {
                         <ProductPhoto product={cheapest} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-brand-dark">{group.name}</p>
-                          <p className="text-xs text-brand-dark/60">
+                          <p className="text-xs text-muted">
                             À partir de <span className="font-semibold text-brand">{formatFCFA(cheapest.price)}</span> ·{' '}
                             {group.variants.length} variantes
                           </p>
                         </div>
                         <ChevronDown
-                          className={`h-4 w-4 text-brand-dark/50 transition-transform duration-300 ease-spring ${
+                          className={`h-4 w-4 text-muted transition-transform duration-300 ease-spring ${
                             isExpanded ? 'rotate-180' : ''
                           }`}
                           aria-hidden="true"
@@ -267,7 +319,7 @@ export default function MerchantDetail() {
                                 <p className="truncate text-sm font-medium text-brand-dark">
                                   {product.variantLabel || getProductDisplayName(product)}
                                 </p>
-                                <p className="text-xs text-brand-dark/60">
+                                <p className="text-xs text-muted">
                                   {formatFCFA(product.price)} / {product.unit}
                                 </p>
                               </div>

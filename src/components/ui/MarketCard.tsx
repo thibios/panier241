@@ -10,7 +10,7 @@ export default function MarketCard({ market, className = 'w-40 shrink-0' }: { ma
   return (
     <Link
       to={`/marche/${market.id}`}
-      className={`flex flex-col overflow-hidden rounded-card border border-line bg-card shadow-card transition duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 ${className}`}
+      className={`flex flex-col overflow-hidden rounded-card border border-line bg-card shadow-card transition duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${className}`}
     >
       <div className="flex h-24 w-full items-center justify-center overflow-hidden bg-brand-light">
         <MarketVisual market={market} iconClassName="h-9 w-9 text-brand" />

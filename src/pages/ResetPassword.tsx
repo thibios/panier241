@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 
 const inputClass =
-  'w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50'
+  'w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand'
 
 /**
  * Écran d'arrivée du lien « mot de passe oublié » reçu par email. Le lien
@@ -57,7 +57,7 @@ export default function ResetPassword() {
           ) : !session ? (
             <Card className="space-y-3 text-center">
               <p className="text-sm font-medium text-brand-dark">Ce lien n'est plus valide.</p>
-              <p className="text-xs text-brand-dark/60">
+              <p className="text-xs text-muted">
                 Les liens de réinitialisation expirent et ne servent qu'une fois. Demande-en un nouveau depuis
                 l'écran de connexion.
               </p>
@@ -68,7 +68,7 @@ export default function ResetPassword() {
           ) : (
             <Card>
               <form onSubmit={handleSubmit} className="space-y-3">
-                <p className="text-xs text-brand-dark/60">Choisis un nouveau mot de passe d'au moins 6 caractères.</p>
+                <p className="text-xs text-muted">Choisis un nouveau mot de passe d'au moins 6 caractères.</p>
                 <input
                   type="password"
                   value={password}

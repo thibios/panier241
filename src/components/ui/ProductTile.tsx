@@ -31,7 +31,7 @@ export default function ProductTile({ product, merchant }: { product: Product; m
       <button
         type="button"
         onClick={() => navigate(`/marchand/${product.merchantId}`)}
-        className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+        className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
       >
         <ProductPhoto product={product} className="h-32 w-full !rounded-none" />
       </button>
@@ -47,7 +47,7 @@ export default function ProductTile({ product, merchant }: { product: Product; m
             type="button"
             onClick={handleAdd}
             aria-label={`Ajouter ${getProductDisplayName(product)} au panier`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-brand-dark transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-brand-dark transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <Plus className="h-4 w-4" strokeWidth={2.8} aria-hidden="true" />
           </button>

@@ -53,7 +53,7 @@ export default function BottomNav() {
               to={tab.to}
               end={tab.end}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 rounded-full py-1 transition-colors duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 ${
+                `flex flex-col items-center gap-0.5 rounded-full py-1 transition-colors duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
                   isActive ? 'text-brand' : 'text-muted'
                 }`
               }

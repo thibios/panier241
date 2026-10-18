@@ -8,7 +8,10 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth, isAdminEmail } from '../context/AuthContext'
 import type { ApprovalStatus } from '../types'
 import { useMarkets, type CustomMarketRow } from '../context/MarketsContext'
+import AdminOrders from '../components/admin/AdminOrders'
+import { translateDbError } from '../lib/orderEngine'
 import { ArrowLeft, Lock } from 'lucide-react'
+import CategoryAdmin from '../components/admin/CategoryAdmin'
 
 interface MerchantRow {
   id: string
@@ -31,6 +34,7 @@ export default function AdminSpace() {
   const [livreurs, setLivreurs] = useState<LivreurRow[]>([])
   const [loading, setLoading] = useState(false)
   const [proposedMarkets, setProposedMarkets] = useState<CustomMarketRow[]>([])
+  const [actionError, setActionError] = useState<string | null>(null)
   const { refresh: refreshMarkets } = useMarkets()
 
   async function fetchAll() {
@@ -50,18 +54,25 @@ export default function AdminSpace() {
     if (isAdminEmail(user?.email)) fetchAll()
   }, [user])
 
+  // Les refus de la base (ex. approbation d'un commerçant de démonstration) sont affichés tels quels.
   async function setMerchantStatus(id: string, status: ApprovalStatus) {
-    await supabase.from('merchants').update({ status }).eq('id', id)
+    setActionError(null)
+    const { error } = await supabase.from('merchants').update({ status }).eq('id', id)
+    if (error) setActionError(translateDbError(error))
     await fetchAll()
   }
 
   async function setMarketStatus(id: string, status: 'approved' | 'rejected') {
-    await supabase.from('custom_markets').update({ status }).eq('id', id)
+    setActionError(null)
+    const { error } = await supabase.from('custom_markets').update({ status }).eq('id', id)
+    if (error) setActionError(translateDbError(error))
     await Promise.all([fetchAll(), refreshMarkets()])
   }
 
   async function setLivreurStatus(id: string, status: ApprovalStatus) {
-    await supabase.from('livreurs').update({ status }).eq('id', id)
+    setActionError(null)
+    const { error } = await supabase.from('livreurs').update({ status }).eq('id', id)
+    if (error) setActionError(translateDbError(error))
     await fetchAll()
   }
 
@@ -97,6 +108,12 @@ export default function AdminSpace() {
           </button>
         </div>
 
+        {actionError && (
+          <p role="alert" className="text-xs font-semibold text-danger">
+            {actionError}
+          </p>
+        )}
+
         <section>
           <h2 className="mb-2 text-sm font-semibold text-brand-dark">
             Marchands en attente {pendingMerchants.length > 0 && `(${pendingMerchants.length})`}
@@ -106,7 +123,7 @@ export default function AdminSpace() {
               {pendingMerchants.map((m) => (
                 <Card key={m.id} className="space-y-2">
                   <p className="text-sm font-semibold text-brand-dark">{m.name}</p>
-                  <p className="text-xs text-brand-dark/50">{m.address}</p>
+                  <p className="text-xs text-muted">{m.address}</p>
                   <div className="flex gap-2">
                     <Button onClick={() => setMerchantStatus(m.id, 'approved')}>Approuver</Button>
                     <Button variant="secondary" onClick={() => setMerchantStatus(m.id, 'rejected')}>
@@ -117,7 +134,7 @@ export default function AdminSpace() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-sm text-brand-dark/50">Aucune demande en attente.</p>
+            <p className="text-center text-sm text-muted">Aucune demande en attente.</p>
           )}
         </section>
 
@@ -133,7 +150,7 @@ export default function AdminSpace() {
                     {(m.logo_url ?? m.photo_url) && <img src={(m.logo_url ?? m.photo_url) as string} alt={`Logo ${m.name}`} className="h-12 w-12 rounded-xl bg-white object-contain" />}
                     <div>
                       <p className="text-sm font-semibold text-brand-dark">{m.name}</p>
-                      <p className="text-xs text-brand-dark/50">
+                      <p className="text-xs text-muted">
                         {m.kind === 'supermarche' ? 'Magasin / enseigne' : m.market_type ?? 'Marché'} · {m.neighborhood}, {m.city}
                         {m.address ? ` · ${m.address}` : ''}
                       </p>
@@ -149,7 +166,7 @@ export default function AdminSpace() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-sm text-brand-dark/50">Aucun marché proposé.</p>
+            <p className="text-center text-sm text-muted">Aucun marché proposé.</p>
           )}
         </section>
 
@@ -162,7 +179,7 @@ export default function AdminSpace() {
               {pendingLivreurs.map((l) => (
                 <Card key={l.id} className="space-y-2">
                   <p className="text-sm font-semibold text-brand-dark">{l.name}</p>
-                  <p className="text-xs text-brand-dark/50">{l.phone} · {l.vehicle}</p>
+                  <p className="text-xs text-muted">{l.phone} · {l.vehicle}</p>
                   <div className="flex gap-2">
                     <Button onClick={() => setLivreurStatus(l.id, 'approved')}>Approuver</Button>
                     <Button variant="secondary" onClick={() => setLivreurStatus(l.id, 'rejected')}>
@@ -173,7 +190,7 @@ export default function AdminSpace() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-sm text-brand-dark/50">Aucune demande en attente.</p>
+            <p className="text-center text-sm text-muted">Aucune demande en attente.</p>
           )}
         </section>
 
@@ -186,7 +203,7 @@ export default function AdminSpace() {
               <Card key={m.id} className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-sm font-semibold text-brand-dark">{m.name}</p>
-                  <p className="text-xs text-brand-dark/50">{m.address}</p>
+                  <p className="text-xs text-muted">{m.address}</p>
                 </div>
                 <Button variant="secondary" onClick={() => setMerchantStatus(m.id, 'suspended')}>
                   Suspendre
@@ -205,7 +222,7 @@ export default function AdminSpace() {
               <Card key={l.id} className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-sm font-semibold text-brand-dark">{l.name}</p>
-                  <p className="text-xs text-brand-dark/50">{l.phone} · {l.vehicle}</p>
+                  <p className="text-xs text-muted">{l.phone} · {l.vehicle}</p>
                 </div>
                 <Button variant="secondary" onClick={() => setLivreurStatus(l.id, 'suspended')}>
                   Suspendre
@@ -214,6 +231,13 @@ export default function AdminSpace() {
             ))}
           </div>
         </section>
+
+        <AdminOrders
+          merchants={merchants.map((m) => ({ id: m.id, name: m.name }))}
+          livreurs={livreurs.map((l) => ({ id: l.id, name: l.name }))}
+        />
+
+        <CategoryAdmin />
       </div>
     </PageShell>
   )

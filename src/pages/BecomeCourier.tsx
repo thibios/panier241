@@ -11,7 +11,7 @@ import { ArrowLeft } from 'lucide-react'
 const vehicles = ['Moto', 'Vélo', 'Voiture', 'À pied']
 
 const inputClass =
-  'w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none'
+  'w-full rounded-2xl bg-brand-light px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted focus:outline-none'
 
 export default function BecomeCourier() {
   const navigate = useNavigate()

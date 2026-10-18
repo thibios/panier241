@@ -231,11 +231,11 @@ export default function Profile() {
         <div className="grid grid-cols-2 gap-3">
           <Card className="text-center">
             <p className="text-lg font-bold text-brand-dark">{orders.length}</p>
-            <p className="mt-0.5 text-[11px] text-brand-dark/50">Commandes</p>
+            <p className="mt-0.5 text-[11px] text-muted">Commandes</p>
           </Card>
           <Card className="text-center">
             <p className="text-lg font-bold text-brand-dark">{favoriteIds.length}</p>
-            <p className="mt-0.5 text-[11px] text-brand-dark/50">Favoris</p>
+            <p className="mt-0.5 text-[11px] text-muted">Favoris</p>
           </Card>
         </div>
 
@@ -263,7 +263,7 @@ export default function Profile() {
                   value={phoneDraft}
                   onChange={(e) => setPhoneDraft(e.target.value)}
                   placeholder="Numéro WhatsApp ou d'appel (ex: +241 074 12 34 56)"
-                  className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
+                  className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-muted focus:outline-none"
                 />
                 <div className="flex gap-2">
                   <Button fullWidth disabled={!phoneDraft.trim() || isSavingPhone} onClick={handleSavePhone}>
@@ -272,7 +272,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setIsEditingPhone(false)}
-                    className="shrink-0 px-3 text-xs font-semibold text-brand-dark/50"
+                    className="shrink-0 px-3 text-xs font-semibold text-muted"
                   >
                     Annuler
                   </button>
@@ -280,7 +280,7 @@ export default function Profile() {
               </>
             ) : (
               <div>
-                <p className="text-xs text-brand-dark/50">Numéro WhatsApp ou d'appel</p>
+                <p className="text-xs text-muted">Numéro WhatsApp ou d'appel</p>
                 <p className="text-sm font-medium text-brand-dark">
                   {profile?.phone || "Ajoute ton numéro pour qu'on puisse te joindre"}
                 </p>
@@ -308,21 +308,21 @@ export default function Profile() {
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="Nom (ex: Domicile, Bureau...)"
-                className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
+                className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-muted focus:outline-none"
               />
               <input
                 type="text"
                 value={fullAddress}
                 onChange={(e) => setFullAddress(e.target.value)}
                 placeholder="Adresse complète"
-                className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
+                className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-muted focus:outline-none"
               />
               <input
                 type="text"
                 value={neighborhood}
                 onChange={(e) => setNeighborhood(e.target.value)}
                 placeholder="Quartier (ex: Louis, Nzeng-Ayong...)"
-                className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none"
+                className="w-full rounded-2xl bg-brand-light px-3 py-2 text-sm text-brand-dark placeholder:text-muted focus:outline-none"
               />
               <button
                 type="button"
@@ -361,8 +361,8 @@ export default function Profile() {
                       </span>
                     )}
                   </div>
-                  <p className="truncate text-xs text-brand-dark/50">{addr.fullAddress}</p>
-                  <p className="text-xs text-brand-dark/50">
+                  <p className="truncate text-xs text-muted">{addr.fullAddress}</p>
+                  <p className="text-xs text-muted">
                     {addr.neighborhood}, {addr.city}
                   </p>
                 </div>
@@ -382,7 +382,7 @@ export default function Profile() {
                 })()}
                 <div>
                   <p className="text-sm font-medium text-brand-dark">{pm.label}</p>
-                  <p className="text-xs text-brand-dark/50">{pm.detail}</p>
+                  <p className="text-xs text-muted">{pm.detail}</p>
                 </div>
               </Card>
             ))}

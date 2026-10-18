@@ -15,7 +15,7 @@ const MARKET_TYPES = [
 ]
 
 const field =
-  'w-full rounded-card border border-line bg-white px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+  'w-full rounded-card border border-line-strong bg-white px-3 py-2.5 text-sm text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand'
 
 /** Carte « + » de la rangée des marchés : ouvre un formulaire pour ajouter un marché de proximité réel. */
 export default function AddMarketCard({ kind = 'marche' }: { kind?: 'marche' | 'supermarche' }) {
@@ -80,7 +80,7 @@ export default function AddMarketCard({ kind = 'marche' }: { kind?: 'marche' | '
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex min-h-[11rem] w-40 shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-brand/40 bg-card p-3 text-brand transition hover:border-brand active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+        className="flex min-h-[11rem] w-40 shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-brand/40 bg-card p-3 text-brand transition hover:border-brand active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
       >
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-brand-dark">
           <Plus className="h-6 w-6" strokeWidth={2.6} aria-hidden="true" />
@@ -157,7 +157,7 @@ export default function AddMarketCard({ kind = 'marche' }: { kind?: 'marche' | '
                     </div>
                     <div>
                       <p className="mb-1 block text-xs font-semibold text-brand-dark">Photo du marché (facultatif)</p>
-                      <label className="flex cursor-pointer items-center gap-3 rounded-card border border-dashed border-line bg-white p-3">
+                      <label className="flex cursor-pointer items-center gap-3 rounded-card border border-dashed border-line-strong bg-white p-3">
                         <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-light">
                           {photoPreview ? <img src={photoPreview} alt="" className="h-full w-full object-cover" /> : <Camera className="h-5 w-5 text-brand" aria-hidden="true" />}
                         </span>
@@ -180,7 +180,7 @@ export default function AddMarketCard({ kind = 'marche' }: { kind?: 'marche' | '
                 {isStore && (
                   <div>
                     <p className="mb-1 block text-xs font-semibold text-brand-dark">Logo (obligatoire)</p>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-card border border-dashed border-line bg-white p-3">
+                    <label className="flex cursor-pointer items-center gap-3 rounded-card border border-dashed border-line-strong bg-white p-3">
                       <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-light">
                         {logoPreview ? <img src={logoPreview} alt="" className="h-full w-full object-contain" /> : <Plus className="h-5 w-5 text-brand" aria-hidden="true" />}
                       </span>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Store, Trash2, MapPin, Clock, Smartphone, Banknote, MessageCircle, Info, Video, ShoppingBasket } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
@@ -15,7 +15,8 @@ import { buildWhatsAppLink } from '../lib/whatsapp'
 import { getProductDisplayName } from '../lib/productDisplay'
 import { markets } from '../data/markets'
 import { paymentMethods } from '../data/addresses'
-import type { Order, OrderItem } from '../types'
+import { newRequestId, paymentCodeFromId } from '../lib/orderEngine'
+import type { OrderItem } from '../types'
 
 const sectionTitle = 'mb-3 font-display text-lg font-bold text-brand-dark'
 const card = 'rounded-card border border-line bg-card shadow-card'
@@ -33,13 +34,15 @@ export default function Cart() {
     removeItem,
     clearCart,
     itemCount,
+    fulfillmentMode,
     subtotal,
     serviceFee,
     deliveryFee,
     distanceKm,
     total,
+    deposit,
   } = useCart()
-  const { addOrder } = useOrders()
+  const { placeOrder } = useOrders()
   const { addresses } = useAddresses()
   const { merchants, products } = useCatalog()
   const { user } = useAuth()
@@ -50,6 +53,15 @@ export default function Cart() {
   const payment = paymentMethods.find((p) => p.id === paymentMethodId) ?? paymentMethods[0]
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [landmark, setLandmark] = useState('')
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const isPickup = fulfillmentMode === 'retrait'
+  // Identifiant de la tentative en cours : réutilisé si l'envoi est relancé après une coupure réseau
+  // (la base renvoie alors la même commande), renouvelé dès que le contenu de la commande change.
+  const requestIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    requestIdRef.current = null
+  }, [items, selectedSlot, selectedAddressId, paymentMethodId, landmark])
 
   if (items.length === 0) {
     return (
@@ -96,52 +108,82 @@ export default function Cart() {
     ...orderItemsPreview.map((i) => `• ${i.quantity} × ${i.productName} (${i.unit})`),
     '',
     selectedSlot ? `Créneau : ${selectedSlot.dayLabel} · ${selectedSlot.periodLabel} (${selectedSlot.timeRange})` : '',
-    selectedAddress ? `Adresse : ${selectedAddress.label} · ${selectedAddress.neighborhood}, ${selectedAddress.city}` : '',
+    isPickup
+      ? 'Retrait sur stand'
+      : selectedAddress
+        ? `Adresse : ${selectedAddress.label} · ${selectedAddress.neighborhood}, ${selectedAddress.city}`
+        : '',
+    !isPickup && landmark.trim() ? `Repère : ${landmark.trim()}` : '',
     `Paiement : ${payment.label} (à la réception)`,
     `Total estimé : ${formatFCFA(total)}`,
+    deposit > 0 ? `Acompte estimé : ${formatFCFA(deposit)}` : '',
   ]
     .filter(Boolean)
     .join('\n')
 
+  const missingAddress = !isPickup && !selectedAddress
+  const canSubmit = Boolean(selectedSlot) && !missingAddress && !isSubmitting
+
   async function handleSubmit() {
-    if (!merchant || !selectedSlot) return
+    if (!merchant || !selectedSlot || !user) return
+    if (missingAddress) {
+      setSubmitError('Ajoutez une adresse de livraison, ou choisissez un retrait sur stand.')
+      return
+    }
+    setSubmitError(null)
+    setIsSubmitting(true)
+
+    const { data: profileData } = await supabase.from('profiles').select('phone').eq('id', user.id).single()
+    const phone = (profileData?.phone ?? '').trim()
+    if (!phone) {
+      setIsSubmitting(false)
+      setSubmitError('Ajoutez votre numéro de téléphone dans votre profil pour que la commande puisse vous joindre.')
+      return
+    }
 
     let shoppingVideoUrl: string | null = null
-    if (videoFile && user) {
+    if (videoFile) {
       const path = `${user.id}/${Date.now()}-${videoFile.name}`
       const { error: uploadError } = await supabase.storage.from('shopping-videos').upload(path, videoFile)
-      if (!uploadError) {
-        const { data: publicUrlData } = supabase.storage.from('shopping-videos').getPublicUrl(path)
-        shoppingVideoUrl = publicUrlData.publicUrl
+      if (uploadError) {
+        setIsSubmitting(false)
+        setSubmitError("La vidéo n'a pas pu être envoyée. Réessayez, ou retirez-la pour commander sans vidéo.")
+        return
       }
+      const { data: publicUrlData } = supabase.storage.from('shopping-videos').getPublicUrl(path)
+      shoppingVideoUrl = publicUrlData.publicUrl
     }
 
-    const order: Order = {
-      id: `ord-${Date.now()}`,
+    if (!requestIdRef.current) requestIdRef.current = newRequestId()
+
+    const result = await placeOrder({
+      requestId: requestIdRef.current,
       merchantId: merchant.id,
-      merchantName: merchant.name,
-      items: orderItemsPreview,
-      subtotal,
-      serviceFee,
-      deliveryFee,
-      distanceKm,
-      total,
-      status: 'en_preparation',
-      createdAt: new Date().toISOString(),
+      items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+      mode: fulfillmentMode,
       slotLabel: `${selectedSlot.dayLabel} · ${selectedSlot.periodLabel} (${selectedSlot.timeRange})`,
-      addressLabel: selectedAddress
-        ? `${selectedAddress.label} · ${selectedAddress.neighborhood}, ${selectedAddress.city}`
-        : '',
-      livreurId: null,
-      livreurName: null,
-      livreurPhone: null,
+      phone,
+      paymentMethod: paymentCodeFromId(payment.id),
+      address:
+        !isPickup && selectedAddress
+          ? `${selectedAddress.fullAddress}, ${selectedAddress.neighborhood}, ${selectedAddress.city}`
+          : null,
+      lat: !isPickup ? selectedAddress?.lat ?? null : null,
+      lng: !isPickup ? selectedAddress?.lng ?? null : null,
+      landmark: !isPickup ? landmark.trim() || null : null,
+      addressLabel:
+        !isPickup && selectedAddress
+          ? `${selectedAddress.label} · ${selectedAddress.neighborhood}, ${selectedAddress.city}`
+          : null,
       shoppingVideoUrl,
-      clientPhone: null,
-    }
-
-    setIsSubmitting(true)
-    await addOrder(order)
+    })
     setIsSubmitting(false)
+
+    if (result.error !== null) {
+      setSubmitError(result.error)
+      return
+    }
+    requestIdRef.current = null
     clearCart()
     navigate('/commandes')
   }
@@ -201,6 +243,23 @@ export default function Cart() {
           </div>
         </section>
 
+        {isPickup ? (
+          <section className="mt-6 px-5">
+            <h2 className={sectionTitle}>Retrait sur stand</h2>
+            <div className={`${card} flex items-start gap-3 p-4`}>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-light">
+                <Store className="h-5 w-5 text-brand" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-brand-dark">{merchant?.name}</p>
+                <p className="mt-0.5 text-xs text-muted">{merchant?.address}</p>
+                <p className="mt-1 text-xs text-muted">
+                  Aucune livraison : vous récupérez la commande sur place quand le commerçant la signale prête.
+                </p>
+              </div>
+            </div>
+          </section>
+        ) : (
         <section className="mt-6 px-5">
           <h2 className={sectionTitle}>Adresse de livraison</h2>
           <div className={`${card} flex items-start gap-3 p-4`}>
@@ -221,10 +280,25 @@ export default function Cart() {
               {selectedAddress ? 'Modifier' : 'Ajouter'}
             </Link>
           </div>
+          {selectedAddress && selectedAddress.lat == null && (
+            <p className="mt-2 text-xs text-muted">Adresse sans position GPS : forfait de livraison appliqué.</p>
+          )}
+          <label className="mt-3 block">
+            <span className="text-xs font-semibold text-brand-dark">Point de repère (optionnel)</span>
+            <input
+              type="text"
+              value={landmark}
+              maxLength={200}
+              onChange={(e) => setLandmark(e.target.value)}
+              placeholder="Ex. : portail bleu, face à la pharmacie"
+              className="mt-1 h-11 w-full rounded-card border border-line-strong bg-white px-3 text-sm text-brand-dark placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            />
+          </label>
         </section>
+        )}
 
         <section className="mt-6 px-5">
-          <h2 className={sectionTitle}>Créneau de livraison</h2>
+          <h2 className={sectionTitle}>Créneau : livraison ou retrait sur stand</h2>
           <Link
             to="/creneau"
             className={`flex items-center gap-3 rounded-card bg-card p-4 ${
@@ -233,7 +307,7 @@ export default function Cart() {
           >
             <span
               className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                selectedSlot ? 'border-brand' : 'border-line'
+                selectedSlot ? 'border-brand' : 'border-line-strong'
               }`}
             >
               {selectedSlot && <span className="h-2.5 w-2.5 rounded-full bg-brand" />}
@@ -282,7 +356,11 @@ export default function Cart() {
               )
             })}
           </div>
-          <p className="mt-2 text-xs text-muted">Réglé au livreur à la réception. Aucun paiement en ligne.</p>
+          <p className="mt-2 text-xs text-muted">
+            {isPickup
+              ? 'Réglé au commerçant au moment du retrait. Aucun paiement en ligne.'
+              : 'Réglé au livreur à la réception. Aucun paiement en ligne.'}
+          </p>
         </section>
 
         <section className="mt-6 px-5">
@@ -330,21 +408,43 @@ export default function Cart() {
               <span className="tabular-nums">{formatFCFA(serviceFee)}</span>
             </div>
             <div className="flex justify-between text-muted">
-              <span>Livraison{distanceKm != null ? ` (${distanceKm.toFixed(1)} km)` : ''}</span>
+              <span>
+                {isPickup
+                  ? 'Retrait sur stand'
+                  : `Livraison${distanceKm != null ? ` (${distanceKm.toFixed(1)} km)` : ' (forfait sans GPS)'}`}
+              </span>
               <span className="tabular-nums">{formatFCFA(deliveryFee)}</span>
             </div>
             <div className="mt-1 flex justify-between border-t border-line pt-1 font-display text-lg font-bold text-brand-dark">
-              <span>Total</span>
+              <span>Total estimé</span>
               <span className="tabular-nums">{formatFCFA(total)}</span>
             </div>
+            {deposit > 0 && (
+              <div className="flex justify-between text-xs text-brand-dark">
+                <span>Dont acompte à régler au commerçant (5 % du total)</span>
+                <span className="tabular-nums">{formatFCFA(deposit)}</span>
+              </div>
+            )}
+            <p className="text-[11px] text-muted">Le montant définitif est calculé à la validation de la commande.</p>
           </div>
+          {submitError && (
+            <p role="alert" className="mt-2 text-xs font-semibold text-danger">
+              {submitError}
+            </p>
+          )}
           <button
             type="button"
-            disabled={!selectedSlot || isSubmitting}
+            disabled={!canSubmit}
             onClick={handleSubmit}
             className="mt-3 h-12 w-full rounded-full bg-brand text-sm font-semibold text-on-header transition active:scale-[0.98] disabled:opacity-50"
           >
-            {isSubmitting ? 'Envoi de la commande…' : selectedSlot ? 'Passer la commande' : 'Choisissez un créneau'}
+            {isSubmitting
+              ? 'Envoi de la commande…'
+              : !selectedSlot
+                ? 'Choisissez un créneau'
+                : missingAddress
+                  ? 'Ajoutez une adresse'
+                  : 'Passer la commande'}
           </button>
           {merchant?.phone && (
             <a

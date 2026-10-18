@@ -1,5 +1,5 @@
 import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from 'react'
-import type { ApprovalStatus, CategoryId, Merchant, Product } from '../types'
+import type { ApprovalStatus, AttributeValue, CategoryId, Merchant, Product } from '../types'
 import { supabase } from '../lib/supabaseClient'
 
 interface CatalogContextValue {
@@ -41,6 +41,19 @@ interface ProductRow {
   image_url: string | null
   variant_label: string | null
   product_type: string | null
+  /** Colonnes de 023 : absentes tant que la migration n'est pas appliquée. */
+  subcategory_id?: string | null
+  attributes?: Record<string, AttributeValue> | null
+}
+
+const PRODUCT_COLUMNS_LEGACY = 'id, merchant_id, name, category, price, unit, image_url, variant_label, product_type'
+const PRODUCT_COLUMNS = `${PRODUCT_COLUMNS_LEGACY}, subcategory_id, attributes`
+
+/** Lit les produits avec les colonnes de 023 ; si elles n'existent pas encore (code 42703), relit sans elles. */
+async function fetchProducts() {
+  const res = await supabase.from('products').select(PRODUCT_COLUMNS)
+  if (res.error?.code === '42703') return supabase.from('products').select(PRODUCT_COLUMNS_LEGACY)
+  return res
 }
 
 function merchantFromRow(row: MerchantRow): Merchant {
@@ -73,6 +86,8 @@ function productFromRow(row: ProductRow): Product {
     imageUrl: row.image_url,
     variantLabel: row.variant_label,
     productType: row.product_type,
+    subcategoryId: row.subcategory_id ?? null,
+    attributes: row.attributes ?? {},
   }
 }
 
@@ -89,14 +104,14 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         .from('merchants')
         .select('id, owner_id, name, market_id, categories, rating, review_count, address, banner_color, kiosk_photo_url, status, phone, business_type, neighborhood')
         .eq('status', 'approved'),
-      supabase.from('products').select('id, merchant_id, name, category, price, unit, image_url, variant_label, product_type'),
+      fetchProducts(),
     ])
     setError(Boolean(merchantsRes.error || productsRes.error))
     if (merchantsRes.data) {
       const approvedMerchants = merchantsRes.data.map(merchantFromRow)
       setMerchants(approvedMerchants)
       const approvedIds = new Set(approvedMerchants.map((m) => m.id))
-      if (productsRes.data) setProducts(productsRes.data.filter((p) => approvedIds.has(p.merchant_id)).map(productFromRow))
+      if (productsRes.data) setProducts((productsRes.data as ProductRow[]).filter((p) => approvedIds.has(p.merchant_id)).map(productFromRow))
     }
     setLoading(false)
   }, [])

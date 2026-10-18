@@ -4,83 +4,103 @@ import PageShell from '../components/layout/PageShell'
 import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
+import StatusBadge from '../components/ui/StatusBadge'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
-import { useCatalog } from '../context/CatalogContext'
 import { markets } from '../data/markets'
 import { formatFCFA } from '../lib/format'
-import type { Livreur, Order } from '../types'
-import { ArrowLeft, Bike, Hourglass, Ban, MapPin, Clock, Phone, Check } from 'lucide-react'
+import {
+  ORDER_COLUMNS,
+  PAYMENT_METHOD_LABELS,
+  orderFromRow,
+  translateDbError,
+  type OrderRow,
+} from '../lib/orderEngine'
+import type { Livreur, Order, OrderDeliveryDetails, OrderStatus, PaymentMethodCode } from '../types'
+import { ArrowLeft, Bike, Hourglass, Ban, MapPin, Clock, Phone, Check, Navigation, Store } from 'lucide-react'
 
 type Tab = 'disponibles' | 'mes_livraisons'
 
-interface OrderRow {
-  id: string
-  merchant_id: string
-  merchant_name: string
-  items: Order['items']
-  subtotal: number
-  service_fee: number
-  delivery_fee: number
-  distance_km: number | null
-  total: number
-  status: Order['status']
-  slot_label: string
-  address_label: string
-  created_at: string
-  livreur_id: string | null
-  livreur_name: string | null
-  livreur_phone: string | null
-  shopping_video_url: string | null
-  client_phone: string | null
+/** Course proposée (list_available_deliveries) : ni téléphone ni adresse complète du client. */
+interface AvailableDelivery {
+  orderId: string
+  merchantName: string
+  marketId: string | null
+  pickupAddress: string | null
+  deliveryArea: string
+  distanceKm: number | null
+  courierGain: number
+  amountToCollect: number
+  paymentMethod: PaymentMethodCode | null
+  slotLabel: string
+  itemCount: number
+  createdAt: string
 }
 
-const ORDER_COLUMNS =
-  'id, merchant_id, merchant_name, items, subtotal, service_fee, delivery_fee, distance_km, total, status, slot_label, address_label, created_at, livreur_id, livreur_name, livreur_phone, shopping_video_url, client_phone'
+interface AvailableDeliveryRow {
+  order_id: string
+  merchant_name: string
+  market_id: string | null
+  pickup_address: string | null
+  delivery_area: string
+  distance_km: number | null
+  courier_gain: number
+  amount_to_collect: number
+  payment_method: PaymentMethodCode | null
+  slot_label: string
+  item_count: number
+  created_at: string
+}
 
-function orderFromRow(row: OrderRow): Order {
-  return {
-    id: row.id,
-    merchantId: row.merchant_id,
-    merchantName: row.merchant_name,
-    items: row.items,
-    subtotal: row.subtotal,
-    serviceFee: row.service_fee,
-    deliveryFee: row.delivery_fee,
-    distanceKm: row.distance_km,
-    total: row.total,
-    status: row.status,
-    createdAt: row.created_at,
-    slotLabel: row.slot_label,
-    addressLabel: row.address_label,
-    livreurId: row.livreur_id,
-    livreurName: row.livreur_name,
-    livreurPhone: row.livreur_phone,
-    shoppingVideoUrl: row.shopping_video_url,
-    clientPhone: row.client_phone,
-  }
+/** Course terminée ou en cours, vue dans l'historique (list_my_deliveries) : sans données du client. */
+interface PastDelivery {
+  orderId: string
+  merchantName: string
+  deliveryArea: string
+  status: OrderStatus
+  courierGain: number
+  total: number
+  paymentMethod: PaymentMethodCode | null
+  paymentStatus: 'du' | 'encaisse' | null
+  slotLabel: string
+  createdAt: string
+}
+
+interface PastDeliveryRow {
+  order_id: string
+  merchant_name: string
+  delivery_area: string
+  status: OrderStatus
+  courier_gain: number
+  total: number
+  payment_method: PaymentMethodCode | null
+  payment_status: 'du' | 'encaisse' | null
+  slot_label: string
+  created_at: string
+}
+
+function mapsLink(lat: number, lng: number) {
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
 }
 
 export default function CourierSpace() {
   const { user } = useAuth()
-  const { merchants } = useCatalog()
 
   const [myLivreur, setMyLivreur] = useState<Livreur | null | undefined>(undefined)
   const [tab, setTab] = useState<Tab>('disponibles')
   const [marketFilter, setMarketFilter] = useState<string>('all')
 
-  const [availableOrders, setAvailableOrders] = useState<Order[]>([])
-  const [myDeliveries, setMyDeliveries] = useState<Order[]>([])
+  const [available, setAvailable] = useState<AvailableDelivery[]>([])
+  const [missions, setMissions] = useState<Order[]>([])
+  const [details, setDetails] = useState<Record<string, OrderDeliveryDetails>>({})
+  const [history, setHistory] = useState<PastDelivery[]>([])
   const [loading, setLoading] = useState(false)
-  const [viewingOrder, setViewingOrder] = useState<Order | null>(null)
-  const [isAccepting, setIsAccepting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [viewing, setViewing] = useState<AvailableDelivery | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
 
-  function marketIdForOrder(order: Order) {
-    return merchants.find((m) => m.id === order.merchantId)?.marketId
-  }
-
-  const filteredAvailableOrders =
-    marketFilter === 'all' ? availableOrders : availableOrders.filter((o) => marketIdForOrder(o) === marketFilter)
+  const filteredAvailable =
+    marketFilter === 'all' ? available : available.filter((o) => o.marketId === marketFilter)
 
   useEffect(() => {
     if (!user) return
@@ -106,42 +126,137 @@ export default function CourierSpace() {
   }, [user])
 
   async function fetchOrders() {
+    if (!myLivreur) return
     setLoading(true)
-    const [availableRes, mineRes] = await Promise.all([
-      supabase.from('orders').select(ORDER_COLUMNS).eq('status', 'en_livraison').is('livreur_id', null),
-      supabase.from('orders').select(ORDER_COLUMNS).not('livreur_id', 'is', null).order('created_at', { ascending: false }),
+    const [availableRes, missionsRes, historyRes] = await Promise.all([
+      supabase.rpc('list_available_deliveries'),
+      // La base ne laisse lire au livreur que sa course en cours (téléphone et adresse compris).
+      supabase.from('orders').select(ORDER_COLUMNS).eq('livreur_id', myLivreur.id).eq('status', 'en_livraison'),
+      supabase.rpc('list_my_deliveries'),
     ])
-    if (availableRes.data) setAvailableOrders(availableRes.data.map(orderFromRow))
-    if (mineRes.data) setMyDeliveries(mineRes.data.map(orderFromRow))
+    const firstError = availableRes.error ?? missionsRes.error ?? historyRes.error
+    setError(firstError ? translateDbError(firstError) : null)
+
+    if (availableRes.data) {
+      setAvailable(
+        (availableRes.data as AvailableDeliveryRow[]).map((r) => ({
+          orderId: r.order_id,
+          merchantName: r.merchant_name,
+          marketId: r.market_id,
+          pickupAddress: r.pickup_address,
+          deliveryArea: r.delivery_area,
+          distanceKm: r.distance_km,
+          courierGain: r.courier_gain,
+          amountToCollect: r.amount_to_collect,
+          paymentMethod: r.payment_method,
+          slotLabel: r.slot_label,
+          itemCount: r.item_count,
+          createdAt: r.created_at,
+        })),
+      )
+    }
+    const currentMissions = missionsRes.data ? (missionsRes.data as unknown as OrderRow[]).map(orderFromRow) : []
+    setMissions(currentMissions)
+    if (historyRes.data) {
+      setHistory(
+        (historyRes.data as PastDeliveryRow[])
+          .filter((r) => r.status !== 'en_livraison')
+          .map((r) => ({
+            orderId: r.order_id,
+            merchantName: r.merchant_name,
+            deliveryArea: r.delivery_area,
+            status: r.status,
+            courierGain: r.courier_gain,
+            total: r.total,
+            paymentMethod: r.payment_method,
+            paymentStatus: r.payment_status,
+            slotLabel: r.slot_label,
+            createdAt: r.created_at,
+          })),
+      )
+    }
+
+    if (currentMissions.length > 0) {
+      const { data: detailRows } = await supabase
+        .from('order_delivery_details')
+        .select('order_id, full_address, landmark, lat, lng')
+        .in(
+          'order_id',
+          currentMissions.map((m) => m.id),
+        )
+      const next: Record<string, OrderDeliveryDetails> = {}
+      for (const d of detailRows ?? []) {
+        next[d.order_id] = {
+          orderId: d.order_id,
+          fullAddress: d.full_address,
+          landmark: d.landmark,
+          lat: d.lat,
+          lng: d.lng,
+        }
+      }
+      setDetails(next)
+    } else {
+      setDetails({})
+    }
     setLoading(false)
   }
 
   useEffect(() => {
     if (myLivreur && myLivreur.status === 'approved') fetchOrders()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myLivreur])
 
   async function acceptDelivery(orderId: string) {
-    if (!myLivreur) return
-    setIsAccepting(true)
-    await supabase
-      .from('orders')
-      .update({ livreur_id: myLivreur.id, livreur_name: myLivreur.name, livreur_phone: myLivreur.phone })
-      .eq('id', orderId)
-    await fetchOrders()
-    setIsAccepting(false)
-    setViewingOrder(null)
+    setBusyId(orderId)
+    const { error: rpcError } = await supabase.rpc('set_order_status', {
+      p_order_id: orderId,
+      p_new_status: 'en_livraison',
+    })
+    setBusyId(null)
+    if (rpcError) {
+      // Course prise entre-temps par un autre livreur, ajustement en attente, compte suspendu...
+      setError(translateDbError(rpcError))
+      await fetchOrders()
+      return
+    }
+    setViewing(null)
     setTab('mes_livraisons')
+    await fetchOrders()
   }
 
   async function markDelivered(orderId: string) {
-    await supabase.from('orders').update({ status: 'livree' }).eq('id', orderId)
+    setBusyId(orderId)
+    const { error: rpcError } = await supabase.rpc('set_order_status', {
+      p_order_id: orderId,
+      p_new_status: 'livree',
+    })
+    setBusyId(null)
+    if (rpcError) {
+      setError(translateDbError(rpcError))
+      return
+    }
+    await fetchOrders()
+  }
+
+  async function recordPayment(orderId: string, method: PaymentMethodCode | null) {
+    setBusyId(orderId)
+    const { error: rpcError } = await supabase.rpc('record_payment', {
+      p_order_id: orderId,
+      p_part: 'solde',
+      p_method: method ?? 'especes',
+    })
+    setBusyId(null)
+    if (rpcError) {
+      setError(translateDbError(rpcError))
+      return
+    }
     await fetchOrders()
   }
 
   if (myLivreur === undefined) {
     return (
       <PageShell>
-        <div className="px-5 pt-8 text-center text-sm text-brand-dark/50">Chargement...</div>
+        <div className="px-5 pt-8 text-center text-sm text-muted">Chargement...</div>
       </PageShell>
     )
   }
@@ -155,7 +270,7 @@ export default function CourierSpace() {
         <div className="px-5 pt-8 text-center">
           <Bike className="mx-auto h-9 w-9 text-brand-dark/30" />
           <p className="mt-2 text-sm font-medium text-brand-dark">Tu n'as pas encore de profil livreur</p>
-          <p className="mt-1 text-xs text-brand-dark/50">
+          <p className="mt-1 text-xs text-muted">
             Crée ton profil pour accepter des livraisons sur Panier 241.
           </p>
           <Link to="/devenir-livreur" className="mt-4 inline-block">
@@ -181,7 +296,7 @@ export default function CourierSpace() {
           <p className="mt-2 text-sm font-medium text-brand-dark">
             {myLivreur.status === 'pending' ? 'En attente de validation' : 'Compte suspendu'}
           </p>
-          <p className="mt-1 text-xs text-brand-dark/50">{message}</p>
+          <p className="mt-1 text-xs text-muted">{message}</p>
         </div>
       </PageShell>
     )
@@ -202,59 +317,57 @@ export default function CourierSpace() {
       </WovenHeader>
 
       <div className="px-5 pt-5">
-        {viewingOrder ? (
+        {error && (
+          <p role="alert" className="mb-3 text-xs font-semibold text-danger">
+            {error}
+          </p>
+        )}
+        {viewing ? (
           <div className="space-y-3 pb-4">
-            <button
-              type="button"
-              onClick={() => setViewingOrder(null)}
-              className="text-xs font-semibold text-brand"
-            >
+            <button type="button" onClick={() => setViewing(null)} className="text-xs font-semibold text-brand">
               <ArrowLeft className="inline h-4 w-4" /> Retour
             </button>
 
             <Card className="space-y-3">
               <div>
-                <p className="text-xs font-semibold text-brand-dark/50">Marchand</p>
-                <p className="text-sm font-semibold text-brand-dark">{viewingOrder.merchantName}</p>
+                <p className="text-xs font-semibold text-muted">Lieu de retrait</p>
+                <p className="text-sm font-semibold text-brand-dark">{viewing.merchantName}</p>
+                {viewing.pickupAddress && <p className="text-xs text-muted">{viewing.pickupAddress}</p>}
               </div>
-
               <div className="border-t border-brand-light pt-2">
-                <p className="text-xs font-semibold text-brand-dark/50">Articles</p>
-                <ul className="mt-1 space-y-0.5 text-sm text-brand-dark/70">
-                  {viewingOrder.items.map((i) => (
-                    <li key={i.productId}>
-                      {i.quantity} {i.productName} ({i.unit})
-                    </li>
-                  ))}
-                </ul>
+                <p className="text-xs font-semibold text-muted">Zone de livraison</p>
+                <p className="text-sm text-brand-dark/70">
+                  <MapPin className="mr-1 inline h-3.5 w-3.5" />
+                  {viewing.deliveryArea}
+                  {viewing.distanceKm != null ? ` · ${viewing.distanceKm} km` : ''}
+                </p>
+                <p className="mt-1 text-sm text-brand-dark/70">
+                  <Clock className="mr-1 inline h-3.5 w-3.5" />
+                  {viewing.slotLabel}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  L'adresse complète, le point de repère et le téléphone du client s'affichent une fois la course acceptée.
+                </p>
               </div>
-
-              <div className="border-t border-brand-light pt-2">
-                <p className="text-xs font-semibold text-brand-dark/50">Adresse de livraison</p>
-                <p className="text-sm text-brand-dark/70"><MapPin className="mr-1 inline h-3.5 w-3.5" />{viewingOrder.addressLabel}</p>
-                <p className="mt-1 text-sm text-brand-dark/70"><Clock className="mr-1 inline h-3.5 w-3.5" />{viewingOrder.slotLabel}</p>
+              <div className="space-y-1 border-t border-brand-light pt-2 text-sm text-brand-dark">
+                <p>
+                  Votre gain : <span className="font-bold">{formatFCFA(viewing.courierGain)}</span>
+                </p>
+                <p>
+                  À encaisser auprès du client : <span className="font-bold">{formatFCFA(viewing.amountToCollect)}</span>
+                  {viewing.paymentMethod ? ` (${PAYMENT_METHOD_LABELS[viewing.paymentMethod]})` : ''}
+                </p>
+                <p className="text-xs text-muted">
+                  {viewing.itemCount} article{viewing.itemCount > 1 ? 's' : ''}
+                </p>
               </div>
-
-              <div className="border-t border-brand-light pt-2">
-                <p className="text-xs font-semibold text-brand-dark/50">Client</p>
-                {viewingOrder.clientPhone ? (
-                  <div className="mt-1 flex items-center justify-between">
-                    <span className="text-sm text-brand-dark/70">{viewingOrder.clientPhone}</span>
-                    <a href={`tel:${viewingOrder.clientPhone}`}>
-                      <Button variant="secondary"><Phone className="mr-1.5 inline h-4 w-4" />Appeler</Button>
-                    </a>
-                  </div>
-                ) : (
-                  <p className="text-sm text-brand-dark/40">Numéro non renseigné.</p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between border-t border-brand-light pt-2">
-                <span className="text-sm font-bold text-brand-dark">{formatFCFA(viewingOrder.total)}</span>
-                <Button disabled={isAccepting} onClick={() => acceptDelivery(viewingOrder.id)}>
-                  {isAccepting ? 'Acceptation...' : 'Accepter cette livraison'}
-                </Button>
-              </div>
+              <Button
+                fullWidth
+                disabled={busyId === viewing.orderId}
+                onClick={() => acceptDelivery(viewing.orderId)}
+              >
+                {busyId === viewing.orderId ? 'Acceptation...' : 'Accepter cette livraison'}
+              </Button>
             </Card>
           </div>
         ) : (
@@ -264,19 +377,19 @@ export default function CourierSpace() {
                 type="button"
                 onClick={() => setTab('disponibles')}
                 className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
-                  tab === 'disponibles' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
+                  tab === 'disponibles' ? 'bg-white text-brand shadow-card' : 'text-muted'
                 }`}
               >
-                Disponibles {availableOrders.length > 0 && `(${availableOrders.length})`}
+                Disponibles {available.length > 0 && `(${available.length})`}
               </button>
               <button
                 type="button"
                 onClick={() => setTab('mes_livraisons')}
                 className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
-                  tab === 'mes_livraisons' ? 'bg-white text-brand shadow-card' : 'text-brand-dark/60'
+                  tab === 'mes_livraisons' ? 'bg-white text-brand shadow-card' : 'text-muted'
                 }`}
               >
-                Mes livraisons {myDeliveries.length > 0 && `(${myDeliveries.length})`}
+                Mes livraisons {missions.length > 0 && `(${missions.length})`}
               </button>
             </div>
 
@@ -301,50 +414,143 @@ export default function CourierSpace() {
                   ))}
                 </select>
 
-                {filteredAvailableOrders.length > 0 ? (
-                  filteredAvailableOrders.map((order) => (
-                    <Card key={order.id} className="space-y-2">
+                {filteredAvailable.length > 0 ? (
+                  filteredAvailable.map((order) => (
+                    <Card key={order.orderId} className="space-y-2">
                       <p className="text-sm font-semibold text-brand-dark">{order.merchantName}</p>
-                      <p className="text-xs text-brand-dark/60">
-                        {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
+                      <p className="text-xs text-muted">
+                        <MapPin className="mr-1 inline h-3.5 w-3.5" />
+                        {order.deliveryArea}
+                        {order.distanceKm != null ? ` · ${order.distanceKm} km` : ''}
                       </p>
-                      <p className="text-xs text-brand-dark/50"><MapPin className="mr-1 inline h-3.5 w-3.5" />{order.addressLabel}</p>
-                      <p className="text-xs text-brand-dark/50"><Clock className="mr-1 inline h-3.5 w-3.5" />{order.slotLabel}</p>
+                      <p className="text-xs text-muted">
+                        <Clock className="mr-1 inline h-3.5 w-3.5" />
+                        {order.slotLabel}
+                      </p>
                       <div className="flex items-center justify-between border-t border-brand-light pt-2">
-                        <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
-                        <Button onClick={() => setViewingOrder(order)}>Voir le détail</Button>
+                        <span className="text-sm font-bold text-brand-dark">Gain {formatFCFA(order.courierGain)}</span>
+                        <Button onClick={() => setViewing(order)}>Voir le détail</Button>
                       </div>
                     </Card>
                   ))
                 ) : (
-                  <p className="text-center text-sm text-brand-dark/50">Aucune livraison disponible pour l'instant.</p>
+                  <p className="text-center text-sm text-muted">Aucune livraison disponible pour l'instant.</p>
                 )}
               </div>
             )}
 
             {tab === 'mes_livraisons' && (
               <div className="space-y-3 pb-4">
-                {myDeliveries.length > 0 ? (
-                  myDeliveries.map((order) => (
-                    <Card key={order.id} className="space-y-2">
-                      <p className="text-sm font-semibold text-brand-dark">{order.merchantName}</p>
-                      <p className="text-xs text-brand-dark/60">
-                        {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
-                      </p>
-                      <p className="text-xs text-brand-dark/50"><MapPin className="mr-1 inline h-3.5 w-3.5" />{order.addressLabel}</p>
-                      <div className="flex items-center justify-between border-t border-brand-light pt-2">
-                        <span className="text-sm font-bold text-brand-dark">{formatFCFA(order.total)}</span>
-                        {order.status === 'en_livraison' ? (
-                          <Button onClick={() => markDelivered(order.id)}>Marquer livrée</Button>
-                        ) : (
-                          <span className="text-xs font-semibold text-category-legumes">Livrée <Check className="inline h-3.5 w-3.5" /></span>
+                {missions.length > 0 ? (
+                  missions.map((order) => {
+                    const d = details[order.id]
+                    return (
+                      <Card key={order.id} className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-semibold text-brand-dark">{order.merchantName}</p>
+                          <StatusBadge status={order.status} />
+                        </div>
+                        <p className="text-xs text-muted">
+                          {order.items.map((i) => `${i.quantity} ${i.productName}`).join(', ')}
+                        </p>
+                        <div className="space-y-1 border-t border-brand-light pt-2 text-xs text-brand-dark/80">
+                          <p className="font-semibold text-muted">Adresse de livraison</p>
+                          <p>
+                            <MapPin className="mr-1 inline h-3.5 w-3.5" />
+                            {d?.fullAddress ?? order.addressLabel}
+                          </p>
+                          {d?.landmark && <p>Repère : {d.landmark}</p>}
+                          {d?.lat != null && d?.lng != null ? (
+                            <a
+                              href={mapsLink(d.lat, d.lng)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-brand"
+                            >
+                              <Navigation className="h-3.5 w-3.5" aria-hidden="true" />
+                              Ouvrir la position GPS dans une carte
+                            </a>
+                          ) : (
+                            <p className="text-muted">Pas de position GPS : appelez le client si besoin.</p>
+                          )}
+                        </div>
+                        {order.clientPhone && (
+                          <a href={`tel:${order.clientPhone}`} className="inline-block">
+                            <Button variant="secondary">
+                              <Phone className="mr-1.5 inline h-4 w-4" />
+                              Appeler le client
+                            </Button>
+                          </a>
                         )}
-                      </div>
-                    </Card>
-                  ))
+                        <div className="space-y-2 border-t border-brand-light pt-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-bold text-brand-dark">
+                              À encaisser {formatFCFA(order.total - (order.depositStatus === 'encaisse' ? order.depositAmount : 0))}
+                            </span>
+                            <Button disabled={busyId === order.id} onClick={() => markDelivered(order.id)}>
+                              Marquer livrée
+                            </Button>
+                          </div>
+                          {order.paymentStatus !== 'encaisse' ? (
+                            <button
+                              type="button"
+                              disabled={busyId === order.id}
+                              onClick={() => recordPayment(order.id, order.paymentMethod)}
+                              className="text-[11px] font-semibold text-brand"
+                            >
+                              Paiement reçu
+                              {order.paymentMethod ? ` (${PAYMENT_METHOD_LABELS[order.paymentMethod]})` : ''}
+                            </button>
+                          ) : (
+                            <p className="text-[11px] text-muted">Paiement reçu.</p>
+                          )}
+                        </div>
+                      </Card>
+                    )
+                  })
                 ) : (
-                  <p className="text-center text-sm text-brand-dark/50">Aucune livraison acceptée pour l'instant.</p>
+                  <p className="text-center text-sm text-muted">Aucune course en cours.</p>
                 )}
+
+                {history.length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Courses passées</p>
+                    {history.map((h) => (
+                      <Card key={h.orderId} className="space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-semibold text-brand-dark">
+                            <Store className="mr-1 inline h-3.5 w-3.5" />
+                            {h.merchantName}
+                          </p>
+                          {h.status === 'livree' ? (
+                            <span className="text-xs font-semibold text-category-legumes">
+                              Livrée <Check className="inline h-3.5 w-3.5" />
+                            </span>
+                          ) : (
+                            <StatusBadge status={h.status} />
+                          )}
+                        </div>
+                        <p className="text-xs text-muted">{h.deliveryArea}</p>
+                        <p className="text-xs text-brand-dark">
+                          Gain {formatFCFA(h.courierGain)} · Total {formatFCFA(h.total)}
+                        </p>
+                        {h.status === 'livree' && h.paymentStatus !== 'encaisse' && (
+                          <button
+                            type="button"
+                            disabled={busyId === h.orderId}
+                            onClick={() => recordPayment(h.orderId, h.paymentMethod)}
+                            className="text-[11px] font-semibold text-brand"
+                          >
+                            Déclarer le paiement reçu
+                          </button>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11px] text-muted">
+                  Une fois la course livrée, l'adresse et le téléphone du client ne sont plus affichés.
+                </p>
               </div>
             )}
           </>

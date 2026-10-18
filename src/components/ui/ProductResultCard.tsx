@@ -18,7 +18,7 @@ export default function ProductResultCard({
         <ProductPhoto product={product} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-brand-dark">{getProductDisplayName(product)}</p>
-          <p className="text-xs text-brand-dark/50">
+          <p className="text-xs text-muted">
             {formatFCFA(product.price)} / {product.unit}
           </p>
         </div>

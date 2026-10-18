@@ -1,7 +1,9 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { CategoryId } from '../../types'
-import { categories } from '../../data/categories'
+import { useTaxonomy } from '../../context/TaxonomyContext'
+import { useCatalog } from '../../context/CatalogContext'
+import { visibleFamilies } from '../../lib/catalogTaxonomy'
 import { usePexelsPhotos } from '../../context/PexelsContext'
 import { CategoryIcon } from './icons'
 
@@ -11,6 +13,13 @@ import { CategoryIcon } from './icons'
  */
 export default function CategoryTabs({ activeId }: { activeId?: CategoryId }) {
   const photos = usePexelsPhotos()
+  const { families } = useTaxonomy()
+  const { products } = useCatalog()
+  // Familles non vides ; la famille ouverte reste affichée même vide (lien direct).
+  const categories = useMemo(
+    () => families.filter((f) => f.id === activeId || visibleFamilies([f], products).length > 0),
+    [families, products, activeId],
+  )
   const tabRefs = useRef(new Map<CategoryId, HTMLAnchorElement>())
   const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null)
 
@@ -22,12 +31,12 @@ export default function CategoryTabs({ activeId }: { activeId?: CategoryId }) {
     }
     setIndicator({ left: el.offsetLeft + el.offsetWidth * 0.25, width: el.offsetWidth * 0.5 })
     el.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' })
-  }, [activeId])
+  }, [activeId, categories.length])
 
   return (
     <nav aria-label="Catégories" className="relative flex gap-3 overflow-x-auto pb-3">
       {categories.map((cat) => {
-        const photo = photos[cat.id]
+        const photo = cat.imageUrl ?? photos[cat.id]
         const isActive = cat.id === activeId
         return (
           <Link
@@ -38,12 +47,12 @@ export default function CategoryTabs({ activeId }: { activeId?: CategoryId }) {
               else tabRefs.current.delete(cat.id)
             }}
             aria-current={isActive ? 'page' : undefined}
-            className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+            className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <span
               className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-full text-white shadow-card transition-transform duration-300 ease-spring active:scale-95 ${
                 cat.colorClass
-              } ${isActive ? 'scale-110 ring-2 ring-accent ring-offset-2 ring-offset-surface' : ''}`}
+              } ${isActive ? 'scale-110 ring-2 ring-accent-ink ring-offset-2 ring-offset-surface' : ''}`}
             >
               {photo ? (
                 <img src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
@@ -63,7 +72,7 @@ export default function CategoryTabs({ activeId }: { activeId?: CategoryId }) {
       })}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 h-1 rounded-full bg-accent transition-all duration-300 ease-spring"
+        className="pointer-events-none absolute bottom-0 h-1 rounded-full bg-accent-ink transition-all duration-300 ease-spring"
         style={indicator ? { left: indicator.left, width: indicator.width, opacity: 1 } : { left: 0, width: 0, opacity: 0 }}
       />
     </nav>

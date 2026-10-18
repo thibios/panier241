@@ -12,7 +12,8 @@ import { useMarkets } from '../context/MarketsContext'
 import CatalogState from '../components/ui/CatalogState'
 import { CategoryIcon } from '../components/ui/icons'
 import { useMarketPhoto } from '../components/ui/MarketVisual'
-import { categories } from '../data/categories'
+import { useTaxonomy } from '../context/TaxonomyContext'
+import { visibleFamilies } from '../lib/catalogTaxonomy'
 import { useCatalog } from '../context/CatalogContext'
 import { useAuth } from '../context/AuthContext'
 import { useAddresses } from '../context/AddressesContext'
@@ -31,7 +32,7 @@ function FeaturedCard({ market, merchantCount }: { market: Market; merchantCount
   return (
     <Link
       to={`/marche/${market.id}`}
-      className="relative block h-44 w-[85%] shrink-0 snap-start overflow-hidden rounded-card bg-brand shadow-card transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+      className="relative block h-44 w-[85%] shrink-0 snap-start overflow-hidden rounded-card bg-brand shadow-card transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
     >
       {market.logoUrl ? (
         <img src={market.logoUrl} alt="" className="absolute inset-0 h-full w-full bg-white object-contain px-10 pb-20 pt-5" />
@@ -60,7 +61,10 @@ export default function Home() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const { markets } = useMarkets()
   const categoryPhotos = usePexelsPhotos()
+  const { families } = useTaxonomy()
   const [showAllCategories, setShowAllCategories] = useState(false)
+  // Familles non vides (ou mises en avant par l'éditorial) ; règle de public.visible_categories() (023).
+  const categories = useMemo(() => visibleFamilies(families, products), [families, products])
   const shownCategories = showAllCategories ? categories : categories.slice(0, VISIBLE_CATEGORIES)
 
   useEffect(() => {
@@ -123,7 +127,7 @@ export default function Home() {
           <Link
             to="/profil"
             aria-label="Mon profil"
-            className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-card font-display text-base font-bold text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+            className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-card font-display text-base font-bold text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -144,7 +148,7 @@ export default function Home() {
       <div className="px-5">
         <Link
           to="/recherche"
-          className="flex h-14 items-center gap-3 rounded-full border border-line bg-white px-5 shadow-field focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+          className="flex h-14 items-center gap-3 rounded-full border border-line-strong bg-white px-5 shadow-field focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           <Search className="h-5 w-5 text-brand" aria-hidden="true" />
           <span className="text-sm text-muted">Produits, commerces, marchés…</span>
@@ -167,6 +171,7 @@ export default function Home() {
         </section>
       )}
 
+      {categories.length > 0 && (
       <section className="mt-7 px-5">
         <h2 className={`${sectionTitle} mb-3`}>Catégories</h2>
         <div className="grid grid-cols-4 gap-2">
@@ -175,11 +180,11 @@ export default function Home() {
               <Link
                 to={`/categorie/${cat.id}`}
                 aria-label={cat.label}
-                className="flex h-full flex-col overflow-hidden rounded-card border border-line bg-card shadow-card transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+                className="flex h-full flex-col overflow-hidden rounded-card border border-line bg-card shadow-card transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
                 <span className="flex h-16 w-full items-center justify-center bg-brand-light">
-                  {categoryPhotos[cat.id] ? (
-                    <img src={categoryPhotos[cat.id] as string} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  {cat.imageUrl ?? categoryPhotos[cat.id] ? (
+                    <img src={(cat.imageUrl ?? categoryPhotos[cat.id]) as string} alt="" loading="lazy" className="h-full w-full object-cover" />
                   ) : (
                     <CategoryIcon category={cat.id} className="h-6 w-6 text-brand" />
                   )}
@@ -194,13 +199,14 @@ export default function Home() {
             type="button"
             onClick={() => setShowAllCategories((v) => !v)}
             aria-expanded={showAllCategories}
-            className="mx-auto mt-3 flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+            className="mx-auto mt-3 flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             {showAllCategories ? 'Voir moins' : 'Voir toutes les catégories'}
             <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showAllCategories ? 'rotate-180' : ''}`} aria-hidden="true" />
           </button>
         )}
       </section>
+      )}
 
       <section className="mt-7">
         <div className="mb-3 flex items-center justify-between px-5">
@@ -218,7 +224,7 @@ export default function Home() {
         <h2 className={`${sectionTitle} mb-3`}>Commerçants</h2>
         <Link
           to="/devenir-marchand"
-          className="flex items-center gap-3 rounded-card border-2 border-dashed border-brand/40 bg-card p-4 transition hover:border-brand active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+          className="flex items-center gap-3 rounded-card border-2 border-dashed border-brand/40 bg-card p-4 transition hover:border-brand active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent text-brand-dark">
             <Plus className="h-6 w-6" strokeWidth={2.6} aria-hidden="true" />

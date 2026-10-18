@@ -1,10 +1,14 @@
+-- DONNÉES DE DÉMONSTRATION : les notes de ce seed (4,6 et 4,3, sans aucun avis) étaient des valeurs de
+-- démonstration ; elles sont ramenées à 0 note / 0 avis. Les notes ne proviennent que de la table reviews
+-- (neutralisation et recalcul par supabase/020_demo_data_isolation.sql). Prix des produits non modifiés.
+--
 -- Panier 241 — catalogues reels pour Bati Plus Gabon et CECADO
 -- A executer dans Supabase : Dashboard > SQL Editor > New query > Run
 
 -- 1. Bati Plus Gabon (materiaux de construction, plomberie, electricite, outillage...)
 with new_merchant as (
   insert into public.merchants (name, market_id, categories, rating, review_count, address, image_emoji, banner_color, status, phone)
-  values ('Bâti Plus Gabon', 'mkt-bati-plus', array['bricolage'], 4.6, 0, 'Oloumi, Libreville', '🔨', '#5B7C99', 'approved', null)
+  values ('Bâti Plus Gabon', 'mkt-bati-plus', array['bricolage'], 0, 0, 'Oloumi, Libreville', '🔨', '#5B7C99', 'approved', null)
   returning id
 )
 insert into public.products (merchant_id, name, category, price, unit, image_emoji)
@@ -27,7 +31,7 @@ from new_merchant, (values
 -- 2. CECADO (enseigne de proximite du groupe Ceca-Gadis : epicerie, frais, menager, boissons, hygiene)
 with new_merchant as (
   insert into public.merchants (name, market_id, categories, rating, review_count, address, image_emoji, banner_color, status, phone)
-  values ('CECADO', 'mkt-ceca-gadis', array['epicerie'], 4.3, 0, 'Nombakélé, Libreville', '🛒', '#2FA3A3', 'approved', null)
+  values ('CECADO', 'mkt-ceca-gadis', array['epicerie'], 0, 0, 'Nombakélé, Libreville', '🛒', '#2FA3A3', 'approved', null)
   returning id
 )
 insert into public.products (merchant_id, name, category, price, unit, image_emoji)
