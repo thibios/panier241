@@ -186,7 +186,7 @@ export default function Auth() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
                   aria-label="Email"
-                  autoComplete="username email"
+                  autoComplete={mode === 'signin' ? 'username' : 'email'}
                   required
                   className={inputClass}
                 />
