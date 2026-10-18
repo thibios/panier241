@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, ChevronRight, Scale } from 'lucide-react'
+import { ChevronRight, MapPin, Plus, Search } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
 import MarketCard from '../components/ui/MarketCard'
 import ProductTile from '../components/ui/ProductTile'
 import Reveal from '../components/ui/Reveal'
 import ScrollRow from '../components/ui/ScrollRow'
+import BrandLogo from '../components/ui/BrandLogo'
 import AddMarketCard from '../components/ui/AddMarketCard'
 import { useMarkets } from '../context/MarketsContext'
 import CatalogState from '../components/ui/CatalogState'
@@ -17,8 +18,7 @@ import { useAuth } from '../context/AuthContext'
 import { useAddresses } from '../context/AddressesContext'
 import { usePexelsPhotos } from '../context/PexelsContext'
 import { supabase } from '../lib/supabaseClient'
-import { resolveImage } from '../lib/images'
-import type { Market, Merchant } from '../types'
+import type { Market } from '../types'
 
 const sectionTitle = 'font-display text-lg font-bold text-brand-dark'
 
@@ -43,43 +43,6 @@ function FeaturedCard({ market, merchantCount }: { market: Market; merchantCount
         <p className="mt-2 font-display text-lg font-bold leading-tight">{market.name}</p>
         <p className="text-xs opacity-85">
           {merchantCount > 0 ? `${merchantCount} commerçant${merchantCount > 1 ? 's' : ''}` : 'Bientôt disponible'} · {market.neighborhood}
-        </p>
-      </div>
-    </Link>
-  )
-}
-
-/** Carte compacte d'un commerçant dans la rangée horizontale. */
-function MerchantTile({ merchant }: { merchant: Merchant }) {
-  const pexelsPhotos = usePexelsPhotos()
-  const { markets } = useMarkets()
-  const market = markets.find((m) => m.id === merchant.marketId)
-  const photo = merchant.kioskPhotoUrl
-    ? resolveImage(merchant.kioskPhotoUrl, merchant.categories[0], pexelsPhotos)
-    : market?.logoUrl ?? resolveImage(null, merchant.categories[0], pexelsPhotos)
-  const category = categories.find((c) => c.id === merchant.categories[0])
-
-  return (
-    <Link
-      to={`/marchand/${merchant.id}`}
-      className="block w-40 shrink-0 snap-start overflow-hidden rounded-card border border-line bg-card shadow-card transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
-    >
-      <div className="flex h-24 w-full items-center justify-center bg-white">
-        {photo ? (
-          <img
-            src={photo}
-            alt=""
-            loading="lazy"
-            className={`h-full w-full ${photo === market?.logoUrl ? 'object-contain p-3' : 'object-cover'}`}
-          />
-        ) : (
-          <CategoryIcon category={merchant.categories[0]} className="h-8 w-8 text-brand" />
-        )}
-      </div>
-      <div className="p-3">
-        <p className="truncate text-sm font-semibold text-brand-dark">{merchant.name}</p>
-        <p className="truncate text-[11px] text-muted">
-          {category?.label.split(' ')[0]} · {market?.neighborhood}
         </p>
       </div>
     </Link>
@@ -141,29 +104,28 @@ export default function Home() {
 
   return (
     <PageShell>
-      <header className="flex items-start justify-between px-5 pb-4 pt-6">
-        <div className="min-w-0">
-          <p className="text-sm text-muted">Bonjour{firstName ? ',' : ''}</p>
-          <h1 className="truncate font-display text-2xl font-bold text-brand-dark">
-            {firstName ?? (
-              <>
-                Le Panier <span className="text-brand">241</span>
-              </>
+      <header className="px-5 pb-4 pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <BrandLogo />
+          <Link
+            to="/profil"
+            aria-label="Mon profil"
+            className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-card font-display text-base font-bold text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              (firstName ?? user?.email ?? '?').charAt(0).toUpperCase()
             )}
-          </h1>
-          <p className="mt-0.5 text-xs text-muted">{area}</p>
+          </Link>
         </div>
-        <Link
-          to="/profil"
-          aria-label="Mon profil"
-          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-card font-display text-base font-bold text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
-        >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-          ) : (
-            (firstName ?? user?.email ?? '?').charAt(0).toUpperCase()
-          )}
-        </Link>
+        <div className="mt-5">
+          <p className="font-display text-xl font-bold text-brand-dark">Bonjour{firstName ? `, ${firstName}` : ''}</p>
+          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
+            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+            {area}
+          </p>
+        </div>
       </header>
 
       <div className="px-5">
@@ -215,22 +177,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mt-5 px-5">
-        <Link
-          to="/prix-officiels"
-          className="flex items-center gap-3 rounded-card border border-line bg-card p-4 shadow-card transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
-        >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-brand-dark">
-            <Scale className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-brand-dark">Prix officiels de l'État</span>
-            <span className="block text-xs text-muted">Riz, sucre, huile, lait, poulet… les prix plafonds à ne pas dépasser</span>
-          </span>
-          <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
-        </Link>
-      </section>
-
       <section className="mt-7">
         <div className="mb-3 flex items-center justify-between px-5">
           <h2 className={sectionTitle}>Magasins et enseignes</h2>
@@ -243,16 +189,22 @@ export default function Home() {
         </ScrollRow>
       </section>
 
-      {merchants.length > 0 && (
-        <section className="mt-7">
-          <h2 className={`${sectionTitle} mb-3 px-5`}>Commerçants</h2>
-          <ScrollRow label="Commerçants">
-            {merchants.map((merchant) => (
-              <MerchantTile key={merchant.id} merchant={merchant} />
-            ))}
-          </ScrollRow>
-        </section>
-      )}
+      <section className="mt-7 px-5">
+        <h2 className={`${sectionTitle} mb-3`}>Commerçants</h2>
+        <Link
+          to="/devenir-marchand"
+          className="flex items-center gap-3 rounded-card border-2 border-dashed border-brand/40 bg-card p-4 transition hover:border-brand active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent text-brand-dark">
+            <Plus className="h-6 w-6" strokeWidth={2.6} aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-brand">Ajouter un commerçant</span>
+            <span className="block text-xs text-muted">Vous vendez au marché ou en boutique ? Inscrivez votre commerce.</span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
+        </Link>
+      </section>
 
       <section className="mt-7">
         <h2 className={`${sectionTitle} mb-3 px-5`}>Marchés de proximité</h2>

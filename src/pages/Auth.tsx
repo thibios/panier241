@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
+import BrandLogo from '../components/ui/BrandLogo'
 import { useAuth } from '../context/AuthContext'
 import { supabase, getRememberMe, setRememberMe } from '../lib/supabaseClient'
 
@@ -95,10 +96,10 @@ export default function Auth() {
     <div className="min-h-screen bg-surface">
       <div className="mx-auto min-h-screen max-w-md">
         <WovenHeader>
-          <h1 className="text-2xl font-extrabold tracking-tight">
-            Panier<span className="text-accent">241</span>
+          <h1>
+            <BrandLogo size="lg" onDark />
           </h1>
-          <p className="mt-1 text-sm text-white/85">
+          <p className="mt-3 text-sm text-white/85">
             Vos courses dans les marchés et magasins de Libreville, livrées chez vous.
           </p>
         </WovenHeader>

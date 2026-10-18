@@ -311,8 +311,8 @@ export default function Cart() {
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>
             Les prix sont des estimations : le montant réel peut varier et sera ajusté par le commerçant.{' '}
-            <Link to="/aide" className="font-semibold text-brand underline">
-              En savoir plus
+            <Link to="/prix-officiels" className="font-semibold text-brand underline">
+              Comparer avec les prix officiels
             </Link>
           </span>
         </p>
