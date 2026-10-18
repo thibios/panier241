@@ -25,21 +25,21 @@ export interface ThemeTokens {
 
 /** ADN Le Panier 241 (projet Sleek « Le Panier 241 ») : vert palmier, lime, sable, ivoire, anthracite. */
 export const baseTheme: ThemeTokens = {
-  brand: '#1F5C3F',
-  ink: '#2A2C2E',
-  soft: '#EFE3CC',
-  surface: '#FBF7EE',
-  accent: '#C5E23A',
-  header: '#1F5C3F',
-  onHeader: '#FBF7EE',
+  brand: '#1B4A2E', // vert profond du logo
+  ink: '#22261F',
+  soft: '#F1E8C9', // jaune ivoire
+  surface: '#FBF8EC', // ivoire
+  accent: '#9DA94A', // olive
+  header: '#1B4A2E',
+  onHeader: '#FBF8EC',
 }
 
 /** Jetons d'interface communs à toute l'app (cartes, bordures, texte secondaire, états). */
 export const uiTokens = {
-  card: '#FFFDF8',
-  line: '#E6DCCB',
-  muted: '#6B6A62',
-  'muted-bg': '#F4EDE0',
+  card: '#FFFDF6',
+  line: '#E6DDBF',
+  muted: '#676A58',
+  'muted-bg': '#F5EFD9',
   warn: '#D99A2B',
   danger: '#A6402A',
 }

@@ -1,9 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
-import BrandLogo from '../components/ui/BrandLogo'
 import { useAuth } from '../context/AuthContext'
 import { supabase, getRememberMe, setRememberMe } from '../lib/supabaseClient'
 
@@ -95,14 +93,14 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-surface">
       <div className="mx-auto min-h-screen max-w-md">
-        <WovenHeader>
+        <header className="px-5 pt-6 text-center">
           <h1>
-            <BrandLogo size="lg" onDark />
+            <img src="/logos/le-panier-241.webp" alt="Le Panier 241, marketplace : tout le Gabon à portée de main" className="mx-auto w-64 max-w-full" />
           </h1>
-          <p className="mt-3 text-sm text-white/85">
+          <p className="mx-auto mt-2 max-w-xs text-sm text-muted">
             Vos courses dans les marchés et magasins de Libreville, livrées chez vous.
           </p>
-        </WovenHeader>
+        </header>
 
         <div className="px-5 pt-6">
           {mode !== 'forgot' && (

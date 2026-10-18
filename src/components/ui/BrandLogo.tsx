@@ -1,4 +1,3 @@
-import { PanierMark } from './CartIcon'
 
 /**
  * Logo Le Panier 241 : le panier tressé, le mot « Panier » et le « 241 » aux
@@ -7,15 +6,15 @@ import { PanierMark } from './CartIcon'
  */
 export default function BrandLogo({ size = 'md', onDark = false }: { size?: 'md' | 'lg'; onDark?: boolean }) {
   const text = size === 'lg' ? 'text-[1.75rem]' : 'text-[1.4rem]'
-  const mark = size === 'lg' ? 'h-10 w-10' : 'h-9 w-9'
+  const mark = size === 'lg' ? 'h-12 w-12' : 'h-11 w-11'
 
   return (
     <span className="inline-flex items-center gap-2" aria-label="Le Panier 241">
       <span
         aria-hidden="true"
-        className={`flex ${mark} shrink-0 items-center justify-center rounded-[0.9rem] ${onDark ? 'bg-white text-brand' : 'bg-brand text-on-header ring-1 ring-inset ring-white/15'} shadow-[0_6px_14px_-6px_rgb(var(--color-brand)/0.6)]`}
+        className={`flex ${mark} shrink-0 items-center justify-center overflow-hidden rounded-[0.9rem] bg-white shadow-[0_6px_14px_-6px_rgb(var(--color-brand)/0.45)] ring-1 ring-inset ring-black/5`}
       >
-        <PanierMark className="h-[62%] w-[62%]" />
+        <img src="/logos/panier-mark.png" alt="" className="h-full w-full object-contain p-0.5" />
       </span>
       <span aria-hidden="true" className={`flex items-baseline gap-1.5 font-display ${text} font-bold leading-none tracking-[-0.03em]`}>
         <span className={onDark ? 'text-on-header' : 'text-brand-dark'}>Panier</span>

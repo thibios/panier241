@@ -62,11 +62,19 @@ export default function Home() {
     if (!user) return
     supabase
       .from('profiles')
-      .select('first_name, avatar_url')
+      .select('first_name, last_name, avatar_url')
       .eq('id', user.id)
       .single()
       .then(({ data }) => {
-        setFirstName(data?.first_name?.trim() || null)
+        const meta = user.user_metadata ?? {}
+        const fromEmail = (user.email ?? '').split('@')[0].replace(/[._-]+/g, ' ').trim()
+        const name =
+          data?.first_name?.trim() ||
+          (meta.first_name as string | undefined)?.trim() ||
+          data?.last_name?.trim() ||
+          (meta.last_name as string | undefined)?.trim() ||
+          fromEmail
+        setFirstName(name ? name.charAt(0).toUpperCase() + name.slice(1) : null)
         setAvatarUrl(data?.avatar_url ?? null)
       })
   }, [user])
