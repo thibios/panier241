@@ -1,4 +1,12 @@
-export type CategoryId = 'legumes' | 'fruits' | 'poisson' | 'cereales' | 'bricolage' | 'epicerie'
+export type CategoryId =
+  | 'legumes'
+  | 'fruits'
+  | 'poisson'
+  | 'cereales'
+  | 'restauration'
+  | 'boulangerie'
+  | 'bricolage'
+  | 'epicerie'
 
 export interface Category {
   id: CategoryId
@@ -34,6 +42,8 @@ export interface Product {
   unit: string // ex: "kg", "botte", "pièce"
   imageUrl: string | null
   variantLabel: string | null
+  /** Type de produit saisi par le commerçant (Plat, Boisson, Gâteau...). */
+  productType?: string | null
 }
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
@@ -51,6 +61,10 @@ export interface Merchant {
   kioskPhotoUrl: string | null
   status: ApprovalStatus
   phone: string | null
+  /** Type de commerce choisi à l'inscription (Restaurant, Pâtisserie...). */
+  businessType?: string | null
+  /** Quartier du commerce, surtout utile pour un commerçant indépendant. */
+  neighborhood?: string | null
 }
 
 export type DeliveryPeriod = 'matin' | 'apres-midi' | 'soir' | 'retrait'

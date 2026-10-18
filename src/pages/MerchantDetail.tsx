@@ -29,6 +29,8 @@ const categoryDotClass: Record<string, string> = {
   fruits: 'bg-category-fruits',
   poisson: 'bg-category-poisson',
   cereales: 'bg-category-cereales',
+  restauration: 'bg-category-restauration',
+  boulangerie: 'bg-category-boulangerie',
   bricolage: 'bg-category-bricolage',
   epicerie: 'bg-category-epicerie',
 }
@@ -132,7 +134,9 @@ export default function MerchantDetail() {
             </div>
             <div>
               <h1 className="text-xl font-bold">{merchant.name}</h1>
-              <p className="text-sm text-on-header/80">{market?.name}</p>
+              <p className="text-sm text-on-header/80">
+                {[merchant.businessType, market?.name ?? merchant.neighborhood].filter(Boolean).join(' · ')}
+              </p>
             </div>
           </div>
         </header>
@@ -161,7 +165,10 @@ export default function MerchantDetail() {
 
           <div className="flex items-start gap-2 rounded-card bg-white p-4 shadow-card">
             <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-brand" aria-hidden="true" />
-            <p className="text-sm text-brand-dark/70">{merchant.address}</p>
+            <p className="text-sm text-brand-dark/70">
+              {merchant.address}
+              {merchant.neighborhood && !merchant.address.includes(merchant.neighborhood) ? `, ${merchant.neighborhood}` : ''}
+            </p>
           </div>
 
           {merchant.phone && (

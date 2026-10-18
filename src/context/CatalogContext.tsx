@@ -25,6 +25,8 @@ interface MerchantRow {
   address: string
   banner_color: string
   kiosk_photo_url: string | null
+  business_type: string | null
+  neighborhood: string | null
   status: ApprovalStatus
   phone: string | null
 }
@@ -38,6 +40,7 @@ interface ProductRow {
   unit: string
   image_url: string | null
   variant_label: string | null
+  product_type: string | null
 }
 
 function merchantFromRow(row: MerchantRow): Merchant {
@@ -52,6 +55,8 @@ function merchantFromRow(row: MerchantRow): Merchant {
     address: row.address,
     bannerColor: row.banner_color,
     kioskPhotoUrl: row.kiosk_photo_url,
+    businessType: row.business_type,
+    neighborhood: row.neighborhood,
     status: row.status,
     phone: row.phone,
   }
@@ -67,6 +72,7 @@ function productFromRow(row: ProductRow): Product {
     unit: row.unit,
     imageUrl: row.image_url,
     variantLabel: row.variant_label,
+    productType: row.product_type,
   }
 }
 
@@ -81,9 +87,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     const [merchantsRes, productsRes] = await Promise.all([
       supabase
         .from('merchants')
-        .select('id, owner_id, name, market_id, categories, rating, review_count, address, banner_color, kiosk_photo_url, status, phone')
+        .select('id, owner_id, name, market_id, categories, rating, review_count, address, banner_color, kiosk_photo_url, status, phone, business_type, neighborhood')
         .eq('status', 'approved'),
-      supabase.from('products').select('id, merchant_id, name, category, price, unit, image_url, variant_label'),
+      supabase.from('products').select('id, merchant_id, name, category, price, unit, image_url, variant_label, product_type'),
     ])
     setError(Boolean(merchantsRes.error || productsRes.error))
     if (merchantsRes.data) {

@@ -10,6 +10,8 @@ const categoryKeywords: Record<CategoryId, string> = {
   fruits: 'plantain bananas market',
   poisson: 'fish market africa',
   cereales: 'spices market',
+  restauration: 'african food dish',
+  boulangerie: 'pastry bakery',
   bricolage: 'hardware store tools',
   epicerie: 'small shop africa',
 }

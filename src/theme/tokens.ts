@@ -50,6 +50,8 @@ export const categoryColors: Record<CategoryId, string> = {
   fruits: '#F2994A',
   poisson: '#E8543A',
   cereales: '#C08A3E',
+  restauration: '#B5532E',
+  boulangerie: '#C9922F',
   bricolage: '#5B7C99',
   epicerie: '#2FA3A3',
 }

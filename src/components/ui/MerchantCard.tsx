@@ -12,6 +12,8 @@ const categoryDotClass: Record<string, string> = {
   fruits: 'bg-category-fruits',
   poisson: 'bg-category-poisson',
   cereales: 'bg-category-cereales',
+  restauration: 'bg-category-restauration',
+  boulangerie: 'bg-category-boulangerie',
   bricolage: 'bg-category-bricolage',
   epicerie: 'bg-category-epicerie',
 }

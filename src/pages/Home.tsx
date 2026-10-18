@@ -164,21 +164,21 @@ export default function Home() {
 
       <section className="mt-7 px-5">
         <h2 className={`${sectionTitle} mb-3`}>Catégories</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-2">
           {categories.map((cat, i) => (
             <Reveal key={cat.id} index={i}>
               <Link
                 to={`/categorie/${cat.id}`}
                 className="flex h-full flex-col overflow-hidden rounded-card border border-line bg-card shadow-card transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
               >
-                <span className="flex h-20 w-full items-center justify-center bg-brand-light">
+                <span className="flex h-16 w-full items-center justify-center bg-brand-light">
                   {categoryPhotos[cat.id] ? (
                     <img src={categoryPhotos[cat.id] as string} alt="" loading="lazy" className="h-full w-full object-cover" />
                   ) : (
                     <CategoryIcon category={cat.id} className="h-6 w-6 text-brand" />
                   )}
                 </span>
-                <span className="flex flex-1 items-center justify-center px-2 py-2 text-center text-xs font-semibold leading-tight text-brand-dark">{cat.label}</span>
+                <span className="flex flex-1 items-center justify-center px-1 py-1.5 text-center text-[11px] font-semibold leading-tight text-brand-dark">{cat.label}</span>
               </Link>
             </Reveal>
           ))}

@@ -4,6 +4,8 @@ import {
   Fish,
   Wheat,
   Hammer,
+  UtensilsCrossed,
+  CakeSlice,
   ShoppingCart,
   ShoppingBasket,
   Store,
@@ -16,6 +18,8 @@ const categoryIcons: Record<CategoryId, LucideIcon> = {
   fruits: Apple,
   poisson: Fish,
   cereales: Wheat,
+  restauration: UtensilsCrossed,
+  boulangerie: CakeSlice,
   bricolage: Hammer,
   epicerie: ShoppingCart,
 }

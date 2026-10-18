@@ -27,6 +27,8 @@ export default {
           fruits: token('cat-fruits'),
           poisson: token('cat-poisson'),
           cereales: token('cat-cereales'),
+          restauration: token('cat-restauration'),
+          boulangerie: token('cat-boulangerie'),
           bricolage: token('cat-bricolage'),
           epicerie: token('cat-epicerie'),
         },
