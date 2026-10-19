@@ -10,22 +10,23 @@ Date : 19/10/2026. Statuts autorisés : absent / présent non exécuté / réuss
 | Lint | — | **absent** | aucun script `lint`, aucune config ESLint |
 | Tests unitaires JS (`pricing.ts`, `orderEngine.ts`, `whatsapp.ts`) | — | **absent** | aucun runner dans `package.json` |
 | Tests de composants / E2E (Playwright…) | — | **absent** | — |
-| SQL 020 isolement démo | `supabase/tests/020_demo_data_isolation_tests.sql` | **échoué** | exécuté le 19/10 dans `begin … rollback` : ~30 assertions passent puis `null value in column "initial_subtotal"` (fixture d'avant 022) ; aucune donnée restante (vérifié) |
-| SQL 022 moteur de commande | `supabase/tests/022_order_engine_tests.sql` | **présent non exécuté** (périmé) | l. 166-168 attend un forfait 1500 F ; base : 2000 F (024) |
-| SQL 023 taxonomie | `supabase/tests/023_catalog_taxonomy_tests.sql` | **présent non exécuté** (périmé) | l. 130 attend 30 produits Bâti Plus ; base : 87 (025) |
+| SQL 020 isolement démo | `supabase/tests/020_demo_data_isolation_tests.sql` | **réussi** | U04, 19/10/2026 : 25 positifs + 15 négatifs = 40 ; commandes support avec `initial_subtotal`, insert direct API vérifié refusé (022) |
+| SQL 022 moteur de commande | `supabase/tests/022_order_engine_tests.sql` | **réussi** | U04, 19/10/2026 : 46 positifs + 69 négatifs = 115 ; barème lu dans `app_settings` (forfait sans GPS 2000 F, 024) |
+| SQL 023 taxonomie | `supabase/tests/023_catalog_taxonomy_tests.sql` | **réussi** | U04, 19/10/2026 : 46 positifs + 31 négatifs = 77 ; comptes Bâti Plus (87, 025) / CECADO / matériaux lus en base |
+| SQL 026 lecture livreurs | `supabase/tests/026_livreurs_lecture_restreinte_tests.sql` | **réussi** | 19/10/2026 : 4 scénarios (anon, tiers, livreur, admin) |
 | Advisors Supabase | `get_advisors` | **insuffisant** (non automatisé) | exécuté manuellement le 19/10 |
 | CI | — | **absent** | pas de `.github/workflows` |
 | Tests de charge / sécurité dynamique | — | **absent** | — |
 
-Remarque de méthode : les fichiers de test SQL ne contiennent ni `begin` ni `rollback` ; ils dépendent de l'appelant. Ils écrivent dans `auth.users` et `public.*` (annulé ensuite) et le 022 crée/supprime temporairement une policy et un GRANT sur `orders` : **ne jamais les lancer hors transaction, ni sur la production sans nécessité**.
+Remarque de méthode : depuis U04 (19/10/2026), chaque fichier de test SQL porte lui-même `begin;` en tête et `rollback;` en fin. Ils écrivent dans `auth.users` et `public.*` (annulé par le rollback) et le 022 crée/supprime temporairement une policy et un GRANT sur `orders` : **ne jamais retirer le `rollback`, ni les lancer sur la production sans nécessité**. Les exécutions U04 ont eu lieu sur la production (aucune branche, U05) : comptes de `orders`, `products`, `merchants`, `reviews`, `favorites`, `livreurs`, `order_status_history`, `order_ledger`, `merchant_sections`, `storefront_categories`, `auth.users`, `app_settings` identiques avant et après chaque fichier ; policy `t022_tmp` absente et UPDATE sur `orders` non accordé à `authenticated` après le 022.
 
 ## 2. Cible
 
 ### 2.1 Base de données (priorité 1)
-1. Corriger les fixtures et assertions périmées (020 : `initial_subtotal` ; 022 : forfait lu depuis `app_settings` plutôt qu'en dur ; 023 : comptages relatifs à l'état initial, comme le fait déjà S7).
-2. Envelopper chaque fichier dans `begin; … rollback;` et terminer par une vérification « aucune ligne de test restante ».
+1. Fait (U04, 19/10/2026) : fixtures et assertions périmées corrigées (020 : `initial_subtotal` ; 022 : barème lu dans `app_settings` ; 023 : comptages lus en base).
+2. Fait (U04) : chaque fichier enveloppé dans `begin; … rollback;` ; vérification « aucune ligne restante » faite par requêtes de comptage après exécution (à intégrer au fichier lui-même si exécuté en CI).
 3. Exécuter sur une **branche Supabase** ou une base locale (`supabase start`) recréée depuis les migrations, jamais sur la production par défaut.
-4. Ajouter des tests pour : lecture anon de `livreurs` (doit échouer après U01), suppression de compte (U08), bucket vidéo privé (U10).
+4. Ajouter des tests pour : lecture anon de `livreurs` (fait : `026_*`), suppression de compte (U08), bucket vidéo privé (U10).
 5. pgTAP envisageable plus tard ; le format actuel (assertions levant une exception) suffit pour démarrer.
 
 ### 2.2 Front (priorité 2)

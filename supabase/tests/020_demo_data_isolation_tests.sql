@@ -1,16 +1,17 @@
 -- Tests de l'isolement des données de démonstration (020).
 --
--- Exécution : dans UNE transaction annulée, après le corps de 020 (sans ses lignes begin/commit) :
---   begin;
---   <contenu de supabase/020_demo_data_isolation.sql sans les lignes "begin;" et "commit;">
---   <contenu de ce fichier>
---   rollback;
--- Si 020 est déjà appliquée : begin; <ce fichier> rollback;
+-- Exécution : migrations 020 à 026 appliquées (état de production). Le fichier porte lui-même
+-- sa transaction : "begin;" en tête, "rollback;" en fin ; il s'exécute tel quel (SQL editor, psql,
+-- execute_sql). Le dernier SELECT avant le rollback donne le décompte positifs / négatifs.
+-- Dernière exécution contre la production : 19/10/2026, 25 positifs + 15 négatifs = 40, tous passés,
+-- aucune donnée restante (comptes des tables identiques avant / après).
 --
 -- Chaque assertion lève une exception en cas d'échec (la transaction échoue alors en entier).
 -- Les rôles sont simulés par "set local role" + "set local request.jwt.claims".
 -- Aucune donnée ne reste : tout est annulé par le rollback final.
 -- Prix utilisés : prix de magasin fictifs de test (aucun prix officiel DGCCRF).
+
+begin;
 
 create temporary table t_results (id serial, kind text, name text);
 grant all on t_results to authenticated, anon;
@@ -209,10 +210,19 @@ begin
   perform pg_temp.t_ok('positif', n = 2, 'Anon : produits visibles une fois le commerçant approuvé');
 
   -- ------------------------------------------------------------ notes (insert / update / delete)
+  -- Depuis 022, l'API ne crée plus de commande en direct (create_order() seulement) : on le vérifie,
+  -- puis les deux commandes « livrées » servant de support aux avis sont posées en fixture sous le
+  -- rôle postgres (chemin d'administration autorisé par guard_order_direct_write), avec initial_subtotal
+  -- (NOT NULL depuis 022). Montants cohérents : 1000 + 5 % (50) + 2000 = 3050 F (prix de magasin fictifs).
+  perform pg_temp.t_as(x);
+  perform pg_temp.t_err('Client : insert direct dans orders refusé (create_order obligatoire, 022)',
+    format('insert into public.orders (id, user_id, merchant_id, merchant_name, items, subtotal, initial_subtotal, service_fee, delivery_fee, total, status, slot_label, address_label) '
+           'values (%L, %L, %L, ''Test020 Notes'', ''[]'', 1000, 1000, 50, 2000, 3050, ''livree'', ''test'', ''test'')', o1, x, mr),
+    'permission denied');
   perform pg_temp.t_postgres();
-  insert into public.orders (id, user_id, merchant_id, merchant_name, items, subtotal, delivery_fee, total, status, slot_label, address_label)
-  values (o1, x, mr::text, 'Test020 Notes', '[]'::jsonb, 1000, 2000, 3050, 'livree', 'test', 'test'),
-         (o2, x, mr::text, 'Test020 Notes', '[]'::jsonb, 1000, 2000, 3050, 'livree', 'test', 'test');
+  insert into public.orders (id, user_id, merchant_id, merchant_name, items, subtotal, initial_subtotal, service_fee, delivery_fee, total, status, slot_label, address_label)
+  values (o1, x, mr::text, 'Test020 Notes', '[]'::jsonb, 1000, 1000, 50, 2000, 3050, 'livree', 'test', 'test'),
+         (o2, x, mr::text, 'Test020 Notes', '[]'::jsonb, 1000, 1000, 50, 2000, 3050, 'livree', 'test', 'test');
   insert into public.reviews (id, order_id, merchant_id, user_id, rating) values (r1, o1, mr, x, 4);
   select rating, review_count into v_rating, v_count from public.merchants where id = mr;
   perform pg_temp.t_ok('positif', v_rating = 4 and v_count = 1, 'Avis inséré : note 4, 1 avis');
@@ -239,3 +249,5 @@ reset role;
 select kind, count(*) as nb from t_results group by kind
 union all select 'total', count(*) from t_results
 order by 1;
+
+rollback;

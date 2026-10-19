@@ -21,16 +21,16 @@ Les 24 phases du cycle couvertes : 1 cadrage, 2 architecture, 3 données, 4 auth
 | P04-4 | Auth | Confirmation e-mail et réglages Auth | NON VERIFIE | non lisible par SQL ; 0 compte non confirmé (S7) | tableau de bord Supabase | propriétaire |
 | P05-1 | Rôles | Admin non codé en dur | BLOQUANT | `is_admin()` e-mail en dur (S2) ; `AuthContext.tsx:25` | tests SQL admin après U12 | U12 |
 | P05-2 | Rôles | MFA administrateur | BLOQUANT | 0 facteur MFA (S7) | connexion admin sans 2e facteur refusée | U03 |
-| P05-3 | Rôles | Commerçant/livreur forcés « pending » à l'inscription | VERIFIE | trigger `force_pending_on_insert` (S triggers) ; 022 l. 27-56 | test 022 §0 (après U06) | — |
-| P05-4 | Rôles | Livreur ne prend pas sa propre commande | VERIFIE | `set_order_status` l. 1088, `list_available_deliveries` l. 1474-1475 | test 022 (après U06) | — |
-| P06-1 | Catalogue | Démo invisibles du public | VERIFIE | T1 : assertions anon/tiers 020 passées avant l'échec | test 020 complet après U04 | — |
-| P06-2 | Catalogue | Taxonomie contrôlée en base | PARTIEL | triggers `validate_product_category`, `guard_category_tree` ; test 023 périmé | test 023 après U06 | U06 |
+| P05-3 | Rôles | Commerçant/livreur forcés « pending » à l'inscription | VERIFIE | trigger `force_pending_on_insert` (S triggers) ; 022 l. 27-56 | test 022 §0 : réussi 19/10/2026 (U04) | — |
+| P05-4 | Rôles | Livreur ne prend pas sa propre commande | VERIFIE | `set_order_status` l. 1088, `list_available_deliveries` l. 1474-1475 | test 022 : réussi 19/10/2026 (U04) | — |
+| P06-1 | Catalogue | Démo invisibles du public | VERIFIE | `supabase/tests/020_*` exécuté 19/10/2026 : 25 positifs + 15 négatifs = 40, tous passés (U04) | test 020 | — |
+| P06-2 | Catalogue | Taxonomie contrôlée en base | VERIFIE | triggers `validate_product_category`, `guard_category_tree` ; `supabase/tests/023_*` exécuté 19/10/2026 : 46 positifs + 31 négatifs = 77, tous passés (U04, comptes Bâti Plus/CECADO lus en base) | test 023 | — |
 | P06-3 | Catalogue | Gestion de stock | MANQUANT | aucune colonne stock dans `products` | — | DÉCISION |
-| P07-1 | Commandes | Montants calculés par la base | VERIFIE | `create_order` 022 l. 879-940 ; front n'envoie que id/quantité (`OrdersContext.tsx`) | test 022 après U06 | — |
+| P07-1 | Commandes | Montants calculés par la base | VERIFIE | `create_order` 022 l. 879-940 ; front n'envoie que id/quantité (`OrdersContext.tsx`) | test 022 : réussi 19/10/2026 (U04) | — |
 | P07-2 | Commandes | Idempotence de création | VERIFIE | index `orders_client_request_unique` + `unique_violation` (022 l. 227, 958) ; `Cart.tsx:157` | test 022 « Idempotence » | — |
 | P07-3 | Commandes | Aucune écriture directe sur `orders` | VERIFIE | grants authenticated/anon = SELECT seulement (S4) ; trigger `guard_order_direct_write` | requête grants | — |
 | P07-4 | Commandes | Historique et journal append-only | VERIFIE | triggers `*_append_only` (S triggers) | test 022 append-only | — |
-| P07-5 | Commandes | Tests du moteur à jour et réussis | BLOQUANT | test 022 périmé (forfait 1500 F l. 166) | exécution sur branche | U06 |
+| P07-5 | Commandes | Tests du moteur à jour et réussis | VERIFIE | `supabase/tests/022_*` exécuté 19/10/2026 : 46 positifs + 69 négatifs = 115, tous passés ; barème lu dans `app_settings` (forfait sans GPS 2 000 F, 024) | test 022 | rejouer sur branche quand U05 sera fait |
 | P07-6 | Commandes | Limite anti-commandes en masse | MANQUANT | aucun plafond dans `create_order` | test négatif | U13 |
 | P08-1 | Paiements | Prestataire intégré | MANQUANT | aucune dépendance ni appel | — | DÉCISION, U17 |
 | P08-2 | Paiements | Encaissement hors ligne tracé | VERIFIE | `record_payment` + ligne `order_ledger` (022 l. 1295-1393) | test 022 encaissement | — |
@@ -55,8 +55,8 @@ Les 24 phases du cycle couvertes : 1 cadrage, 2 architecture, 3 données, 4 auth
 | P12-5 | Données perso | Qualification Gabon / RGPD | NON VERIFIE | sources non officielles (AFAPDP, presse) | consultation JO / APDPVP | hors technique |
 | P13-1 | Qualité code | TypeScript strict | VERIFIE | `tsconfig.json` `strict: true` ; 1 `any` (`api/pexels.ts`) | `tsc -b` | — |
 | P13-2 | Qualité code | Lint configuré | MANQUANT | aucun script `lint` | `npm run lint` | U25 |
-| P14-1 | Tests | Test SQL 020 réussi | BLOQUANT | T1 : échec `initial_subtotal` | rejouer | U04 |
-| P14-2 | Tests | Test SQL 023 réussi | NON VERIFIE | non exécuté ; périmé par lecture (l. 130) | rejouer sur branche | U06 |
+| P14-1 | Tests | Test SQL 020 réussi | VERIFIE | `supabase/tests/020_*` exécuté 19/10/2026 : 25 positifs + 15 négatifs = 40, tous passés ; commandes support posées avec `initial_subtotal`, insert direct API vérifié refusé | test 020 | — |
+| P14-2 | Tests | Test SQL 023 réussi | VERIFIE | `supabase/tests/023_*` exécuté 19/10/2026 : 46 positifs + 31 négatifs = 77, tous passés | test 023 | rejouer sur branche quand U05 sera fait |
 | P14-3 | Tests | Tests JS unitaires / E2E | MANQUANT | `package.json` | `npm test` | U25 |
 | P15-1 | Builds | Build de production | VERIFIE | C1 : `npm run build` code 0 | même commande | — |
 | P15-2 | Builds | Taille du bundle < 500 kB par chunk | MANQUANT | C1 : 692,69 kB | build | U21 |
@@ -81,11 +81,11 @@ Les 24 phases du cycle couvertes : 1 cadrage, 2 architecture, 3 données, 4 auth
 
 | Statut | Nombre |
 |---|---|
-| VERIFIE | 21 |
+| VERIFIE | 25 |
 | PARTIEL | 11 |
 | MANQUANT | 23 |
-| BLOQUANT | 7 |
-| NON VERIFIE | 6 |
+| BLOQUANT | 4 |
+| NON VERIFIE | 5 |
 | HORS PERIMETRE | 1 |
 | **Total** | **69** |
 

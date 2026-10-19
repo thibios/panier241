@@ -1,17 +1,18 @@
 -- Tests du moteur de commande (022).
 --
--- Exécution : dans UNE transaction annulée, après le corps de 022 (sans son begin/commit) :
---   begin;
---   <contenu de supabase/022_order_engine.sql sans les lignes "begin;" et "commit;">
---   <contenu de ce fichier>
---   rollback;
--- Si 022 est déjà appliquée : begin; <ce fichier> rollback;
--- Prérequis : 020 appliquée. Dernière exécution : 18/10/2026, 45 positifs + 69 négatifs = 114, tous passés.
+-- Exécution : migrations 020 à 026 appliquées (état de production). Le fichier porte lui-même
+-- sa transaction : "begin;" en tête, "rollback;" en fin ; il s'exécute tel quel (SQL editor, psql,
+-- execute_sql). Le dernier SELECT avant le rollback donne le décompte positifs / négatifs.
+-- Dernière exécution contre la production : 19/10/2026, 46 positifs + 69 négatifs = 115, tous passés,
+-- aucune donnée restante (comptes des tables identiques avant / après).
+-- Barème lu dans app_settings (024 : forfait sans GPS 2 000 F) : les montants attendus en dépendent.
 --
 -- Chaque assertion lève une exception en cas d'échec (la transaction échoue alors en entier).
 -- Les rôles sont simulés par "set local role authenticated" + "set local request.jwt.claims".
 -- Aucune donnée ne reste : tout est annulé par le rollback final.
 -- Prix utilisés : prix de magasin fictifs de test (aucun prix officiel DGCCRF).
+
+begin;
 
 create temporary table t_results (id serial, kind text, name text);
 grant all on t_results to authenticated, anon;
@@ -86,9 +87,20 @@ declare
   o public.orders%rowtype;
   o_gps uuid; o_nogps uuid; o_pick uuid; o_big uuid; o_adj1 uuid; o_adj2 uuid; o_adj3 uuid; o_adj4 uuid;
   n int; v int; r record; j jsonb; rid uuid; o2 public.orders%rowtype;
+  -- Barème de référence lu en base (app_settings), jamais codé en dur
+  s_base int; s_km int; s_fb int; s_fee numeric; s_dep numeric; s_thr int;
+  f_gps int; t_gps int; t_big int;
 begin
   select id into adm from auth.users where email = 'thibiosang@gmail.com';
   if adm is null then raise exception 'Compte admin introuvable'; end if;
+  select value::int into strict s_base from public.app_settings where key = 'delivery_base_fee';
+  select value::int into strict s_km   from public.app_settings where key = 'delivery_rate_per_km';
+  select value::int into strict s_fb   from public.app_settings where key = 'delivery_fallback_fee';
+  select value      into strict s_fee  from public.app_settings where key = 'service_fee_rate';
+  select value      into strict s_dep  from public.app_settings where key = 'deposit_rate';
+  select value::int into strict s_thr  from public.app_settings where key = 'deposit_threshold';
+  perform pg_temp.t_ok('positif', s_fb = 2000 and s_base = 2000 and s_km = 300 and s_fee = 0.05,
+                       'Barème en base : 2000 F + 300 F/km, forfait sans GPS 2000 F (024), commission 5 %');
 
   -- ------------------------------------------------------------ jeu de données (rôle postgres)
   insert into auth.users (id, email) values
@@ -145,13 +157,15 @@ begin
                            'livraison', 'Demain · Matin', '+241 77 12 34 56', 'airtel_money',
                            'Quartier Louis, rue des Ambassades', 0.41, 9.47, 'Face à la pharmacie', 'Maison · Louis, Libreville');
   o_gps := o.id;
-  perform pg_temp.t_ok('positif', o.subtotal = 5000 and o.service_fee = 250 and o.delivery_fee = 2843 and o.total = 8093
+  f_gps := s_base + round(o.distance_km * s_km)::int;                 -- 2843 F avec le barème actuel
+  t_gps := 5000 + round(5000 * s_fee)::int + f_gps;                     -- 8093 F avec le barème actuel
+  perform pg_temp.t_ok('positif', o.subtotal = 5000 and o.service_fee = round(5000 * s_fee) and o.delivery_fee = f_gps and o.total = t_gps
                        and o.status = 'en_preparation' and o.fulfillment_mode = 'livraison'
-                       and o.merchant_share = 5000 and o.courier_share = 2843 and o.platform_share = 250
+                       and o.merchant_share = 5000 and o.courier_share = f_gps and o.platform_share = round(5000 * s_fee)
                        and o.deposit_amount = 0 and o.deposit_status = 'non_requis'
                        and o.payment_method = 'airtel_money' and o.payment_status = 'du'
                        and o.client_phone = '+24177123456' and round(o.distance_km, 3) = 2.812,
-                       'Livraison GPS : montants recalculés serveur identiques à pricing.ts (8093 F)');
+                       'Livraison GPS : montants recalculés serveur (base + km x tarif + commission), identiques à pricing.ts');
   perform pg_temp.t_ok('positif', (o.items -> 1 ->> 'productName') = 'Gombo gros' and (o.items -> 0 ->> 'unitPrice')::int = 1500,
                        'Articles figés depuis les prix en base (nom + variante)');
   select count(*) into n from public.order_delivery_details where order_id = o_gps and landmark = 'Face à la pharmacie' and lat = 0.41;
@@ -163,9 +177,9 @@ begin
                                                  jsonb_build_object('product_id', p1, 'quantity', 2)),
                            'livraison', 'Demain · Soir', '077123456', 'especes', 'Akébé, derrière l''école');
   o_nogps := o.id;
-  perform pg_temp.t_ok('positif', o.delivery_fee = 1500 and o.subtotal = 4500 and o.service_fee = 225 and o.total = 6225
+  perform pg_temp.t_ok('positif', o.delivery_fee = s_fb and o.subtotal = 4500 and o.service_fee = 225 and o.total = 4500 + 225 + s_fb
                        and jsonb_array_length(o.items) = 1 and (o.items -> 0 ->> 'quantity')::int = 3,
-                       'Sans GPS : forfait 1500 F au total ; lignes identiques fusionnées');
+                       'Sans GPS : forfait app_settings.delivery_fallback_fee au total ; lignes identiques fusionnées');
 
   o := public.create_order(gen_random_uuid(), ma, jsonb_build_array(jsonb_build_object('product_id', p2, 'quantity', 2)),
                            'retrait', 'Demain · Retrait sur stand', '077123456', 'moov_money',
@@ -180,9 +194,10 @@ begin
   o := public.create_order(gen_random_uuid(), ma, jsonb_build_array(jsonb_build_object('product_id', p3, 'quantity', 2)),
                            'livraison', 'Demain · Matin', '077123456', 'especes', 'Oloumi, entrepôt');
   o_big := o.id;
-  perform pg_temp.t_ok('positif', o.subtotal = 120000 and o.service_fee = 6000 and o.total = 127500
-                       and o.deposit_amount = 6375 and o.deposit_status = 'du',
-                       'Total 127500 F > 100000 F : acompte 5 % du total = 6375 F');
+  t_big := 120000 + 6000 + s_fb;                                         -- 128000 F avec le forfait 2000 F
+  perform pg_temp.t_ok('positif', t_big > s_thr and o.subtotal = 120000 and o.service_fee = 6000 and o.total = t_big
+                       and o.deposit_amount = round(t_big * s_dep) and o.deposit_status = 'du',
+                       'Total au-dessus du seuil : acompte = taux d''acompte x total (6400 F au barème actuel)');
   rid := gen_random_uuid();
   o := public.create_order(rid, ma, jsonb_build_array(jsonb_build_object('product_id', p1, 'quantity', 1)),
                            'livraison', 's', '077123456', 'especes', 'adresse ok');
@@ -265,7 +280,7 @@ begin
   perform pg_temp.t_ok('positif', o.status = 'prete_a_livrer' and n = 1, 'Commerçant : en_preparation -> prete_a_livrer, historique complet');
 
   perform pg_temp.t_as(l1);
-  select count(*) into n from public.list_available_deliveries() d where d.order_id = o_gps and d.courier_gain = 2843 and d.amount_to_collect = 8093;
+  select count(*) into n from public.list_available_deliveries() d where d.order_id = o_gps and d.courier_gain = f_gps and d.amount_to_collect = t_gps;
   perform pg_temp.t_ok('positif', n = 1, 'Livreur : course disponible avec gain et montant à encaisser');
   select count(*) into n from public.orders where id = o_gps;
   perform pg_temp.t_ok('negatif', n = 0, 'Livreur non affecté : ligne commande (téléphone client) non lisible');
@@ -289,7 +304,7 @@ begin
   perform pg_temp.t_ok('positif', n = 1, 'Livreur affecté en course : adresse, GPS et repère lisibles');
   select count(*) into n from public.orders where id = o_gps and client_phone = '+24177123456';
   perform pg_temp.t_ok('positif', n = 1, 'Livreur affecté en course : téléphone du client lisible');
-  select count(*) into n from public.order_ledger where order_id = o_gps and event = 'attribution_livreur' and beneficiary_ref = liv1::text and amount = 2843;
+  select count(*) into n from public.order_ledger where order_id = o_gps and event = 'attribution_livreur' and beneficiary_ref = liv1::text and amount = f_gps;
   perform pg_temp.t_ok('positif', n = 1, 'Journal : part livraison attribuée au livreur');
 
   perform pg_temp.t_as(l2);
@@ -315,10 +330,10 @@ begin
   perform pg_temp.t_ok('negatif', n = 0, 'Livreur après livraison : adresse et GPS de nouveau masqués');
   select count(*) into n from public.orders where id = o_gps;
   perform pg_temp.t_ok('negatif', n = 0, 'Livreur après livraison : ligne commande (téléphone client) masquée');
-  select count(*) into n from public.list_my_deliveries() d where d.order_id = o_gps and d.status = 'livree' and d.courier_gain = 2843;
+  select count(*) into n from public.list_my_deliveries() d where d.order_id = o_gps and d.status = 'livree' and d.courier_gain = f_gps;
   perform pg_temp.t_ok('positif', n = 1, 'Livreur : historique de ses courses sans téléphone ni adresse');
   o := public.record_payment(o_gps, 'solde', 'especes');
-  select count(*) into n from public.order_ledger where order_id = o_gps and entry_type = 'encaissement' and amount = 8093 and beneficiary = 'livreur' and state = 'encaisse';
+  select count(*) into n from public.order_ledger where order_id = o_gps and entry_type = 'encaissement' and amount = t_gps and beneficiary = 'livreur' and state = 'encaisse';
   perform pg_temp.t_ok('positif', o.payment_status = 'encaisse' and o.payment_method = 'especes' and n = 1, 'Livreur : solde encaissé (espèces) tracé au journal');
   perform pg_temp.t_err('Double encaissement', format('select public.record_payment(%L, ''solde'', ''especes'')', o_gps), 'déjà encaissé');
 
@@ -438,7 +453,7 @@ begin
   perform pg_temp.t_err('Ajustement sans motif',
     format('select public.adjust_order_amount(%L, 6100, ''  '')', o_adj1), 'Motif obligatoire');
   o := public.adjust_order_amount(o_adj1, 6600, 'Tomates plus chères au marché ce matin');   -- +10 % pile
-  perform pg_temp.t_ok('positif', o.subtotal = 6600 and o.service_fee = 330 and o.total = 6600 + 330 + 1500
+  perform pg_temp.t_ok('positif', o.subtotal = 6600 and o.service_fee = 330 and o.total = 6600 + 330 + s_fb
                        and o.initial_subtotal = 6000 and o.adjustment_status = 'applique' and o.merchant_share = 6600,
                        'Ajustement +10 % appliqué directement, commission et total recalculés');
   select count(*) into n from public.order_amount_adjustments
@@ -453,7 +468,7 @@ begin
                        'Baisse toujours autorisée (commande prête, avant départ)');
 
   o := public.adjust_order_amount(o_adj2, 7800, 'Gros arrivage au prix fort');   -- +30 %
-  perform pg_temp.t_ok('positif', o.subtotal = 6000 and o.total = 6000 + 300 + 1500 and o.adjustment_status = 'en_attente'
+  perform pg_temp.t_ok('positif', o.subtotal = 6000 and o.total = 6000 + 300 + s_fb and o.adjustment_status = 'en_attente'
                        and o.proposed_subtotal = 7800,
                        'Ajustement +30 % : en attente du client, montant inchangé');
   perform pg_temp.t_err('Commande prête bloquée pendant l''attente',
@@ -462,7 +477,7 @@ begin
     format('select public.respond_to_adjustment(%L, true)', o_adj2), 'introuvable');
   perform pg_temp.t_as(c);
   o := public.respond_to_adjustment(o_adj2, true);
-  perform pg_temp.t_ok('positif', o.subtotal = 7800 and o.service_fee = 390 and o.total = 7800 + 390 + 1500 and o.adjustment_status = 'accepte',
+  perform pg_temp.t_ok('positif', o.subtotal = 7800 and o.service_fee = 390 and o.total = 7800 + 390 + s_fb and o.adjustment_status = 'accepte',
                        'Client accepte : nouveau montant appliqué et recalculé');
   perform pg_temp.t_err('Répondre deux fois', format('select public.respond_to_adjustment(%L, false)', o_adj2), 'Aucun ajustement');
 
@@ -560,3 +575,5 @@ reset role;
 select kind, count(*) as nb from t_results group by kind
 union all select 'total', count(*) from t_results
 order by 1;
+
+rollback;

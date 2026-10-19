@@ -1,15 +1,16 @@
 -- Tests de la taxonomie du catalogue (023) : 9 scénarios du propriétaire, positifs et négatifs.
 --
--- Exécution : dans UNE transaction annulée, après le corps de 023 (sans ses lignes begin/commit) :
---   begin;
---   <contenu de supabase/023_catalog_taxonomy.sql sans les lignes "begin;" et "commit;">
---   <contenu de ce fichier>
---   rollback;
--- Si 023 est déjà appliquée : begin; <ce fichier> rollback;
+-- Exécution : migrations 020 à 026 appliquées (état de production). Le fichier porte lui-même
+-- sa transaction : "begin;" en tête, "rollback;" en fin ; il s'exécute tel quel (SQL editor, psql,
+-- execute_sql). Le dernier SELECT avant le rollback donne le décompte positifs / négatifs.
+-- Dernière exécution contre la production : 19/10/2026, 46 positifs + 31 négatifs = 77, tous passés,
+-- aucune donnée restante (comptes des tables identiques avant / après).
 --
 -- Chaque assertion lève une exception en cas d'échec (la transaction échoue alors en entier).
 -- Rôles simulés par "set local role" + "set local request.jwt.claims". Rien ne reste après le rollback.
 -- Prix utilisés : prix de magasin fictifs de test (aucun prix officiel DGCCRF).
+
+begin;
 
 create temporary table t_results (id serial, kind text, name text);
 grant all on t_results to authenticated, anon;
@@ -91,6 +92,8 @@ declare
   adm uuid;
   n int; n2 int; v_text text; v_price int; v_cat text; v_sub text; v_mid uuid; v_unit text;
   real_products int; real_price_sum bigint; orders_before int; demo_products int;
+  -- Références lues en base avant tout jeu de données (aucun nombre de produits codé en dur)
+  bp_before int; cecado_before int; mat_before int; mat_diam_before int;
 begin
   -- ------------------------------------------------------------ jeu de données (rôle postgres)
   perform pg_temp.t_postgres();
@@ -101,6 +104,12 @@ begin
   from public.products p join public.merchants m on m.id = p.merchant_id where not m.is_demo;
   select count(*) into demo_products from public.products p join public.merchants m on m.id = p.merchant_id where m.is_demo;
   select count(*) into orders_before from public.orders;
+  select count(*) into bp_before from public.products p join public.merchants m on m.id = p.merchant_id where m.name = 'Bâti Plus Gabon';
+  select count(*) into cecado_before from public.products p join public.merchants m on m.id = p.merchant_id where m.name = 'CECADO';
+  -- Matériaux publiables (commerçant approuvé, non démo), avec et sans diamètre renseigné
+  select count(*), count(*) filter (where p.attributes ->> 'diametre' is not null) into mat_before, mat_diam_before
+  from public.products p join public.merchants m on m.id = p.merchant_id
+  where p.subcategory_id = 'bricolage-materiaux' and m.status = 'approved' and not m.is_demo;
 
   insert into auth.users (id, email) values
     (oa, 'test023-a@example.invalid'), (ob, 'test023-b@example.invalid'),
@@ -127,7 +136,9 @@ begin
   perform pg_temp.t_ok('positif', n = 0, 'S9 Aucun libellé en double dans une même famille');
   select count(*) into n from public.products p join public.merchants m on m.id = p.merchant_id where m.name = 'Bâti Plus Gabon';
   select count(*) into n2 from public.products p join public.merchants m on m.id = p.merchant_id where m.name = 'CECADO';
-  perform pg_temp.t_ok('positif', n = 30 and n2 = 24, 'S7 Bâti Plus (30) et CECADO (24) gardent tous leurs produits');
+  -- 87 Bâti Plus depuis 025 (30 avant), 24 CECADO au 19/10/2026 : comptés en base, non codés en dur.
+  perform pg_temp.t_ok('positif', n = bp_before and n2 = cecado_before and n > 0 and n2 > 0,
+    'S7 Bâti Plus et CECADO : catalogue présent et rattaché (comptes lus en base)');
   select count(*) into n from public.products p join public.categories s on s.id = p.subcategory_id where s.parent_id <> p.category;
   perform pg_temp.t_ok('positif', n = 0, 'S9 Aucune sous-catégorie incohérente avec la famille du produit');
 
@@ -287,6 +298,9 @@ begin
     'S7 Supprimer une sous-catégorie : produits gardés au niveau famille, prix intacts');
   select category into v_cat from public.products where id = pa;
   perform pg_temp.t_ok('positif', v_cat = 'bricolage', 'S7 Le produit garde sa famille après retrait de la sous-catégorie');
+  select count(*) into n from public.products p join public.merchants m on m.id = p.merchant_id where m.name = 'Bâti Plus Gabon';
+  perform pg_temp.t_ok('positif', n = bp_before,
+    'S7 Retrait de la sous-catégorie Plomberie : Bâti Plus garde tous ses produits');
   update public.categories set is_active = false where id = 'bricolage-electricite';
   select count(*) into n from public.products where id = pe and subcategory_id = 'bricolage-electricite';
   perform pg_temp.t_ok('positif', n = 1, 'S7 Désactiver une sous-catégorie garde l''historique des produits');
@@ -319,7 +333,8 @@ begin
   select count(*) into n from public.products p
    where p.subcategory_id = 'bricolage-materiaux' and (p.attributes ->> 'diametre') is not null;
   select count(*) into n2 from public.products p where p.subcategory_id = 'bricolage-materiaux';
-  perform pg_temp.t_ok('positif', n = 6 and n2 = 7, 'S8 Diamètre : 6 fers renseignés, le produit sans valeur reste listé');
+  perform pg_temp.t_ok('positif', n = mat_diam_before and n2 = mat_before + 1 and n2 > n,
+    'S8 Diamètre : seuls les fers renseignés filtrés, le produit de test sans valeur reste listé');
   perform pg_temp.t_as(oa);
   perform pg_temp.t_err('S8 Attributs qui ne sont pas un objet refusés',
     format('update public.products set attributes = ''[1,2]'' where id = %L', pa), 'check constraint');
@@ -371,3 +386,5 @@ begin
 end $$;
 
 select kind, count(*) as nombre from t_results group by kind order by kind;
+
+rollback;
