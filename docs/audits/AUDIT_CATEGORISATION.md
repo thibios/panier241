@@ -152,8 +152,8 @@ Produits laissés au niveau famille (classement incertain, à trancher par le pr
 - 34 produits des 7 commerçants de démonstration : non classés (non publics).
 
 Décisions à prendre :
-1. EPI et outillage : placés sous Bricolage & Construction (demande du propriétaire). `businessTypes.ts` rattache encore « Équipements de sécurité (EPI) » et « Outillage manuel professionnel » à `industrie` : à aligner ?
-2. Mises en avant des enseignes Bâti Plus et Ceca-Gadis pré-remplies d'après leurs catalogues : à valider.
+1. EPI et outillage : **validé par le propriétaire le 19/10/2026**. Ils restent sous Bricolage & Construction, et `businessTypes.ts` les rattache désormais à `bricolage` (groupe « Bricolage et construction »).
+2. Mises en avant des enseignes Bâti Plus et Ceca-Gadis : **validées par le propriétaire le 19/10/2026**, telles qu'appliquées par 023 (Bâti Plus : matériaux, ciment, carrelage, plomberie, électricité, peinture, outillage ; Ceca-Gadis : épicerie salée, boissons, produits frais, droguerie).
 3. Liste des 65 sous-catégories : à relire (issue de la liste du propriétaire et des types de produits de `businessTypes.ts`).
 4. Une famille créée par l'admin s'affiche avec l'icône générique et la couleur de marque : ajouter icône/couleur dans `tokens.ts`, `tailwind.config.js`, `icons.tsx`, `pexels.ts` si elle doit durer.
 5. `PexelsContext` et `ProductPhoto` gardent la liste statique pour les photos et couleurs (jetons de design) : volontaire.

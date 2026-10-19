@@ -65,7 +65,7 @@ Scripts présents dans `package.json` : `dev`, `build`, `preview`. Aucun script 
 - R39. Paiement à la livraison uniquement, au livreur (espèces, Airtel Money, Moov Money). Aucun paiement en ligne.
 - R40. Un seul commerçant par panier.
 - R41. Frais de service : 5 % du sous-total, arrondi à l'unité.
-- R42. Livraison : 2 000 F + 300 F/km (distance à vol d'oiseau) ; forfait 1 500 F sans GPS. Barème dans `src/lib/pricing.ts`, à ne pas dupliquer.
+- R42. Livraison : 2 000 F + 300 F/km (distance à vol d'oiseau) ; forfait 2 000 F sans GPS (migration 024). Barème de référence en base (`app_settings`), estimation dans `src/lib/pricing.ts`.
 - R43. Annulation client seulement si la commande est `en_preparation` ; une commande `annulee` ne change plus.
 - R44. Commerçants, livreurs, marchés et magasins proposés passent par la validation administrateur avant d'être visibles.
 - R45. Un magasin ou une enseigne n'est affiché qu'avec un logo.
@@ -108,7 +108,7 @@ Scripts présents dans `package.json` : `dev`, `build`, `preview`. Aucun script 
 - [ ] Lint : aucun script disponible ; signalé comme non lancé.
 - [ ] Tests automatisés : aucun script disponible ; test manuel du parcours avec `npm run dev`, décrit dans le résumé.
 - [ ] Régressions vérifiées sur les parcours touchés (client, commerçant, livreur, admin).
-- [ ] Règles métier intactes : paiement à la livraison, un commerçant par panier, 5 %, 2 000 F + 300 F/km, 1 500 F sans GPS, annulation seulement `en_preparation`, validation admin, logo obligatoire, prix officiels à la demande.
+- [ ] Règles métier intactes : paiement à la livraison, un commerçant par panier, 5 %, 2 000 F + 300 F/km, 2 000 F sans GPS, annulation seulement `en_preparation`, validation admin, logo obligatoire, prix officiels à la demande.
 - [ ] Chaque prix saisi est signalé : prix officiel DGCCRF ou prix du magasin.
 - [ ] Design : aucune couleur en dur (`grep -rnE "#[0-9A-Fa-f]{6}" src --include=*.tsx`), aucun emoji, aucun dégradé violet, aucun faux avis, fausse métrique ou faux compte.
 - [ ] Base : changement livré dans une migration `supabase/020_...` ou suivante ; RLS active et policies vérifiées pour chaque rôle.

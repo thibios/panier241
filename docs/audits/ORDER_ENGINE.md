@@ -13,7 +13,7 @@ Montants manipulés : prix du magasin (`products.price`), jamais le prix officie
 |---|---|---|
 | `delivery_base_fee` | 2000 | Livraison avec GPS : partie fixe |
 | `delivery_rate_per_km` | 300 | Livraison avec GPS : par km (haversine depuis `market_locations`) |
-| `delivery_fallback_fee` | 1500 | Livraison sans GPS (lieu ou adresse) : **forfait total** (confirmé) |
+| `delivery_fallback_fee` | 2000 (024, était 1500) | Livraison sans GPS (lieu ou adresse) : **forfait total** (confirmé) |
 | `service_fee_rate` | 0.05 | Commission plateforme sur le sous-total |
 | `deposit_threshold` | 100000 | Acompte dû si le **total** dépasse ce seuil |
 | `deposit_rate` | 0.05 | Acompte = 5 % du total (confirmé) |
@@ -77,7 +77,7 @@ Type front : `OrderStatus` doit inclure `prete_a_livrer`, `prete_a_retirer`, `re
 
 | Fichier | Changement |
 |---|---|
-| `src/lib/pricing.ts` | Barème d'ESTIMATION aligné : 2 000 F + 300 F/km avec GPS, forfait total 1 500 F sans GPS, 0 F en retrait, 5 %, acompte 5 % du total au-delà de 100 000 F |
+| `src/lib/pricing.ts` | Barème d'ESTIMATION aligné : 2 000 F + 300 F/km avec GPS, forfait total 2 000 F sans GPS, 0 F en retrait, 5 %, acompte 5 % du total au-delà de 100 000 F |
 | `src/lib/orderEngine.ts` (nouveau) | Colonnes lues, conversion des lignes, libellés de statut, codes de paiement, identifiant de tentative, traduction des erreurs en français |
 | `src/types/index.ts` | `OrderStatus` à 7 valeurs, champs mode/acompte/paiement/ajustement sur `Order`, `OrderDeliveryDetails` |
 | `src/context/CartContext.tsx` | Mode déduit du créneau (retrait sur stand = 0 F), acompte estimé |
@@ -100,7 +100,7 @@ Impacts si 022 est appliquée SANS ce front : création, annulation, « prête �
 4. Rejouer `supabase/tests/022_order_engine_tests.sql` dans `begin; ... rollback;` et vérifier qu'aucune donnée de test ne reste.
 
 Vérifications manuelles après déploiement (comptes réels de test, puis suppression des commandes de test par l'admin) :
-- Client : commande en livraison avec GPS (total = estimation), sans GPS (forfait 1 500 F), en retrait (0 F, pas d'adresse) ; double clic sur « Passer la commande » = une seule commande ; commande > 100 000 F : acompte affiché.
+- Client : commande en livraison avec GPS (total = estimation), sans GPS (forfait 2 000 F), en retrait (0 F, pas d'adresse) ; double clic sur « Passer la commande » = une seule commande ; commande > 100 000 F : acompte affiché.
 - Client : annulation en préparation (motif) ; refus puis acceptation d'un ajustement > +10 % ; historique visible ; « Prête à retirer » visible pour un retrait.
 - Commerçant : prête / prête à retirer / remise au client ; ajustement ≤ +10 % appliqué, > +10 % en attente ; annulation avec motif ; compte suspendu : actions refusées avec message.
 - Livreur : la commande prête apparaît (sans téléphone ni adresse) ; acceptation ; adresse, repère, lien carte et téléphone visibles ; livrée ; ensuite plus de téléphone ni d'adresse ; retrait jamais proposé ; sa propre commande jamais proposée.
@@ -146,8 +146,8 @@ Les tables d'audit (`order_status_history`, `order_ledger`, `order_amount_adjust
 ## 8. Risques et points ouverts
 
 - Coupure fonctionnelle si la base et le front ne sont pas déployés ensemble (sections 5 et 6).
-- **Limite connue (non corrigée)** : les coordonnées GPS viennent de l'adresse enregistrée par le client ; un client peut déclarer une position plus proche pour réduire ses frais (au plus jusqu'à 2 000 F, ou choisir l'absence de GPS : forfait 1 500 F). Aucune vérification serveur n'est possible sans géocodage.
-- Le forfait sans GPS (1 500 F) est inférieur à la livraison avec GPS de base (2 000 F) : un client a intérêt à ne pas donner sa position (décision du propriétaire, à surveiller).
+- **Limite connue (non corrigée)** : les coordonnées GPS viennent de l'adresse enregistrée par le client ; un client peut déclarer une position plus proche pour réduire ses frais (au plus jusqu'à 2 000 F, ou choisir l'absence de GPS : forfait 2 000 F). Aucune vérification serveur n'est possible sans géocodage.
+- Corrigé par 024 (19/10/2026) : le forfait sans GPS est passé à 2 000 F, égal à la partie fixe avec GPS.
 - Les constantes de `src/lib/pricing.ts` dupliquent `app_settings` pour l'estimation : à réaligner si l'admin change le barème.
 - Le bénéficiaire de l'acompte est le commerçant (recommandation D4 du PRD) ; le reversement est saisi par l'admin (`record_payout`, sans écran pour l'instant).
 - Les marchés sans coordonnées dans `market_locations` (Oloumi, Nkembo, Akébé, marchés ajoutés) appliquent toujours le forfait.

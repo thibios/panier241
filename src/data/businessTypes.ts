@@ -46,6 +46,8 @@ export const businessTypes: BusinessType[] = [
   // Bricolage et construction
   { id: 'quincaillerie', label: 'Quincaillerie / matériaux de construction', group: 'Bricolage et construction', categories: ['bricolage'], itemWord: 'produit', productTypes: ['Ciment', 'Fer', 'Outillage', 'Plomberie', 'Électricité', 'Peinture'], defaultUnit: 'pièce' },
   { id: 'menuiserie', label: 'Menuiserie (bois, meubles sur mesure)', group: 'Bricolage et construction', categories: ['bricolage'], itemWord: 'article', productTypes: ['Planche', 'Chevron', 'Contreplaqué', 'Porte', 'Fenêtre', 'Meuble sur mesure'], defaultUnit: 'pièce' },
+  { id: 'epi-securite', label: 'Équipements de sécurité (EPI)', group: 'Bricolage et construction', categories: ['bricolage'], itemWord: 'article', productTypes: ['Casque de chantier', 'Gants', 'Chaussures de sécurité', 'Gilet', 'Masque'], defaultUnit: 'pièce' },
+  { id: 'outillage-pro', label: 'Outillage manuel professionnel', group: 'Bricolage et construction', categories: ['bricolage'], itemWord: 'article', productTypes: ['Outil manuel', 'Outil de mesure', 'Coffret à outils'], defaultUnit: 'pièce' },
 
   // High-tech, informatique et électronique
   { id: 'telephonie', label: 'Boutique de téléphonie', group: 'High-tech, informatique et électronique', categories: ['high-tech'], itemWord: 'article', productTypes: ['Smartphone', 'Tablette', 'Accessoire téléphone', 'Écouteurs / casque'], defaultUnit: 'pièce' },
@@ -93,9 +95,7 @@ export const businessTypes: BusinessType[] = [
 
   // Industrie et science
   { id: 'nettoyage-pro', label: 'Nettoyage professionnel', group: 'Industrie et science', categories: ['industrie'], itemWord: 'produit', productTypes: ['Détergent', 'Matériel de nettoyage', 'Consommable'], defaultUnit: 'pièce' },
-  { id: 'epi-securite', label: 'Équipements de sécurité (EPI)', group: 'Industrie et science', categories: ['industrie'], itemWord: 'article', productTypes: ['Casque de chantier', 'Gants', 'Chaussures de sécurité', 'Gilet', 'Masque'], defaultUnit: 'pièce' },
   { id: 'laboratoire', label: 'Matériel de laboratoire', group: 'Industrie et science', categories: ['industrie'], itemWord: 'article', productTypes: ['Verrerie', 'Réactif', 'Appareil de mesure', 'Consommable'], defaultUnit: 'pièce' },
-  { id: 'outillage-pro', label: 'Outillage manuel professionnel', group: 'Industrie et science', categories: ['industrie'], itemWord: 'article', productTypes: ['Outil manuel', 'Outil de mesure', 'Coffret à outils'], defaultUnit: 'pièce' },
 
   // Équipement professionnel (CHR)
   { id: 'materiel-restauration', label: 'Matériel de cuisine pour restaurants', group: 'Équipement professionnel (CHR)', categories: ['chr'], itemWord: 'article', productTypes: ['Matériel de cuisine', 'Ustensile professionnel', 'Four / friteuse', 'Vaisselle professionnelle'], defaultUnit: 'pièce' },

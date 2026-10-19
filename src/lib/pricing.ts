@@ -9,7 +9,7 @@ import type { FulfillmentMode } from '../types'
 export const BASE_DELIVERY_FEE = 2000
 export const RATE_PER_KM = 300
 /** Livraison sans position GPS (lieu de vente ou adresse) : forfait TOTAL. */
-export const FALLBACK_DELIVERY_FEE = 1500
+export const FALLBACK_DELIVERY_FEE = 2000
 export const SERVICE_FEE_RATE = 0.05
 /** Acompte dû quand le total dépasse ce seuil (F CFA). */
 export const DEPOSIT_THRESHOLD = 100000
@@ -55,7 +55,7 @@ export function computeDeposit(total: number): number {
 /**
  * Estimation de la tarification d'une commande :
  * total = sous-total + commission (5 %) + livraison.
- * Livraison avec GPS : 2 000 F + 300 F/km ; sans GPS : forfait total de 1 500 F ; retrait sur stand : 0 F.
+ * Livraison avec GPS : 2 000 F + 300 F/km ; sans GPS : forfait total de 2 000 F ; retrait sur stand : 0 F.
  */
 export function computeDelivery(
   subtotal: number,
