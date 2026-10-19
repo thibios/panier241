@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { Market } from '../types'
 import { markets as staticMarkets } from '../data/markets'
 import { supabase } from '../lib/supabaseClient'
-import { useAuth, isAdminEmail } from './AuthContext'
+import { useAuth } from './AuthContext'
 import { compressImage } from '../lib/compressImage'
 
 /** Marché proposé ou ajouté depuis l'application (table custom_markets). */
@@ -64,7 +64,7 @@ interface MarketsContextValue {
 const MarketsContext = createContext<MarketsContextValue | null>(null)
 
 export function MarketsProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [markets, setMarkets] = useState<Market[]>(staticMarkets)
 
   const refresh = useCallback(async () => {
@@ -86,7 +86,7 @@ export function MarketsProvider({ children }: { children: ReactNode }) {
 
   async function addMarket({ name, neighborhood, kind = 'marche', logoFile = null, photoFile = null, marketType, address }: NewPlace) {
     if (!user) return { error: 'Connectez-vous pour ajouter un marché.', approved: false }
-    const approved = isAdminEmail(user.email)
+    const approved = isAdmin
 
     // Un magasin ou une enseigne n'est affiché qu'avec son logo.
     let logoUrl: string | null = null

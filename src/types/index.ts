@@ -212,6 +212,7 @@ export interface Order {
   livreurId: string | null
   livreurName: string | null
   livreurPhone: string | null
+  /** Chemin de la vidéo dans le bucket privé shopping-videos (028), lue par URL signée ; ancienne URL publique avant 028. */
   shoppingVideoUrl: string | null
   clientPhone: string | null
   /** Annulation (client, commerçant ou administrateur), motif obligatoire. */

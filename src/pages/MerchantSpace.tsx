@@ -21,8 +21,9 @@ import {
   type OrderRow,
 } from '../lib/orderEngine'
 import type { CategoryId, Merchant, Order, OrderStatus, PaymentMethodCode } from '../types'
-import { ArrowLeft, Bike, Store, Hourglass, Ban, Play } from 'lucide-react'
+import { ArrowLeft, Bike, Store, Hourglass, Ban } from 'lucide-react'
 import ProductPhoto from '../components/ui/ProductPhoto'
+import ShoppingVideoLink from '../components/ui/ShoppingVideoLink'
 
 type Tab = 'produits' | 'commandes'
 
@@ -658,16 +659,7 @@ export default function MerchantSpace() {
                   {order.livreurName && (
                     <p className="text-[11px] text-muted"><Bike className="mr-1 inline h-3.5 w-3.5" />Livreur : {order.livreurName}</p>
                   )}
-                  {order.shoppingVideoUrl && (
-                    <a
-                      href={order.shoppingVideoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-[11px] font-semibold text-brand"
-                    >
-                      <Play className="mr-1 inline h-3 w-3" />Voir la vidéo de la liste de courses
-                    </a>
-                  )}
+                  {order.shoppingVideoUrl && <ShoppingVideoLink video={order.shoppingVideoUrl} />}
                 </Card>
               ))
             ) : (

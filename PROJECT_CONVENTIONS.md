@@ -505,7 +505,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 
 **Existant**
 
-- Supabase Storage, buckets publics en lecture : `kiosk-photos`, `product-photos`, photos de profil, vidéos de liste de courses (003, 008, 010, 013).
+- Supabase Storage, buckets publics en lecture : `kiosk-photos`, `product-photos`, photos de profil (003, 010, 013).
+- Bucket privé `shopping-videos` (vidéos de liste de courses, 008 puis 028) : la commande stocke le chemin `<uid>/<fichier>` ; lecture par URL signée d'1 h (`lib/shoppingVideo.ts`) réservée au client, au commerçant de la commande, au livreur affecté pendant la course et à l'admin.
 - Compression avant envoi (`compressImage`), avatar recadré en carré 512 px (`lib/avatar.ts`).
 - Limite de 5 Mo par image côté stockage.
 

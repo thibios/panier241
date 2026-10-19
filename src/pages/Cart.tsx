@@ -10,6 +10,7 @@ import { useAddresses } from '../context/AddressesContext'
 import { useCatalog } from '../context/CatalogContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
+import { uploadShoppingVideo } from '../lib/shoppingVideo'
 import { formatFCFA } from '../lib/format'
 import { buildWhatsAppLink } from '../lib/whatsapp'
 import { getProductDisplayName } from '../lib/productDisplay'
@@ -141,17 +142,17 @@ export default function Cart() {
       return
     }
 
+    // Bucket privé (028) : la commande enregistre le chemin de la vidéo, pas une URL publique.
     let shoppingVideoUrl: string | null = null
     if (videoFile) {
-      const path = `${user.id}/${Date.now()}-${videoFile.name}`
-      const { error: uploadError } = await supabase.storage.from('shopping-videos').upload(path, videoFile)
-      if (uploadError) {
+      try {
+        shoppingVideoUrl = await uploadShoppingVideo(user.id, videoFile)
+      } catch (error) {
+        console.error('Envoi de la vidéo de liste de courses', error)
         setIsSubmitting(false)
         setSubmitError("La vidéo n'a pas pu être envoyée. Réessayez, ou retirez-la pour commander sans vidéo.")
         return
       }
-      const { data: publicUrlData } = supabase.storage.from('shopping-videos').getPublicUrl(path)
-      shoppingVideoUrl = publicUrlData.publicUrl
     }
 
     if (!requestIdRef.current) requestIdRef.current = newRequestId()

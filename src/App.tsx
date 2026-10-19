@@ -31,6 +31,7 @@ import Contact from './pages/Contact'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import ResetPassword from './pages/ResetPassword'
+import MfaChallenge from './components/account/MfaChallenge'
 
 function AuthenticatedApp() {
   return (
@@ -77,7 +78,7 @@ function AuthenticatedApp() {
 }
 
 function Gate() {
-  const { session, loading } = useAuth()
+  const { session, loading, mfaRequired } = useAuth()
 
   if (loading) {
     return (
@@ -92,7 +93,8 @@ function Gate() {
       <Route path="/confidentialite" element={<Privacy />} />
       <Route path="/cgu" element={<Terms />} />
       <Route path="/nouveau-mot-de-passe" element={<ResetPassword />} />
-      <Route path="*" element={session ? <AuthenticatedApp /> : <AuthPage />} />
+      {/* Double authentification activée : le code est demandé avant d'entrer dans l'application. */}
+      <Route path="*" element={session ? mfaRequired ? <MfaChallenge /> : <AuthenticatedApp /> : <AuthPage />} />
     </Routes>
   )
 }

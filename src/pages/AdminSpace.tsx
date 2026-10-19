@@ -5,13 +5,14 @@ import WovenHeader from '../components/layout/WovenHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { supabase } from '../lib/supabaseClient'
-import { useAuth, isAdminEmail } from '../context/AuthContext'
+import { useAuth } from '../context/AuthContext'
 import type { ApprovalStatus } from '../types'
 import { useMarkets, type CustomMarketRow } from '../context/MarketsContext'
 import AdminOrders from '../components/admin/AdminOrders'
 import { translateDbError } from '../lib/orderEngine'
-import { ArrowLeft, Lock } from 'lucide-react'
+import { ArrowLeft, Lock, ShieldCheck } from 'lucide-react'
 import CategoryAdmin from '../components/admin/CategoryAdmin'
+import { MFA_SECTION_ID } from '../components/account/MfaSettings'
 
 interface MerchantRow {
   id: string
@@ -29,7 +30,7 @@ interface LivreurRow {
 }
 
 export default function AdminSpace() {
-  const { user } = useAuth()
+  const { isAdmin, isAdminMember } = useAuth()
   const [merchants, setMerchants] = useState<MerchantRow[]>([])
   const [livreurs, setLivreurs] = useState<LivreurRow[]>([])
   const [loading, setLoading] = useState(false)
@@ -51,8 +52,8 @@ export default function AdminSpace() {
   }
 
   useEffect(() => {
-    if (isAdminEmail(user?.email)) fetchAll()
-  }, [user])
+    if (isAdmin) fetchAll()
+  }, [isAdmin])
 
   // Les refus de la base (ex. approbation d'un commerçant de démonstration) sont affichés tels quels.
   async function setMerchantStatus(id: string, status: ApprovalStatus) {
@@ -76,7 +77,27 @@ export default function AdminSpace() {
     await fetchAll()
   }
 
-  if (!isAdminEmail(user?.email)) {
+  // Inscrit comme administrateur mais session sans second facteur (aal1) : la base refuse tout droit admin.
+  if (!isAdmin && isAdminMember) {
+    return (
+      <PageShell>
+        <div className="px-5 pt-8 text-center">
+          <ShieldCheck className="mx-auto h-9 w-9 text-brand-dark/30" />
+          <p className="mt-2 text-sm font-medium text-brand-dark">
+            Activez la double authentification pour accéder à l'administration
+          </p>
+          <p className="mx-auto mt-1 max-w-xs text-xs text-muted">
+            L'espace admin exige un code à 6 chiffres en plus du mot de passe.
+          </p>
+          <Link to={`/profil#${MFA_SECTION_ID}`} className="mt-4 inline-block text-sm font-semibold text-brand">
+            Activer la double authentification
+          </Link>
+        </div>
+      </PageShell>
+    )
+  }
+
+  if (!isAdmin) {
     return (
       <PageShell>
         <div className="px-5 pt-8 text-center">

@@ -8,9 +8,10 @@ import { paymentMethods } from '../data/addresses'
 import { useOrders } from '../context/OrdersContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { useAddresses } from '../context/AddressesContext'
-import { useAuth, isAdminEmail } from '../context/AuthContext'
+import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import { uploadAvatar, removeAvatar } from '../lib/avatar'
+import MfaSettings from '../components/account/MfaSettings'
 import { MapPin, User, Smartphone, Banknote, CreditCard, Camera, Loader2, type LucideIcon } from 'lucide-react'
 
 const paymentIcon: Record<string, LucideIcon> = {
@@ -24,7 +25,7 @@ function formatMemberSince(iso: string) {
 }
 
 export default function Profile() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, isAdminMember, isAdmin } = useAuth()
   const { orders } = useOrders()
   const { favoriteIds } = useFavorites()
   const { addresses, addAddress } = useAddresses()
@@ -34,7 +35,6 @@ export default function Profile() {
   )
   const [myMerchant, setMyMerchant] = useState<{ id: string; status: string } | null | undefined>(undefined)
   const [myLivreur, setMyLivreur] = useState<{ id: string; status: string } | null | undefined>(undefined)
-  const isAdmin = isAdminEmail(user?.email)
 
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [label, setLabel] = useState('')
@@ -415,7 +415,9 @@ export default function Profile() {
           </section>
         )}
 
-        {isAdmin && (
+        <MfaSettings />
+
+        {(isAdminMember || isAdmin) && (
           <section>
             <h2 className="mb-2 text-sm font-semibold text-brand-dark">Administration</h2>
             <Link to="/admin">

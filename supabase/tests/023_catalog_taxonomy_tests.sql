@@ -8,6 +8,7 @@
 --
 -- Chaque assertion lève une exception en cas d'échec (la transaction échoue alors en entier).
 -- Rôles simulés par "set local role" + "set local request.jwt.claims". Rien ne reste après le rollback.
+-- Depuis 027 : sessions simulées en aal2 (is_admin() exige aal2 et une ligne admin_users ; sans effet pour les non-admins).
 -- Prix utilisés : prix de magasin fictifs de test (aucun prix officiel DGCCRF).
 
 begin;
@@ -20,7 +21,7 @@ create function pg_temp.t_as(p_uid uuid) returns void language plpgsql as $$
 begin
   execute 'reset role';
   execute format('set local request.jwt.claims = %L',
-                 json_build_object('sub', p_uid, 'role', 'authenticated')::text);
+                 json_build_object('sub', p_uid, 'role', 'authenticated', 'aal', 'aal2')::text);
   execute 'set local role authenticated';
 end $$;
 

@@ -35,10 +35,10 @@ begin
   if n <> 0 then raise exception 'ECHEC 3b : le livreur lit % autre(s) fiche(s)', n; end if;
   reset role;
 
-  -- 4. l'administrateur lit toutes les fiches (is_admin() lit l'e-mail dans auth.users).
+  -- 4. l'administrateur (inscrit dans admin_users, session aal2 depuis 027) lit toutes les fiches.
   select id into v_id from auth.users where lower(email) = 'thibiosang@gmail.com';
   set local role authenticated;
-  perform set_config('request.jwt.claims', json_build_object('sub', v_id::text, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', v_id::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   select count(*) into n from public.livreurs;
   if n < 1 then raise exception 'ECHEC 4 : l''admin ne lit pas les livreurs'; end if;
   reset role;

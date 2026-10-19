@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabaseClient'
 import { clearSession } from '../lib/storage'
@@ -18,19 +18,51 @@ interface AuthContextValue {
   signUp: (input: SignUpInput) => Promise<{ error: string | null }>
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  /** Compte inscrit dans admin_users (migration 027), que la double authentification soit faite ou non. */
+  isAdminMember: boolean
+  /** Administrateur effectif : inscrit dans admin_users ET session en aal2 (réponse de public.is_admin()). */
+  isAdmin: boolean
+  /** Un facteur TOTP vérifié existe mais la session n'est qu'en aal1 : le code à 6 chiffres est requis. */
+  mfaRequired: boolean
+  /** Relit le niveau d'authentification et les droits admin (après vérification ou retrait d'un facteur). */
+  refreshSecurity: () => Promise<void>
 }
+
+interface SecurityState {
+  isAdminMember: boolean
+  isAdmin: boolean
+  mfaRequired: boolean
+}
+
+const NO_SECURITY: SecurityState = { isAdminMember: false, isAdmin: false, mfaRequired: false }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-export const ADMIN_EMAIL = 'thibiosang@gmail.com'
-
-export function isAdminEmail(email: string | null | undefined): boolean {
-  return (email ?? '').trim().toLowerCase() === ADMIN_EMAIL
+/**
+ * Droits lus en base (migration 027) : le rôle admin n'est plus déduit de l'e-mail.
+ * Les refus de la base font foi ; en cas d'erreur de lecture, aucun droit n'est accordé côté écran.
+ */
+async function readSecurity(userId: string): Promise<SecurityState> {
+  const [aalRes, memberRes, adminRes] = await Promise.all([
+    supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+    supabase.from('admin_users').select('user_id').eq('user_id', userId).maybeSingle(),
+    supabase.rpc('is_admin'),
+  ])
+  return {
+    mfaRequired: !aalRes.error && aalRes.data.currentLevel === 'aal1' && aalRes.data.nextLevel === 'aal2',
+    isAdminMember: !memberRes.error && memberRes.data !== null,
+    isAdmin: !adminRes.error && adminRes.data === true,
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [security, setSecurity] = useState<SecurityState>(NO_SECURITY)
+  // Compte pour lequel les droits ont été lus : l'écran attend cette lecture à chaque connexion.
+  const [securityCheckedFor, setSecurityCheckedFor] = useState<string | null>(null)
+  const userId = session?.user.id ?? null
+  const accessToken = session?.access_token ?? null
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -44,6 +76,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.subscription.unsubscribe()
   }, [])
+
+  // Relu à chaque nouveau jeton (connexion, code vérifié, rafraîchissement) ; hors du rappel
+  // onAuthStateChange, où un appel Supabase attendu bloquerait le client.
+  useEffect(() => {
+    if (!userId || !accessToken) {
+      setSecurity(NO_SECURITY)
+      return
+    }
+    let cancelled = false
+    readSecurity(userId)
+      // Réseau indisponible : aucun droit admin accordé (la base refuse de toute façon en aal1).
+      .catch(() => NO_SECURITY)
+      .then((next) => {
+        if (cancelled) return
+        setSecurity(next)
+        setSecurityCheckedFor(userId)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [userId, accessToken])
+
+  const refreshSecurity = useCallback(async () => {
+    if (!userId) return
+    setSecurity(await readSecurity(userId))
+  }, [userId])
 
   async function signUp({ email, password, firstName, lastName, phone }: SignUpInput) {
     const { error } = await supabase.auth.signUp({
@@ -71,7 +129,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        user: session?.user ?? null,
+        loading: loading || (userId !== null && securityCheckedFor !== userId),
+        signUp,
+        signIn,
+        signOut,
+        ...security,
+        refreshSecurity,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
